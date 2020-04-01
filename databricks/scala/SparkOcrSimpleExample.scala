@@ -17,7 +17,13 @@ dbutils.fs.put("/databricks/init/tesseract-install.sh","""
 sudo add-apt-repository ppa:alex-p/tesseract-ocr
 sudo apt-get update
 sudo apt-get install -y tesseract-ocr
-tesseract -v""", true)
+tesseract -v
+OCR_MODEL_DIR=/dbfs/ocr/models
+if [ ! -d "$OCR_MODEL_DIR" ]; then
+    mkdir -p $OCR_MODEL_DIR
+    cd $OCR_MODEL_DIR
+    wget https://raw.githubusercontent.com/tesseract-ocr/tessdata/master/eng.traineddata
+fi""", true)
 
 // COMMAND ----------
 
@@ -61,6 +67,7 @@ def pipeline() = {
       .setInputCol("image")
       .setOutputCol("text")
       .setConfidenceThreshold(65)
+      .setTessdata("/dbfs/ocr/models")
     
     new Pipeline().setStages(Array(
       binaryToImage,
