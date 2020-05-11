@@ -63,7 +63,7 @@ def pipeline() = {
       .setOutputCol("image")
 
     // Run tesseract OCR
-    val ocr = new ImageToText()
+    val ocr = new TesseractOcr()
       .setInputCol("image")
       .setOutputCol("text")
       .setConfidenceThreshold(65)
