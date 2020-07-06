@@ -6,37 +6,6 @@
 
 // COMMAND ----------
 
-// MAGIC %md ## Add init script for install fresh version of Tesseract
-// MAGIC Note: Need run only one time and restart cluster after added script if run first time on Databrick accaunt.
-
-// COMMAND ----------
-
-dbutils.fs.mkdirs("dbfs:/databricks/init/")
-dbutils.fs.put("/databricks/init/tesseract-install.sh","""
-#!/bin/bash
-sudo add-apt-repository ppa:alex-p/tesseract-ocr
-sudo apt-get update
-sudo apt-get install -y tesseract-ocr
-tesseract -v
-OCR_MODEL_DIR=/dbfs/ocr/models
-if [ ! -d "$OCR_MODEL_DIR" ]; then
-    mkdir -p $OCR_MODEL_DIR
-    cd $OCR_MODEL_DIR
-    wget https://raw.githubusercontent.com/tesseract-ocr/tessdata/master/eng.traineddata
-fi""", true)
-
-// COMMAND ----------
-
-// MAGIC %md ## Check tesseract installation
-// MAGIC Need tesseract 4.1.1
-
-// COMMAND ----------
-
-// MAGIC %sh
-// MAGIC tesseract -v
-
-// COMMAND ----------
-
 // MAGIC %md ## Import OCR transformers and utils
 
 // COMMAND ----------
@@ -50,8 +19,8 @@ implicit val displayHtmlFunction: (String) => Unit = displayHTML
 // COMMAND ----------
 
 // MAGIC %md ## Define OCR transformers and pipeline
-// MAGIC * Transforrm binary data to Image schema using [BinaryToImage](https://nlp.johnsnowlabs.com/docs/en/ocr#binarytoimage). More details about Image Schema [here]( https://nlp.johnsnowlabs.com/docs/en/ocr#image-schema).
-// MAGIC * Recognize text using [TesseractOcr](https://nlp.johnsnowlabs.com/docs/en/ocr#tesseractocr) transformer.
+// MAGIC * Transforrm binary data to Image schema using [BinaryToImage](https://nlp.johnsnowlabs.com/docs/en/ocr_pipeline_components#binarytoimage). More details about Image Schema [here](https://nlp.johnsnowlabs.com/docs/en/ocr_structures#image-schema).
+// MAGIC * Recognize text using [ImageToText](https://nlp.johnsnowlabs.com/docs/en/ocr_pipeline_components#imagetotext) transformer.
 
 // COMMAND ----------
 
@@ -62,12 +31,11 @@ def pipeline() = {
       .setInputCol("content")
       .setOutputCol("image")
 
-    // Run tesseract OCR
+    // Run OCR
     val ocr = new ImageToText()
       .setInputCol("image")
       .setOutputCol("text")
       .setConfidenceThreshold(65)
-      .setTessdata("/dbfs/ocr/models")
     
     new Pipeline().setStages(Array(
       binaryToImage,
