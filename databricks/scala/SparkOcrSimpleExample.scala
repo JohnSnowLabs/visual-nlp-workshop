@@ -12,7 +12,7 @@
 
 import com.johnsnowlabs.ocr.transformers._
 import org.apache.spark.ml.Pipeline
-import com.johnsnowlabs.ocr.OcrContext.implicits._
+import .implicits._
 implicit val sparkSession = spark
 implicit val displayHtmlFunction: (String) => Unit = displayHTML
 
