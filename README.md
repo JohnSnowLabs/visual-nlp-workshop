@@ -44,7 +44,7 @@ set JSL_OCR_LICENSE=license_key
   * Select `SparkOcrSimpleExample.ipynb` notebook.
 * Set `secret` and `license` variables to valid values in first cell.
 * Run all cells: Runtime -> Run all.
-* Restart runtime: Runtime -> Resturt runtime (Need restart first time after installing new packages).
+* Restart runtime: Runtime -> Restart runtime (Need restart first time after installing new packages).
 * Run all cellls again.
 
 ### Run notebooks locally using jupyter
@@ -66,5 +66,5 @@ jupyter-notebook
 * Open `jupyter/SparkOcrSimpleExample.ipynb` notebook.
 * Set `secret` and `license` variables to valid values in first cell.
 * Run all cells: Cell -> Run all.
-* Restart runtime: Kernel -> Resturt (Need restart first time after installing new packages).
+* Restart runtime: Kernel -> Restart (Need restart first time after installing new packages).
 * Run all cellls again.
