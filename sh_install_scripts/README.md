@@ -30,14 +30,15 @@ with open('spark_ocr.json', 'r') as f:
 
 ## 3. Run the 1-line install script
 For `AWS Sagemaker`
-``sh
+```sh
 !wget https://raw.githubusercontent.com/JohnSnowLabs/spark-ocr-workshop/master/sh/jsl_sagemaker_setup_with_OCR.sh -O - | bash
 
-``
+```
+
 For `Google Colab`
-``sh
+```sh
 !wget https://raw.githubusercontent.com/JohnSnowLabs/spark-ocr-workshop/master/sh/jsl_sagemaker_setup_with_OCR.sh -O - | bash
-``
+```
 
 ## 4. Restart Notebook and run Code from (2.) again
 The Python kernel must be restarted for the new packages to become importable
