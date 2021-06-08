@@ -30,15 +30,26 @@ def pipeline() = {
     val binaryToImage = new BinaryToImage()
       .setInputCol("content")
       .setOutputCol("image")
+  
+   val transformer = new GPUImageTransformer()
+      .addHuangTransform()
+      .addScalingTransform(2)
+      .addDilateTransform(2,2)
+      .addErodeTransform(2,2)
+      .setInputCol("image")
+      .setOutputCol("transformed_image")
 
     // Run OCR
     val ocr = new ImageToText()
-      .setInputCol("image")
+      .setInputCol("transformed_image")
       .setOutputCol("text")
       .setConfidenceThreshold(65)
-    
+      .setModelType("best")
+      .setLanguage("eng")
+
     new Pipeline().setStages(Array(
       binaryToImage,
+      transformer,
       ocr
     ))
 }
@@ -50,17 +61,17 @@ def pipeline() = {
 // COMMAND ----------
 
 // MAGIC %sh
-// MAGIC OCR_DIR=/dbfs/tmp/ocr
+// MAGIC OCR_DIR=/dbfs/tmp/ocr_1
 // MAGIC if [ ! -d "$OCR_DIR" ]; then
 // MAGIC     mkdir $OCR_DIR
 // MAGIC     cd $OCR_DIR
-// MAGIC     wget https://s3.amazonaws.com/auxdata.johnsnowlabs.com/public/ocr/datasets/images.zip
-// MAGIC     unzip images.zip
+// MAGIC     wget https://s3.amazonaws.com/auxdata.johnsnowlabs.com/public/ocr/datasets/news.2B.0.png.zip
+// MAGIC     unzip news.2B.0.png.zip
 // MAGIC fi
 
 // COMMAND ----------
 
-display(dbutils.fs.ls("dbfs:/tmp/ocr/images/"))
+display(dbutils.fs.ls("dbfs:/tmp/ocr_1/0/"))
 
 // COMMAND ----------
 
@@ -68,7 +79,7 @@ display(dbutils.fs.ls("dbfs:/tmp/ocr/images/"))
 
 // COMMAND ----------
 
-val imagesPath = "/tmp/ocr/images/*.tif"
+val imagesPath = "/tmp/ocr_1/0/*.png"
 val imagesExampleDf = spark.read.format("binaryFile").load(imagesPath).cache()
 display(imagesExampleDf)
 
