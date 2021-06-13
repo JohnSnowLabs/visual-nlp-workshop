@@ -1,0 +1,128 @@
+# To add a new cell, type '# %%'
+# To add a new markdown cell, type '# %% [markdown]'
+# %%
+from IPython import get_ipython
+
+# %% [markdown]
+# # Example of usage Spark OCR for Signature Detection
+# %% [markdown]
+# ## Install spark-ocr python packge
+# Need to specify:
+# - secret
+# - license
+# - aws credentials
+
+# %%
+secret = ""
+license = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJleHAiOjE2NTQ3ODQ0MzAsImlhdCI6MTYyMzI0ODQzMCwidW5pcXVlX2lkIjoiZDg4N2VlZmUtYzkyZC0xMWViLTg3ZGItN2ViMzllMmQ0ZTM4In0.cR1XckcKBjQ4-sX-BCmJYuWinTJdccGrfxmOAdP6NJ_grXHPqhdP2OubTpfPczb5FVgUhS1K06asvdjmSERK-z5XnFa6OpLjiaZvMXrtzj4F-91BxSzW0KJZKNNKp6i5xqXLnvTBtaQqrs5k3Ujl7s0Fbo6bvMSmBoWSJBBwW1z3GVmKjEu4h6mhMhWcDfKJJQEQAM_OiUEsRRFWKGOUVoxQKNj7JbdeTcjrZbAaQBu0z8d_XWkO7r1YUbC5ZHlJeTwbHJmww4Gvl5xxWei-gHpoMJkg41qRZ6E5y9IWkaUW9w1IpUW2d9TMFHadVPCXXenVf2pKBJYJH7fgLrBkvA"
+AWS_ACCESS_KEY_ID = ""
+AWS_SECRET_ACCESS_KEY = ""
+
+version = secret.split("-")[0]
+spark_ocr_jar_path = "../../target/scala-2.11"
+imagePath = "./data/signature/LIL18369-Lease_Z-1.jpg"
+
+
+# %%
+get_ipython().run_cell_magic('bash', '', 'if python -c \'import google.colab\' &> /dev/null; then\n    echo "Run on Google Colab!"\n    echo "Install Open JDK"\n    apt-get install -y openjdk-8-jdk-headless -qq > /dev/null\n    java -version\nfi')
+
+
+# %%
+# install from local package 
+#%pip install ../../python/dist/spark-ocr-3.2.0.spark30.tar.gz
+
+
+# %%
+# install from PYPI using secret
+#%pip install spark-ocr==$version\.spark30 --extra-index-url=https://pypi.johnsnowlabs.com/$secret --upgrade
+
+
+# %%
+import os
+import sys
+
+if AWS_ACCESS_KEY_ID != "":
+    os.environ["AWS_ACCESS_KEY_ID"] = AWS_ACCESS_KEY_ID
+    os.environ["AWS_SECRET_ACCESS_KEY"] = AWS_SECRET_ACCESS_KEY
+    
+if license:
+    os.environ['JSL_OCR_LICENSE'] = license
+    
+if 'google.colab' in sys.modules:
+  os.environ["JAVA_HOME"] = "/usr/lib/jvm/java-8-openjdk-amd64"
+  os.environ["PATH"] = os.environ["JAVA_HOME"] + "/bin:" + os.environ["PATH"]
+
+# %% [markdown]
+# ## Initialization of spark session
+# Need specify path to `spark-ocr-assembly.jar` or `secret`
+
+# %%
+from pyspark import SparkConf
+from sparkocr import start
+
+spark = start(secret=secret, jar_path = spark_ocr_jar_path, nlp_version="3.0.3")
+
+spark
+
+# %% [markdown]
+# ## Read images and display it
+
+# %%
+from pyspark.ml import PipelineModel
+import pyspark.sql.functions as f
+from sparkocr.transformers import *
+from sparkocr.enums import *
+from sparkocr.utils import display_images
+
+image_df = spark.read.format("binaryFile").load(imagePath)
+
+display_images(BinaryToImage().transform(image_df), "image")
+
+# %% [markdown]
+# ## Define OCR Pipeline
+
+# %%
+binary_to_image = BinaryToImage(imageType=5) 
+#binary_to_image.setImageType(ImageType.TYPE_3BYTE_BGR)
+
+pretrained_model = ("image_signature_detector_gsa0611", "en", "public/ocr/models")
+signature_detector = ImageSignatureDetector()
+signature_detector.pretrained(*pretrained_model)
+signature_detector.setInputCol("image")
+signature_detector.setOutputCol("signature_regions")
+
+draw_regions = ImageDrawRegions()
+draw_regions.setInputCol("image")
+draw_regions.setInputRegionsCol("signature_regions")
+draw_regions.setOutputCol("image_with_regions")
+
+pipeline = PipelineModel(stages=[
+    binary_to_image,
+    signature_detector,
+    #draw_regions
+])
+
+# %% [markdown]
+# ## Run pipeline and show results
+
+# %%
+result =  pipeline.transform(image_df)
+#display_images(result, "image_with_regions")
+
+
+# %%
+result.printSchema()
+#result = result.withColumn("coordinate", f.explode(f.col("signature_regions.coordinates")))
+result.printSchema()
+
+#result = result.select("coordinate")
+result = result.select("signature_regions")
+result.show(truncate=False)
+
+#assert(result.count() > 0)
+
+
+# %%
+
+
+
