@@ -1,4 +1,3 @@
-pyspark==3.0.2
 git+https://github.com/fadi212/transformers.git@layoutlmv2_onnx
 torch==1.10.0 
 torchvision==0.11.1 
