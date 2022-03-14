@@ -17,6 +17,7 @@
     {
         "classification": "spark-defaults",
         "properties": {
+            "spark.jars": "/usr/lib/spark/jars/*.jar",
             "spark.driver.memory": "32G",
             "spark.kryoserializer.buffer.max": "2000M",
             "spark.driver.maxResultSize": "0",
