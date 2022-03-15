@@ -23,7 +23,8 @@
             "spark.driver.maxResultSize": "0",
             "spark.serializer": "org.apache.spark.serializer.KryoSerializer",
             "spark.yarn.stagingDir": "hdfs:///tmp",
-            "spark.yarn.preserve.staging.files": "true"
+            "spark.yarn.preserve.staging.files": "true",
+            "spark.sql.legacy.allowUntypedScalaUDF": "true"
         }
     }
 ]
