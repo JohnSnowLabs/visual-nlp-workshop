@@ -1,0 +1,84 @@
+[
+  {
+    "completions": [
+      {
+        "created_username": "aleksei",
+        "created_ago": "2022-05-02T14:26:39.234130Z",
+        "lead_time": 49,
+        "result": [
+          {
+            "original_width": 2550,
+            "original_height": 3299,
+            "image_rotation": 0,
+            "value": {
+              "x": 26.11764705882353,
+              "y": 40.70930585025765,
+              "width": 8.03921568627451,
+              "height": 1.4549863595028796,
+              "rotation": 0,
+              "x_px": 666,
+              "y_px": 1343,
+              "width_px": 205,
+              "height_px": 48,
+              "rectanglelabels": [
+                "Symptom"
+              ],
+              "text": [
+                "cyanosis,"
+              ]
+            },
+            "tokens": [
+              {
+                "x": 666,
+                "y": 1343,
+                "width": 205,
+                "height": 48,
+                "rotation": 0,
+                "text": "cyanosis,"
+              }
+            ],
+            "id": "4K3z0SXt0F",
+            "from_name": "label",
+            "to_name": "image",
+            "type": "rectanglelabels",
+            "pageNumber": 1
+          },
+          {
+            "original_width": 2550,
+            "original_height": 3299,
+            "image_rotation": 0,
+            "value": {
+              "x": 34.94117647058824,
+              "y": 40.6486814186117,
+              "width": 5.450980392156863,
+              "height": 1.515610791148833,
+              "rotation": 0,
+              "x_px": 891,
+              "y_px": 1341,
+              "width_px": 139,
+              "height_px": 50,
+              "rectanglelabels": [
+                "Symptom"
+              ],
+              "text": [
+                "pallor,"
+              ]
+            },
+            "tokens": [
+              {
+                "x": 891,
+                "y": 1341,
+                "width": 139,
+                "height": 50,
+                "rotation": 0,
+                "text": "pallor,"
+              }
+            ],
+            "id": "b8YuwIoeqT",
+            "from_name": "label",
+            "to_name": "image",
+            "type": "rectanglelabels",
+            "pageNumber": 1
+          }
+     ]}
+]
