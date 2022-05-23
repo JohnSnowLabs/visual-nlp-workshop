@@ -10,7 +10,7 @@ pipeline {
         stage('Copy notebooks to Databricks') {
             steps {
                 script {
-                    databricks  workspace import_dir -o  "./databricks/python" "/Shared/Spark OCR/tests/" --profile mykola
+                    sh('databricks  workspace import_dir -o  "./databricks/python" "/Shared/Spark OCR/tests/"')
                 }
             }
         }
