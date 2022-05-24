@@ -10,6 +10,9 @@ pipeline {
                 filename '.ci/Dockerfile.build'
         }
     }
+    environment {
+            DBTOKEN_CREDS = credentials(DBTOKEN)
+        }
 
     stages {
         stage('Setup') {
@@ -19,11 +22,11 @@ pipeline {
                         sh """#!/bin/bash
                             # Configure Databricks CLI for deployment
                             echo "${DBURL}
-                            $TOKEN" | databricks configure --token
+                            $DBTOKEN_CREDS" | databricks configure --token
 
                             # Configure Databricks Connect for testing
                             echo "${DBURL}
-                            $TOKEN
+                            $DBTOKEN_CREDS
                             ${CLUSTERID}
                             0
                             15001" | databricks-connect configure
