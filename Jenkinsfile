@@ -15,7 +15,7 @@ pipeline {
             steps {
                 script {
                     withCredentials([string(credentialsId: DBTOKEN, variable: 'TOKEN')]) {
-                        sh '''#!/bin/bash
+                        sh(script: '''#!/bin/bash
                             # Configure Databricks CLI for deployment
                             echo "${DBURL}
                             $DBTOKEN_CREDS" | databricks configure --token
@@ -26,7 +26,7 @@ pipeline {
                             ${CLUSTERID}
                             0
                             15001" | databricks-connect configure
-                           '''
+                           ''')
                     }
                 }
             }
