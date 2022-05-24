@@ -19,13 +19,6 @@ pipeline {
                             # Configure Databricks CLI for deployment
                             echo "${DBURL}
                             $DBTOKEN_CREDS" | databricks configure --token
-
-                            # Configure Databricks Connect for testing
-                            echo "${DBURL}
-                            $DBTOKEN_CREDS
-                            ${CLUSTERID}
-                            0
-                            15001" | databricks-connect configure
                            ''')
                     }
                 }
