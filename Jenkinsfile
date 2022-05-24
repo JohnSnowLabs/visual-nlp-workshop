@@ -15,9 +15,10 @@ pipeline {
             steps {
                 script {
                     withCredentials([string(credentialsId: DBTOKEN, variable: 'TOKEN')]) {
-                        sh(script: '''#!/bin/bash
+                        def output = sh(returnStdout: true, script: '''#!/bin/bash
 echo "$DBURL
 $TOKEN" | databricks configure --token''')
+                        echo $output
                     }
                 }
             }
