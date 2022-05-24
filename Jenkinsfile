@@ -11,7 +11,7 @@ pipeline {
         }
     }
     environment {
-            DBTOKEN_CREDS = credentials(DBTOKEN)
+            DBTOKEN_CREDS = credentials("DATABRICKS_TOKEN")
         }
 
     stages {
