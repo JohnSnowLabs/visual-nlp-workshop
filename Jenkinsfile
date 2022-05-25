@@ -10,6 +10,9 @@ pipeline {
                 filename '.ci/Dockerfile.build'
         }
     }
+    environment {
+        DATABRICKS_CONFIG_FILE = ".databricks.cfg"
+    }
     stages {
         stage('Setup') {
             steps {
