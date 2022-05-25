@@ -16,7 +16,7 @@ pipeline {
                 script {
                     withCredentials([string(credentialsId: DBTOKEN, variable: 'TOKEN')]) {
                         sh('echo "${TOKEN}" > secret.txt')
-                        sh('databricks configure --token-file secret.txt --host ${DBURL}')
+                        sh("databricks configure --token-file secret.txt --host ${DBURL}")
                     }
                 }
             }
