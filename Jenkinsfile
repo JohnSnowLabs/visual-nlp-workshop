@@ -1,8 +1,13 @@
 @Library('jenkinslib')_
 
 def DBTOKEN = "DATABRICKS_TOKEN"
-def DBURL = "https://dbc-6ca13d9d-74bb.cloud.databricks.com/"
+def DBURL = "https://dbc-6ca13d9d-74bb.cloud.databricks.com"
 def CLUSTERID = "0428-112519-vaxgi8gx"
+def SCRIPTPATH = "./.ci"
+def NOTEBOOKPATH = "./databricks/python"
+def WORKSPACEPATH = "/Shared/Spark OCR/tests"
+def OUTFILEPATH = "."
+def TESTRESULTPATH = "."
 
 pipeline {
     agent {
@@ -27,8 +32,28 @@ pipeline {
         stage('Copy notebooks to Databricks') {
             steps {
                 script {
-                    sh('databricks  workspace import_dir -o  "./databricks/python" "/Shared/Spark OCR/tests/"')
+                    sh('databricks  workspace import_dir -o  "${NOTEBOOKPATH}" "${WORKSPACEPATH}"')
                 }
+            }
+        }
+        stage('Run Notebook Tests') {
+            withCredentials([string(credentialsId: DBTOKEN, variable: 'TOKEN')]) {
+                sh '''python3 ${SCRIPTPATH}/executenotebook.py --workspace=${DBURL}\
+                                --token=$TOKEN\
+                                --clusterid=${CLUSTERID}\
+                                --localpath=${NOTEBOOKPATH}\
+                                --workspacepath=${WORKSPACEPATH}\
+                                --outfilepath=${OUTFILEPATH}
+                   '''
+                sh '''sed -i -e 's #ENV# ${OUTFILEPATH} g' ${SCRIPTPATH}/evaluatenotebookruns.py
+                          python3 -m pytest -s --junit-xml=${TESTRESULTPATH}/TEST-notebookout.xml ${SCRIPTPATH}/evaluatenotebookruns.py || true
+                   '''
+              }
+        stage('Report Test Results') {
+                sh """find ${OUTFILEPATH} -name '*.json' -exec gzip --verbose {} \\;
+                      touch ${TESTRESULTPATH}/TEST-*.xml
+                   """
+                junit "**/reports/junit/*.xml"
             }
         }
     }
