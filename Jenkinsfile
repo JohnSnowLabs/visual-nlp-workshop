@@ -32,7 +32,7 @@ pipeline {
         stage('Copy notebooks to Databricks') {
             steps {
                 script {
-                    sh("""databricks  workspace import_dir -o  "${NOTEBOOKPATH}" "${WORKSPACEPATH}"""")
+                    sh('''databricks  workspace import_dir -o  '${NOTEBOOKPATH}' '${WORKSPACEPATH}' ''')
                 }
             }
         }
