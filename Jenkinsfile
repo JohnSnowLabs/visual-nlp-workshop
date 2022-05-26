@@ -44,8 +44,8 @@ pipeline {
                                         --token=$TOKEN\
                                         --clusterid=$CLUSTERID\
                                         --localpath=${NOTEBOOKPATH}\
-                                        --workspacepath=${WORKSPACEPATH}\
-                                        --outfilepath=${OUTFILEPATH}
+                                        --workspacepath='${WORKSPACEPATH}'\
+                                        --outfilepath='${OUTFILEPATH}'
                            """
                         sh """sed -i -e 's #ENV# ${OUTFILEPATH} g' ${SCRIPTPATH}/evaluatenotebookruns.py
                                   python3 -m pytest -s --junit-xml=${TESTRESULTPATH}/TEST-notebookout.xml ${SCRIPTPATH}/evaluatenotebookruns.py || true
