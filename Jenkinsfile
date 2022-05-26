@@ -7,7 +7,7 @@ def SCRIPTPATH = "./.ci"
 def NOTEBOOKPATH = "./databricks/python"
 def WORKSPACEPATH = "/Shared/Spark OCR/tests"
 def OUTFILEPATH = "."
-def TESTRESULTPATH = "."
+def TESTRESULTPATH = "./reports/junit"
 
 pipeline {
     agent {
@@ -60,7 +60,7 @@ pipeline {
                     sh """find ${OUTFILEPATH} -name '*.json' -exec gzip --verbose {} \\;
                           touch ${TESTRESULTPATH}/TEST-*.xml
                        """
-                    junit allowEmptyResults: true, testResults:"${TESTRESULTPATH}/TEST-notebookout.xml"
+                    junit "**/reports/junit/*.xml"
                 }
             }
         }
