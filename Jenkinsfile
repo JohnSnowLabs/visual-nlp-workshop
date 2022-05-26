@@ -60,7 +60,7 @@ pipeline {
                     sh """find ${OUTFILEPATH} -name '*.json' -exec gzip --verbose {} \\;
                           touch ${TESTRESULTPATH}/TEST-*.xml
                        """
-                    junit "${TESTRESULTPATH}/TEST-*.xml"
+                    junit allowEmptyResults: true, testResults:"${TESTRESULTPATH}/TEST-notebookout.xml"
                 }
             }
         }
