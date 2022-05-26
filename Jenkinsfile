@@ -40,9 +40,9 @@ pipeline {
             steps {
                 script {
                     withCredentials([string(credentialsId: DBTOKEN, variable: 'TOKEN')]) {
-                        sh '''python3 ${SCRIPTPATH}/executenotebook.py --workspace=${DBURL}\
+                        sh '''python3 $SCRIPTPATH/executenotebook.py --workspace=$DBURL\
                                         --token=$TOKEN\
-                                        --clusterid=${CLUSTERID}\
+                                        --clusterid=$CLUSTERID\
                                         --localpath=${NOTEBOOKPATH}\
                                         --workspacepath=${WORKSPACEPATH}\
                                         --outfilepath=${OUTFILEPATH}
