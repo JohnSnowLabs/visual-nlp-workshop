@@ -8,6 +8,7 @@ def NOTEBOOKPATH = "./databricks/python"
 def WORKSPACEPATH = "/Shared/Spark OCR/tests"
 def OUTFILEPATH = "."
 def TESTRESULTPATH = "./reports/junit"
+def IGNORE = "3. Compare CPU and GPU image processing with Spark OCR.ipynb"
 
 pipeline {
     agent {
@@ -45,7 +46,8 @@ pipeline {
                                         --clusterid=$CLUSTERID\
                                         --localpath=${NOTEBOOKPATH}\
                                         --workspacepath='${WORKSPACEPATH}'\
-                                        --outfilepath='${OUTFILEPATH}'
+                                        --outfilepath='${OUTFILEPATH}'\
+                                        --ignore='${IGNORE}'
                            """
                         sh """sed -i -e 's #ENV# ${OUTFILEPATH} g' ${SCRIPTPATH}/evaluatenotebookruns.py
                               python3 -m pytest -s --junit-xml=${TESTRESULTPATH}/TEST-notebookout.xml ${SCRIPTPATH}/evaluatenotebookruns.py
