@@ -3,6 +3,7 @@ import unittest
 import json
 import glob
 import os
+import logging
 
 class TestJobOutput(unittest.TestCase):
 
@@ -32,12 +33,13 @@ class TestJobOutput(unittest.TestCase):
 
 
         for filename in glob.glob(os.path.join(path, '*.json')):
-            print('Evaluating: ' + filename)
+            logging.info('Evaluating: ' + filename)
             data = json.load(open(filename))
             status = data['state']['result_state']
             statuses.append(status)
 
         self.assertFalse('FAILED' in statuses)
+        self.assertFalse('RUNNING' in statuses)
 
 if __name__ == '__main__':
     unittest.main()

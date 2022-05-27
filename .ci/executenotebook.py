@@ -82,7 +82,7 @@ def main():
         d = json.loads(runjson)
         runid = d['run_id']
 
-        i=0
+        i = 0
         waiting = True
         while waiting:
             time.sleep(10)
@@ -93,9 +93,9 @@ def main():
             j = json.loads(jobjson)
             current_state = j['state']['life_cycle_state']
             runid = j['run_id']
-            if current_state in ['TERMINATED', 'INTERNAL_ERROR', 'SKIPPED'] or i >= 12:
+            if current_state in ['TERMINATED', 'INTERNAL_ERROR', 'SKIPPED'] or i >= 24:
                 break
-            i=i+1
+            i = i + 1
 
         if outfilepath != '':
             file = open(outfilepath + '/' +  str(runid) + '.json', 'w')
