@@ -59,6 +59,7 @@ pipeline {
     }
     post {
         always {
+            sh "find ${OUTFILEPATH} -name '*.json' -exec rm {} +"
             junit allowEmptyResults: true, testResults: "**/reports/junit/*.xml"
         }
     }
