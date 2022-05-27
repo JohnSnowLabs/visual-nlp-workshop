@@ -72,45 +72,45 @@ def main():
                 row = [fullpath, fullworkspacepath, 1]
                 notebooks.append(row)
 
-    # # run each element in list
-    # for notebook in notebooks:
-    #     nameonly = os.path.basename(notebook[0])
-    #     workspacepath = notebook[1]
-    #
-    #     name, file_extension = os.path.splitext(nameonly)
-    #
-    #     # workpath removes extension
-    #     fullworkspacepath = workspacepath + '/' + name
-    #
-    #     print('Running job for:' + fullworkspacepath)
-    #     values = {'run_name': name, 'existing_cluster_id': clusterid, 'timeout_seconds': 3600, 'notebook_task': {'notebook_path': fullworkspacepath}}
-    #
-    #     resp = requests.post(workspace + '/api/2.0/jobs/runs/submit',
-    #                          data=json.dumps(values), auth=("token", token))
-    #     runjson = resp.text
-    #     print("runjson:" + runjson)
-    #     d = json.loads(runjson)
-    #     runid = d['run_id']
-    #
-    #     i = 0
-    #     waiting = True
-    #     while waiting:
-    #         time.sleep(20)
-    #         jobresp = requests.get(workspace + '/api/2.0/jobs/runs/get?run_id='+str(runid),
-    #                                data=json.dumps(values), auth=("token", token))
-    #         jobjson = jobresp.text
-    #         print("jobjson:" + jobjson)
-    #         j = json.loads(jobjson)
-    #         current_state = j['state']['life_cycle_state']
-    #         runid = j['run_id']
-    #         if current_state in ['TERMINATED', 'INTERNAL_ERROR', 'SKIPPED'] or i >= 24:
-    #             break
-    #         i = i + 1
-    #
-    #     if outfilepath != '':
-    #         file = open(outfilepath + '/' +  str(runid) + '.json', 'w')
-    #         file.write(json.dumps(j))
-    #         file.close()
+    # run each element in list
+    for notebook in notebooks:
+        nameonly = os.path.basename(notebook[0])
+        workspacepath = notebook[1]
+
+        name, file_extension = os.path.splitext(nameonly)
+
+        # workpath removes extension
+        fullworkspacepath = workspacepath + '/' + name
+
+        print('Running job for:' + fullworkspacepath)
+        values = {'run_name': name, 'existing_cluster_id': clusterid, 'timeout_seconds': 3600, 'notebook_task': {'notebook_path': fullworkspacepath}}
+
+        resp = requests.post(workspace + '/api/2.0/jobs/runs/submit',
+                             data=json.dumps(values), auth=("token", token))
+        runjson = resp.text
+        print("runjson:" + runjson)
+        d = json.loads(runjson)
+        runid = d['run_id']
+
+        i = 0
+        waiting = True
+        while waiting:
+            time.sleep(20)
+            jobresp = requests.get(workspace + '/api/2.0/jobs/runs/get?run_id='+str(runid),
+                                   data=json.dumps(values), auth=("token", token))
+            jobjson = jobresp.text
+            print("jobjson:" + jobjson)
+            j = json.loads(jobjson)
+            current_state = j['state']['life_cycle_state']
+            runid = j['run_id']
+            if current_state in ['TERMINATED', 'INTERNAL_ERROR', 'SKIPPED'] or i >= 24:
+                break
+            i = i + 1
+
+        if outfilepath != '':
+            file = open(outfilepath + '/' +  str(runid) + '.json', 'w')
+            file.write(json.dumps(j))
+            file.close()
 
 if __name__ == '__main__':
     main()
