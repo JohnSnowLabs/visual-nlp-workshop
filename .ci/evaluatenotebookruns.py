@@ -7,7 +7,7 @@ import logging
 
 class TestJobOutput(unittest.TestCase):
 
-    test_output_path = './tests/res'
+    test_output_path = '#ENV#'
 
     # def test_performance(self):
     #     path = self.test_output_path
@@ -39,7 +39,6 @@ class TestJobOutput(unittest.TestCase):
             statuses.append(status)
 
         self.assertFalse('FAILED' in statuses)
-        self.assertFalse('RUNNING' in statuses)
 
 if __name__ == '__main__':
     unittest.main()
