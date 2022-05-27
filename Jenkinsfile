@@ -57,7 +57,7 @@ pipeline {
     }
     post {
         always {
-            sh "touch ${TESTRESULTPATH}/TEST-*.xml"
             junit allowEmptyResults: true, testResults: "**/reports/junit/*.xml"
         }
+    }
 }
