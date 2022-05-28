@@ -37,6 +37,22 @@ pipeline {
                 }
             }
         }
+        stage('Start cluster') {
+            steps {
+                script {
+                    sh("databricks clusters start --cluster-id ${CLUSTERID}")
+                    timeout(5) {
+                        waitUntil {
+                           script {
+                             def respString = sh script: "databricks clusters get --cluster-id ${CLUSTERID}", returnStdout: true
+                             def respJson = readJSON text: respString
+                             return (respJson['state'] == 'RUNNING');
+                           }
+                        }
+                    }
+                }
+            }
+        }
         stage('Run Notebook Tests') {
             steps {
                 script {
