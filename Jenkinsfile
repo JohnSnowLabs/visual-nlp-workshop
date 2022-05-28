@@ -40,7 +40,7 @@ pipeline {
         stage('Start cluster') {
             steps {
                 script {
-                    sh("databricks clusters start --cluster-id ${CLUSTERID}")
+                    sh("databricks clusters start --cluster-id ${CLUSTERID} || True")
                     timeout(5) {
                         waitUntil {
                            script {
