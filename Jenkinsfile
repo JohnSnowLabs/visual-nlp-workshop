@@ -14,9 +14,6 @@ def SPARK_NLP_VERSION = "3.4.2"
 def SPARK_NLP_HEALTHCARE_VERSION = "3.4.2"
 def SPARK_OCR_VERSION = "3.12.0"
 
-def PYPI_REPO_HEALTHCARE_SECRET = sparknlp_helpers.spark_nlp_healthcare_secret(SPARK_NLP_HEALTHCARE_VERSION)
-def PYPI_REPO_OCR_SECRET = sparknlp_helpers.spark_ocr_secret(SPARK_OCR_VERSION)
-
 pipeline {
     agent {
         dockerfile {
@@ -64,6 +61,9 @@ pipeline {
         stage('Install deps to Cluster') {
             steps {
                 script {
+                    def PYPI_REPO_HEALTHCARE_SECRET = sparknlp_helpers.spark_nlp_healthcare_secret(SPARK_NLP_HEALTHCARE_VERSION)
+                    def PYPI_REPO_OCR_SECRET = sparknlp_helpers.spark_ocr_secret(SPARK_OCR_VERSION)
+
                     sh("databricks libraries uninstall --cluster-id ${CLUSTERID} --all")
                     sh("databricks libraries install --cluster-id ${CLUSTERID} --jar  s3://pypi.johnsnowlabs.com/${PYPI_REPO_OCR_SECRET}/jars/spark-ocr-assembly-${SPARK_OCR_VERSION}-spark30.jar")
                     sh("databricks libraries install --cluster-id ${CLUSTERID} --jar  s3://pypi.johnsnowlabs.com/${SPARK_NLP_HEALTHCARE_VERSION}/spark-nlp-jsl-${SPARK_NLP_HEALTHCARE_VERSION}.jar")
