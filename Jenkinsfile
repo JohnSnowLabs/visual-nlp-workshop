@@ -72,9 +72,9 @@ pipeline {
                     timeout(10) {
                         waitUntil {
                            script {
-                             def respString = sh script: "databricks clusters get --cluster-id ${CLUSTERID}", returnStdout: true
-                             def respJson = readJSON text: respString
-                             return (respJson['state'] == 'RUNNING');
+                             def respStringWait = sh script: "databricks clusters get --cluster-id ${CLUSTERID}", returnStdout: true
+                             def respJsonWait = readJSON text: respStringWait
+                             return (respJsonWait['state'] == 'RUNNING');
                            }
                         }
                     }
