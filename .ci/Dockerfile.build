@@ -3,6 +3,6 @@ FROM python:3.7-alpine
 
 ENV LC_ALL=C
 
-RUN apt-get -y update && apt-get -y install git
+RUN apk add --no-cache git
 
 RUN pip install databricks-cli requests pytest gh
