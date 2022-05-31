@@ -62,7 +62,13 @@ pipeline {
         stage('Start cluster') {
             steps {
                 script {
-                    sh("databricks clusters restart --cluster-id ${CLUSTERID} || true")
+                    def respString = sh script: "databricks clusters get --cluster-id ${CLUSTERID}", returnStdout: true
+                    def respJson = readJSON text: respString
+                    if (respJson['state'] == 'RUNNING') {
+                        sh("databricks clusters restart --cluster-id ${CLUSTERID}")
+                    } else {
+                        sh("databricks clusters start --cluster-id ${CLUSTERID}")
+                    }
                     timeout(10) {
                         waitUntil {
                            script {
