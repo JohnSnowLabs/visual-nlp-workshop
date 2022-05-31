@@ -42,22 +42,6 @@ pipeline {
                 }
             }
         }
-        stage('Start cluster') {
-            steps {
-                script {
-                    sh("databricks clusters start --cluster-id ${CLUSTERID} || true")
-                    timeout(10) {
-                        waitUntil {
-                           script {
-                             def respString = sh script: "databricks clusters get --cluster-id ${CLUSTERID}", returnStdout: true
-                             def respJson = readJSON text: respString
-                             return (respJson['state'] == 'RUNNING');
-                           }
-                        }
-                    }
-                }
-            }
-        }
         stage('Install deps to Cluster') {
             steps {
                 script {
@@ -71,6 +55,22 @@ pipeline {
                     sh("databricks libraries install --cluster-id ${CLUSTERID} --whl s3://pypi.johnsnowlabs.com/${PYPI_REPO_OCR_SECRET}/spark-ocr/spark_ocr-${SPARK_OCR_VERSION}+spark30-py3-none-any.whl")
                     sh("databricks libraries install --cluster-id ${CLUSTERID} --whl s3://pypi.johnsnowlabs.com/${PYPI_REPO_HEALTHCARE_SECRET}/spark-nlp-jsl/spark_nlp_jsl-${SPARK_NLP_VERSION}-py3-none-any.whl")
                     sh("databricks libraries install --cluster-id ${CLUSTERID} --pypi-package spark-nlp==${SPARK_NLP_VERSION}")
+                }
+            }
+        }
+        stage('Start cluster') {
+            steps {
+                script {
+                    sh("databricks clusters restart --cluster-id ${CLUSTERID} || true")
+                    timeout(10) {
+                        waitUntil {
+                           script {
+                             def respString = sh script: "databricks clusters get --cluster-id ${CLUSTERID}", returnStdout: true
+                             def respJson = readJSON text: respString
+                             return (respJson['state'] == 'RUNNING');
+                           }
+                        }
+                    }
                 }
             }
         }

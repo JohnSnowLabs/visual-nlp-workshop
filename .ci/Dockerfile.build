@@ -3,4 +3,4 @@ FROM python:3.7-alpine
 
 ENV LC_ALL=C
 
-RUN pip install databricks-cli requests pytest
+RUN pip install databricks-cli requests pytest gh
