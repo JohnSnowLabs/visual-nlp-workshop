@@ -51,7 +51,7 @@ pipeline {
                 script {
                     sh("databricks libraries uninstall --cluster-id ${CLUSTERID} --all")
                     sh("databricks libraries install --cluster-id ${CLUSTERID} --jar  s3://pypi.johnsnowlabs.com/${PYPI_REPO_OCR_SECRET}/jars/spark-ocr-assembly-${SPARK_OCR_VERSION}-spark30.jar")
-                    sh("databricks libraries install --cluster-id ${CLUSTERID} --jar  s3://pypi.johnsnowlabs.com/${SPARK_NLP_HEALTHCARE_VERSION}/spark-nlp-jsl-${SPARK_NLP_HEALTHCARE_VERSION}.jar")
+                    sh("databricks libraries install --cluster-id ${CLUSTERID} --jar  s3://pypi.johnsnowlabs.com/${PYPI_REPO_HEALTHCARE_SECRET}/spark-nlp-jsl-${SPARK_NLP_HEALTHCARE_VERSION}.jar")
                     sh("databricks libraries install --cluster-id ${CLUSTERID} --maven-coordinates com.johnsnowlabs.nlp:spark-nlp_2.12:${SPARK_NLP_VERSION}")
                     sh("databricks libraries install --cluster-id ${CLUSTERID} --whl s3://pypi.johnsnowlabs.com/${PYPI_REPO_OCR_SECRET}/spark-ocr/spark_ocr-${SPARK_OCR_VERSION}+spark30-py3-none-any.whl")
                     sh("databricks libraries install --cluster-id ${CLUSTERID} --whl s3://pypi.johnsnowlabs.com/${PYPI_REPO_HEALTHCARE_SECRET}/spark-nlp-jsl/spark_nlp_jsl-${SPARK_NLP_VERSION}-py3-none-any.whl")
