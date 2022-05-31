@@ -25,6 +25,7 @@ pipeline {
     }
     environment {
         DATABRICKS_CONFIG_FILE = ".databricks.cfg"
+        GITHUB_CREDS = credentials('55e7e818-4ccf-4d23-b54c-fd97c21081ba')
     }
     stages {
         stage('Setup') {
