@@ -36,7 +36,7 @@ pipeline {
     parameters {
         choice(
             name:'databricks_runtime',
-            choices:'6.4.x-esr-scala2.11\n7.3.x-cpu-ml-scala2.12\n7.3.x-hls-scala2.12\n10.2.x-gpu-ml-scala2.12\n10.5.x-aarch64-scala2.12\n7.3.x-gpu-ml-scala2.12\n10.2.x-aarch64-photon-scala2.12\n10.4.x-cpu-ml-scala2.12\n9.1.x-aarch64-scala2.12\n10.1.x-photon-scala2.12\n9.1.x-photon-scala2.12\n10.4.x-scala2.12\n10.2.x-photon-scala2.12\n10.4.x-photon-scala2.12\n11.0.x-photon-scala2.12\n10.3.x-photon-scala2.12\n10.5.x-photon-scala2.12\n10.1.x-gpu-ml-scala2.12\n9.1.x-scala2.12\n11.0.x-scala2.12\n10.3.x-cpu-ml-scala2.12\n10.3.x-aarch64-photon-scala2.12\n11.0.x-gpu-ml-scala2.12\n10.5.x-aarch64-photon-scala2.12\n10.1.x-cpu-ml-scala2.12\n10.4.x-aarch64-photon-scala2.12\n10.5.x-gpu-ml-scala2.12\napache-spark-2.4.x-esr-scala2.11\n10.1.x-scala2.12\n9.1.x-cpu-ml-scala2.12\n11.0.x-cpu-ml-scala2.12\n10.2.x-aarch64-scala2.12\n10.2.x-scala2.12\n10.2.x-cpu-ml-scala2.12\n11.0.x-aarch64-photon-scala2.12\n10.4.x-aarch64-scala2.12\n11.0.x-aarch64-scala2.12\n10.1.x-aarch64-scala2.12\n9.1.x-gpu-ml-scala2.12\napache-spark-2.4.x-scala2.11\n10.5.x-scala2.12\n7.3.x-scala2.12\n10.3.x-scala2.12\n10.3.x-aarch64-scala2.12\n10.5.x-cpu-ml-scala2.12\n10.3.x-gpu-ml-scala2.12\n10.4.x-gpu-ml-scala2.12',
+            choices:'7.3.x-scala2.12\n6.4.x-esr-scala2.11\n7.3.x-cpu-ml-scala2.12\n7.3.x-hls-scala2.12\n10.2.x-gpu-ml-scala2.12\n10.5.x-aarch64-scala2.12\n7.3.x-gpu-ml-scala2.12\n10.2.x-aarch64-photon-scala2.12\n10.4.x-cpu-ml-scala2.12\n9.1.x-aarch64-scala2.12\n10.1.x-photon-scala2.12\n9.1.x-photon-scala2.12\n10.4.x-scala2.12\n10.2.x-photon-scala2.12\n10.4.x-photon-scala2.12\n11.0.x-photon-scala2.12\n10.3.x-photon-scala2.12\n10.5.x-photon-scala2.12\n10.1.x-gpu-ml-scala2.12\n9.1.x-scala2.12\n11.0.x-scala2.12\n10.3.x-cpu-ml-scala2.12\n10.3.x-aarch64-photon-scala2.12\n11.0.x-gpu-ml-scala2.12\n10.5.x-aarch64-photon-scala2.12\n10.1.x-cpu-ml-scala2.12\n10.4.x-aarch64-photon-scala2.12\n10.5.x-gpu-ml-scala2.12\napache-spark-2.4.x-esr-scala2.11\n10.1.x-scala2.12\n9.1.x-cpu-ml-scala2.12\n11.0.x-cpu-ml-scala2.12\n10.2.x-aarch64-scala2.12\n10.2.x-scala2.12\n10.2.x-cpu-ml-scala2.12\n11.0.x-aarch64-photon-scala2.12\n10.4.x-aarch64-scala2.12\n11.0.x-aarch64-scala2.12\n10.1.x-aarch64-scala2.12\n9.1.x-gpu-ml-scala2.12\napache-spark-2.4.x-scala2.11\n10.5.x-scala2.12\n10.3.x-scala2.12\n10.3.x-aarch64-scala2.12\n10.5.x-cpu-ml-scala2.12\n10.3.x-gpu-ml-scala2.12\n10.4.x-gpu-ml-scala2.12',
             description:'define spark version'
         )
     }
@@ -102,7 +102,7 @@ pipeline {
         stage('Install deps to Cluster') {
             steps {
                 script {
-                    sh("databricks libraries uninstall --cluster-id ${cluster_id} --all")
+                    //sh("databricks libraries uninstall --cluster-id ${cluster_id} --all")
                     sh("databricks libraries install --cluster-id ${cluster_id} --jar  s3://pypi.johnsnowlabs.com/${PYPI_REPO_OCR_SECRET}/jars/spark-ocr-assembly-${SPARK_OCR_VERSION}-spark30.jar")
                     sh("databricks libraries install --cluster-id ${cluster_id} --jar  s3://pypi.johnsnowlabs.com/${PYPI_REPO_HEALTHCARE_SECRET}/spark-nlp-jsl-${SPARK_NLP_HEALTHCARE_VERSION}.jar")
                     sh("databricks libraries install --cluster-id ${cluster_id} --maven-coordinates com.johnsnowlabs.nlp:spark-nlp_2.12:${SPARK_NLP_VERSION}")
@@ -112,28 +112,28 @@ pipeline {
                 }
             }
         }
-        stage('Start cluster') {
-            steps {
-                script {
-                    def respString = sh script: "databricks clusters get --cluster-id ${cluster_id}", returnStdout: true
-                    def respJson = readJSON text: respString
-                    if (respJson['state'] == 'RUNNING') {
-                        sh("databricks clusters restart --cluster-id ${cluster_id}")
-                    } else {
-                        sh("databricks clusters start --cluster-id ${cluster_id}")
-                    }
-                    timeout(10) {
-                        waitUntil {
-                           script {
-                             def respStringWait = sh script: "databricks clusters get --cluster-id ${cluster_id}", returnStdout: true
-                             def respJsonWait = readJSON text: respStringWait
-                             return (respJsonWait['state'] == 'RUNNING');
-                           }
-                        }
-                    }
-                }
-            }
-        }
+//         stage('Start cluster') {
+//             steps {
+//                 script {
+//                     def respString = sh script: "databricks clusters get --cluster-id ${cluster_id}", returnStdout: true
+//                     def respJson = readJSON text: respString
+//                     if (respJson['state'] == 'RUNNING') {
+//                         sh("databricks clusters restart --cluster-id ${cluster_id}")
+//                     } else {
+//                         sh("databricks clusters start --cluster-id ${cluster_id}")
+//                     }
+//                     timeout(10) {
+//                         waitUntil {
+//                            script {
+//                              def respStringWait = sh script: "databricks clusters get --cluster-id ${cluster_id}", returnStdout: true
+//                              def respJsonWait = readJSON text: respStringWait
+//                              return (respJsonWait['state'] == 'RUNNING');
+//                            }
+//                         }
+//                     }
+//                 }
+//             }
+//         }
         stage('Run Notebook Tests') {
             steps {
                 script {
