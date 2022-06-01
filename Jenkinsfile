@@ -18,6 +18,12 @@ def PYPI_REPO_HEALTHCARE_SECRET = sparknlp_helpers.spark_nlp_healthcare_secret(S
 def PYPI_REPO_OCR_SECRET = sparknlp_helpers.spark_ocr_secret(SPARK_OCR_VERSION)
 
 
+def runtimeRespString = sh script: "databricks clusters spark-versions", returnStdout: true
+def runtimeRespJson = readJSON text: runtimeRespString
+
+def runtimes = runtimeRespJson['versions'].collect { it['key'] }.join('\n')
+
+
 pipeline {
     agent {
         dockerfile {
@@ -27,6 +33,13 @@ pipeline {
     environment {
         DATABRICKS_CONFIG_FILE = ".databricks.cfg"
         GITHUB_CREDS = credentials('55e7e818-4ccf-4d23-b54c-fd97c21081ba')
+    }
+    parameters {
+        choice(
+            name:'databricks_runtime',
+            choices:runtimes,
+            description:'define spark version'
+        )
     }
     stages {
         stage('Setup') {
