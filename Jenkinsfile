@@ -95,6 +95,7 @@ pipeline {
                         def clusterRespString = sh(returnStdout: true, script: "databricks clusters create --json-file cluster.json")
                         def clusterRespJson = readJSON text: clusterRespString
                         cluster_id = clusterRespJson['cluster_id']
+                        sh "rm cluster.json"
                     }
                 }
             }
@@ -155,7 +156,6 @@ pipeline {
                                         --outfilepath='${OUTFILEPATH}'\
                                         --ignore='${IGNORE}'
                            """
-                        sh "ls *.json"
                         sh """sed -i -e 's #ENV# ${OUTFILEPATH} g' ${SCRIPTPATH}/evaluatenotebookruns.py
                               python3 -m pytest -s --junit-xml=${TESTRESULTPATH}/TEST-notebookout.xml ${SCRIPTPATH}/evaluatenotebookruns.py
                            """
