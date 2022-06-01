@@ -17,15 +17,6 @@ def SPARK_OCR_VERSION = "3.12.0"
 def PYPI_REPO_HEALTHCARE_SECRET = sparknlp_helpers.spark_nlp_healthcare_secret(SPARK_NLP_HEALTHCARE_VERSION)
 def PYPI_REPO_OCR_SECRET = sparknlp_helpers.spark_ocr_secret(SPARK_OCR_VERSION)
 
-dockerNode {
-    withCredentials([string(credentialsId: DBTOKEN, variable: 'TOKEN')]) {
-        sh('echo "${TOKEN}" > secret.txt')
-        sh("databricks configure --token-file secret.txt --host ${DBURL}")
-    }
-    def runtimeRespString = sh script: "databricks clusters spark-versions", returnStdout: true
-    def runtimeRespJson = readJSON text: runtimeRespString
-    def runtimes = runtimeRespJson['versions'].collect { it['key'] }.join('\n')
-}
 
 pipeline {
     agent {
@@ -40,7 +31,7 @@ pipeline {
     parameters {
         choice(
             name:'databricks_runtime',
-            choices:runtimes,
+            choices:'6.4.x-esr-scala2.11\n7.3.x-cpu-ml-scala2.12\n7.3.x-hls-scala2.12\n10.2.x-gpu-ml-scala2.12\n10.5.x-aarch64-scala2.12\n7.3.x-gpu-ml-scala2.12\n10.2.x-aarch64-photon-scala2.12\n10.4.x-cpu-ml-scala2.12\n9.1.x-aarch64-scala2.12\n10.1.x-photon-scala2.12\n9.1.x-photon-scala2.12\n10.4.x-scala2.12\n10.2.x-photon-scala2.12\n10.4.x-photon-scala2.12\n11.0.x-photon-scala2.12\n10.3.x-photon-scala2.12\n10.5.x-photon-scala2.12\n10.1.x-gpu-ml-scala2.12\n9.1.x-scala2.12\n11.0.x-scala2.12\n10.3.x-cpu-ml-scala2.12\n10.3.x-aarch64-photon-scala2.12\n11.0.x-gpu-ml-scala2.12\n10.5.x-aarch64-photon-scala2.12\n10.1.x-cpu-ml-scala2.12\n10.4.x-aarch64-photon-scala2.12\n10.5.x-gpu-ml-scala2.12\napache-spark-2.4.x-esr-scala2.11\n10.1.x-scala2.12\n9.1.x-cpu-ml-scala2.12\n11.0.x-cpu-ml-scala2.12\n10.2.x-aarch64-scala2.12\n10.2.x-scala2.12\n10.2.x-cpu-ml-scala2.12\n11.0.x-aarch64-photon-scala2.12\n10.4.x-aarch64-scala2.12\n11.0.x-aarch64-scala2.12\n10.1.x-aarch64-scala2.12\n9.1.x-gpu-ml-scala2.12\napache-spark-2.4.x-scala2.11\n10.5.x-scala2.12\n7.3.x-scala2.12\n10.3.x-scala2.12\n10.3.x-aarch64-scala2.12\n10.5.x-cpu-ml-scala2.12\n10.3.x-gpu-ml-scala2.12\n10.4.x-gpu-ml-scala2.12',
             description:'define spark version'
         )
     }
