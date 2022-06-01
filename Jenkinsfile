@@ -32,7 +32,7 @@ pipeline {
         choice(
             name:'databricks_runtime',
             choices:'6.4.x-esr-scala2.11\n7.3.x-cpu-ml-scala2.12\n7.3.x-hls-scala2.12\n10.2.x-gpu-ml-scala2.12\n10.5.x-aarch64-scala2.12\n7.3.x-gpu-ml-scala2.12\n10.2.x-aarch64-photon-scala2.12\n10.4.x-cpu-ml-scala2.12\n9.1.x-aarch64-scala2.12\n10.1.x-photon-scala2.12\n9.1.x-photon-scala2.12\n10.4.x-scala2.12\n10.2.x-photon-scala2.12\n10.4.x-photon-scala2.12\n11.0.x-photon-scala2.12\n10.3.x-photon-scala2.12\n10.5.x-photon-scala2.12\n10.1.x-gpu-ml-scala2.12\n9.1.x-scala2.12\n11.0.x-scala2.12\n10.3.x-cpu-ml-scala2.12\n10.3.x-aarch64-photon-scala2.12\n11.0.x-gpu-ml-scala2.12\n10.5.x-aarch64-photon-scala2.12\n10.1.x-cpu-ml-scala2.12\n10.4.x-aarch64-photon-scala2.12\n10.5.x-gpu-ml-scala2.12\napache-spark-2.4.x-esr-scala2.11\n10.1.x-scala2.12\n9.1.x-cpu-ml-scala2.12\n11.0.x-cpu-ml-scala2.12\n10.2.x-aarch64-scala2.12\n10.2.x-scala2.12\n10.2.x-cpu-ml-scala2.12\n11.0.x-aarch64-photon-scala2.12\n10.4.x-aarch64-scala2.12\n11.0.x-aarch64-scala2.12\n10.1.x-aarch64-scala2.12\n9.1.x-gpu-ml-scala2.12\napache-spark-2.4.x-scala2.11\n10.5.x-scala2.12\n7.3.x-scala2.12\n10.3.x-scala2.12\n10.3.x-aarch64-scala2.12\n10.5.x-cpu-ml-scala2.12\n10.3.x-gpu-ml-scala2.12\n10.4.x-gpu-ml-scala2.12',
-            description:'define spark version'
+            description:'define spark version',
             defaultValue: '7.3.x-scala2.12'
         )
     }
@@ -64,27 +64,27 @@ pipeline {
                         secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
                         def jsonCluster = '''
                         {
-                              "num_workers": 1,
-                              "cluster_name": "Spark Ocr Notebook Test",
-                              "spark_version": "${databricks_runtime}",
-                              "spark_conf": {
-                                  "spark.sql.legacy.allowUntypedScalaUDF": "true"
-                              },
-                              "aws_attributes": {
-                                  "first_on_demand": 1,
-                                  "availability": "SPOT_WITH_FALLBACK",
-                                  "zone_id": "us-west-2a",
-                                  "spot_bid_price_percent": 100,
-                                  "ebs_volume_count": 0
-                              },
-                              "node_type_id": "i3.xlarge",
-                              "driver_node_type_id": "i3.xlarge",
-                              "spark_env_vars": {
-                                  "JSL_OCR_LICENSE": "${SPARK_OCR_LICENSE}",
-                                  "AWS_ACCESS_KEY_ID": "${AWS_ACCESS_KEY_ID}",
-                                  "AWS_SECRET_ACCESS_KEY": "${AWS_SECRET_ACCESS_KEY}"
-                              },
-                              "autotermination_minutes": 20,
+                            "num_workers": 1,
+                            "cluster_name": "Spark Ocr Notebook Test",
+                            "spark_version": "${databricks_runtime}",
+                            "spark_conf": {
+                              "spark.sql.legacy.allowUntypedScalaUDF": "true"
+                            },
+                            "aws_attributes": {
+                              "first_on_demand": 1,
+                              "availability": "SPOT_WITH_FALLBACK",
+                              "zone_id": "us-west-2a",
+                              "spot_bid_price_percent": 100,
+                              "ebs_volume_count": 0
+                            },
+                            "node_type_id": "i3.xlarge",
+                            "driver_node_type_id": "i3.xlarge",
+                            "spark_env_vars": {
+                              "JSL_OCR_LICENSE": "${SPARK_OCR_LICENSE}",
+                              "AWS_ACCESS_KEY_ID": "${AWS_ACCESS_KEY_ID}",
+                              "AWS_SECRET_ACCESS_KEY": "${AWS_SECRET_ACCESS_KEY}"
+                            },
+                            "autotermination_minutes": 20,
                         }
                         '''
                         def clusterRespString = sh(returnStdout: true, script: "databricks clusters create --json ${jsonCluster}")
