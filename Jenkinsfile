@@ -90,7 +90,7 @@ pipeline {
                             "autotermination_minutes": 20,
                         }
                         """
-                        sh('echo "${jsonCluster}" > cluster.json')
+                        writeFile file: 'cluster.json', text: jsonCluster
                         def clusterRespString = sh(returnStdout: true, script: "databricks clusters create --json-file cluster.json")
                         def clusterRespJson = readJSON text: clusterRespString
                         def CLUSTERID = clusterRespJson['cluster_id']
