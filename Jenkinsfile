@@ -58,7 +58,7 @@ pipeline {
         stage('Create Cluster') {
             steps {
                 script {
-                    withCredentials([string(credentialsId:'TEST_SPARK_OCR_LICENSE',variable:'SPARK_OCR_LICENSE'),[
+                    withCredentials([string(credentialsId:'TEST_SPARK_NLP_LICENSE',variable:'SPARK_OCR_LICENSE'),[
                         $class: 'AmazonWebServicesCredentialsBinding',
                         credentialsId: 'a4362e3b-808e-45e0-b7d2-1c62b0572df4',
                         accessKeyVariable: 'AWS_ACCESS_KEY_ID',
