@@ -1,5 +1,7 @@
 @Library('jenkinslib')_
 
+databricks_runtime = ""
+
 def DBTOKEN = "DATABRICKS_TOKEN"
 def DBURL = "https://dbc-6ca13d9d-74bb.cloud.databricks.com"
 //def CLUSTERID = "0428-112519-vaxgi8gx"
@@ -17,7 +19,7 @@ def SPARK_OCR_VERSION = "3.12.0"
 def PYPI_REPO_HEALTHCARE_SECRET = sparknlp_helpers.spark_nlp_healthcare_secret(SPARK_NLP_HEALTHCARE_VERSION)
 def PYPI_REPO_OCR_SECRET = sparknlp_helpers.spark_ocr_secret(SPARK_OCR_VERSION)
 
-def databricks_runtime = params.databricks_runtime == null ? '7.3.x-scala2.12' : params.databricks_runtime
+databricks_runtime = params.databricks_runtime == null ? '7.3.x-scala2.12' : params.databricks_runtime
 
 
 pipeline {
@@ -63,7 +65,7 @@ pipeline {
                         credentialsId: 'a4362e3b-808e-45e0-b7d2-1c62b0572df4',
                         accessKeyVariable: 'AWS_ACCESS_KEY_ID',
                         secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
-                        def jsonCluster = '''
+                        def jsonCluster = """
                         {
                             "num_workers": 1,
                             "cluster_name": "Spark Ocr Notebook Test",
@@ -87,7 +89,7 @@ pipeline {
                             },
                             "autotermination_minutes": 20,
                         }
-                        '''
+                        """
                         echo "${jsonCluster}"
                         def clusterRespString = sh(returnStdout: true, script: "databricks clusters create --json ${jsonCluster}")
                         def clusterRespJson = readJSON text: clusterRespString
