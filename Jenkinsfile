@@ -17,7 +17,11 @@ def SPARK_OCR_VERSION = "3.12.0"
 def PYPI_REPO_HEALTHCARE_SECRET = sparknlp_helpers.spark_nlp_healthcare_secret(SPARK_NLP_HEALTHCARE_VERSION)
 def PYPI_REPO_OCR_SECRET = sparknlp_helpers.spark_ocr_secret(SPARK_OCR_VERSION)
 
-node {
+dockerNode {
+    withCredentials([string(credentialsId: DBTOKEN, variable: 'TOKEN')]) {
+        sh('echo "${TOKEN}" > secret.txt')
+        sh("databricks configure --token-file secret.txt --host ${DBURL}")
+    }
     def runtimeRespString = sh script: "databricks clusters spark-versions", returnStdout: true
     def runtimeRespJson = readJSON text: runtimeRespString
     def runtimes = runtimeRespJson['versions'].collect { it['key'] }.join('\n')
