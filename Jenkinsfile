@@ -149,15 +149,17 @@ pipeline {
                     withCredentials([string(credentialsId: DBTOKEN, variable: 'TOKEN')]) {
                         sh """python3 $SCRIPTPATH/executenotebook.py --workspace=$DBURL\
                                         --token=$TOKEN\
-                                        --clusterid=$cluster_id\
+                                        --clusterid=${cluster_id}\
                                         --localpath=${NOTEBOOKPATH}\
                                         --workspacepath='${WORKSPACEPATH}'\
                                         --outfilepath='${OUTFILEPATH}'\
                                         --ignore='${IGNORE}'
                            """
+                        sh "ls *.json"
                         sh """sed -i -e 's #ENV# ${OUTFILEPATH} g' ${SCRIPTPATH}/evaluatenotebookruns.py
                               python3 -m pytest -s --junit-xml=${TESTRESULTPATH}/TEST-notebookout.xml ${SCRIPTPATH}/evaluatenotebookruns.py
                            """
+
                     }
                 }
             }

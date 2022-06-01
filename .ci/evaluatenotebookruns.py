@@ -34,7 +34,9 @@ class TestJobOutput(unittest.TestCase):
 
         for filename in glob.glob(os.path.join(path, '*.json')):
             logging.info('Evaluating: ' + filename)
+            print('Evaluating: ' + filename)
             data = json.load(open(filename))
+            print(data)
             if data['state']['life_cycle_state'] == "RUNNING":
                 statuses.append('NOT_COMPLETED')
             else:
