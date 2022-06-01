@@ -109,6 +109,15 @@ pipeline {
                     sh("databricks libraries install --cluster-id ${cluster_id} --whl s3://pypi.johnsnowlabs.com/${PYPI_REPO_OCR_SECRET}/spark-ocr/spark_ocr-${SPARK_OCR_VERSION}+spark30-py3-none-any.whl")
                     sh("databricks libraries install --cluster-id ${cluster_id} --whl s3://pypi.johnsnowlabs.com/${PYPI_REPO_HEALTHCARE_SECRET}/spark-nlp-jsl/spark_nlp_jsl-${SPARK_NLP_VERSION}-py3-none-any.whl")
                     sh("databricks libraries install --cluster-id ${cluster_id} --pypi-package spark-nlp==${SPARK_NLP_VERSION}")
+                    timeout(10) {
+                        waitUntil {
+                           script {
+                             def respStringWaitLib = sh script: "databricks libraries cluster-status --cluster-id ${cluster_id}", returnStdout: true
+                             def respJsonWaitLib = readJSON text: respStringWaitLib
+                             return (respJsonWaitLib['library_statuses'].every{ it['status'] == 'INSTALLED'} );
+                           }
+                        }
+                    }
                 }
             }
         }
