@@ -90,7 +90,6 @@ pipeline {
                         def clusterRespString = sh(returnStdout: true, script: "databricks clusters create --json ${jsonCluster}")
                         def clusterRespJson = readJSON text: clusterRespString
                         def CLUSTERID = clusterRespJson['cluster_id']
-                        }
                     }
                 }
             }
