@@ -87,7 +87,7 @@ pipeline {
                               "AWS_ACCESS_KEY_ID": "${AWS_ACCESS_KEY_ID}",
                               "AWS_SECRET_ACCESS_KEY": "${AWS_SECRET_ACCESS_KEY}"
                             },
-                            "autotermination_minutes": 20,
+                            "autotermination_minutes": 20
                         }
                         """
                         writeFile file: 'cluster.json', text: jsonCluster
