@@ -3,6 +3,7 @@
 databricks_runtime = ""
 cluster_id = ""
 ocr_versions = ""
+nlp_versions = ""
 
 def DBTOKEN = "DATABRICKS_TOKEN"
 def DBURL = "https://dbc-6ca13d9d-74bb.cloud.databricks.com"
@@ -25,12 +26,19 @@ databricks_runtime = params.databricks_runtime == null ? '7.3.x-scala2.12' : par
 
 
 node {
+
+    def get_releases(repo)
+    {
+        String sparkOcrVesrionsString = sh(returnStdout: true, script: """gh api   -H "Accept: application/vnd.github.v3+json" /repos/${repo}/releases""")
+        String sparkOcrVesrionsStringJson = readJSON text: sparkOcrVesrionsString
+        return sparkOcrVesrionsStringJson.collect{ it['name']}.join("\n")
+    }
     withCredentials([usernamePassword(credentialsId: '55e7e818-4ccf-4d23-b54c-fd97c21081ba',
                                                   usernameVariable: 'GITHUB_USER',
                                                   passwordVariable: 'GITHUB_TOKEN')]) {
-    def sparkOcrVesrionsString = sh(returnStdout: true, script: 'gh api   -H "Accept: application/vnd.github.v3+json" /repos/johnsnowlabs/spark-ocr/releases')
-    def sparkOcrVesrionsStringJson = readJSON text: sparkOcrVesrionsString
-    ocr_versions = sparkOcrVesrionsStringJson.collect{ it['name']}.join("\n")
+        ocr_versions = get_releases("johnsnowlabs/spark-ocr")
+        nlp_versions = get_releases("johnsnowlabs/spark-nlp")
+
     }
 }
 
@@ -54,6 +62,11 @@ pipeline {
             name:'ocr_version',
             choices: ocr_versions,
             description:'Spark Ocr Version'
+        )
+        choice(
+            name:'nlp_version',
+            choices: nlp_versions,
+            description:'Spark Nlp Version'
         )
     }
     stages {
