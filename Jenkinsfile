@@ -103,6 +103,7 @@ pipeline {
                         credentialsId: 'a4362e3b-808e-45e0-b7d2-1c62b0572df4',
                         accessKeyVariable: 'AWS_ACCESS_KEY_ID',
                         secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+                        echo databricks_runtime_1
                         def jsonCluster = """
                         {
                             "num_workers": 1,
