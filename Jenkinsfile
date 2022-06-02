@@ -24,7 +24,7 @@ def SPARK_OCR_VERSION = "3.12.0"
 def PYPI_REPO_HEALTHCARE_SECRET = sparknlp_helpers.spark_nlp_healthcare_secret(SPARK_NLP_HEALTHCARE_VERSION)
 def PYPI_REPO_OCR_SECRET = sparknlp_helpers.spark_ocr_secret(SPARK_OCR_VERSION)
 
-databricks_runtime = params.databricks_runtime == null ? '7.3.x-scala2.12' : params.databricks_runtime
+databricks_runtime = params.databricks_runtime == null ? '7.3.x-scala2.12' : params.databricks_runtime.split('|')[1]
 
 def String get_releases(repo)
 {
@@ -46,7 +46,7 @@ node {
 
     def databricksVersionsString = sh(returnStdout: true, script:'curl --header "Authorization: Bearer $TOKEN"  -X GET https://dbc-6ca13d9d-74bb.cloud.databricks.com/api/2.0/clusters/spark-versions')
     def databricksVersionsStringJson = readJSON text: databricksVersionsString
-    databricks_versions = databricksVersionsStringJson['versions'].collect{ it['key']}.join("\n")
+    databricks_versions = databricksVersionsStringJson['versions'].collect{ it['name'] +"|"+it['key']}.join("\n")
     }
 }
 
