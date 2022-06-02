@@ -28,7 +28,7 @@ def String get_releases(repo)
 {
     def sparkOcrVesrionsString = sh(returnStdout: true, script: """gh api   -H "Accept: application/vnd.github.v3+json" /repos/${repo}/releases""")
     def sparkOcrVesrionsStringJson = readJSON text: sparkOcrVesrionsString
-    return sparkOcrVesrionsStringJson.collect{ it['name']}.join("\n")
+    return sparkOcrVesrionsStringJson.collect{ it['tag_name']}.join("\n")
 }
 
 node {
