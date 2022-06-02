@@ -25,9 +25,13 @@ databricks_runtime = params.databricks_runtime == null ? '7.3.x-scala2.12' : par
 
 
 node {
+    withCredentials([usernamePassword(credentialsId: '55e7e818-4ccf-4d23-b54c-fd97c21081ba',
+                                                  usernameVariable: 'GITHUB_USER',
+                                                  passwordVariable: 'GITHUB_TOKEN')]) {
     def sparkOcrVesrionsString = sh(returnStdout: true, script: 'gh api   -H "Accept: application/vnd.github.v3+json" /repos/johnsnowlabs/spark-ocr/releases')
     def sparkOcrVesrionsStringJson = readJSON text: sparkOcrVesrionsString
     ocr_versions = sparkOcrVesrionsStringJson.collect{ it['name']}.join("\n")
+    }
 }
 
 pipeline {
