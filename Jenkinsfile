@@ -24,9 +24,11 @@ def PYPI_REPO_OCR_SECRET = sparknlp_helpers.spark_ocr_secret(SPARK_OCR_VERSION)
 databricks_runtime = params.databricks_runtime == null ? '7.3.x-scala2.12' : params.databricks_runtime
 
 
-def sparkOcrVesrionsString = sh(returnStdout: true, script: 'gh api   -H "Accept: application/vnd.github.v3+json" /repos/johnsnowlabs/spark-ocr/releases')
-def sparkOcrVesrionsStringJson = readJSON text: sparkOcrVesrionsString
-ocr_versions = sparkOcrVesrionsStringJson.collect{ it['name']}.join("\n")
+node {
+    def sparkOcrVesrionsString = sh(returnStdout: true, script: 'gh api   -H "Accept: application/vnd.github.v3+json" /repos/johnsnowlabs/spark-ocr/releases')
+    def sparkOcrVesrionsStringJson = readJSON text: sparkOcrVesrionsString
+    ocr_versions = sparkOcrVesrionsStringJson.collect{ it['name']}.join("\n")
+}
 
 pipeline {
     agent {
