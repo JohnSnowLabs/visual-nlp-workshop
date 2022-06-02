@@ -1,6 +1,6 @@
 @Library('jenkinslib')_
 
-databricks_runtime_1 = ""
+databricks_runtime = ""
 cluster_id = ""
 ocr_versions = ""
 nlp_versions = ""
@@ -24,7 +24,7 @@ def SPARK_OCR_VERSION = "3.12.0"
 def PYPI_REPO_HEALTHCARE_SECRET = sparknlp_helpers.spark_nlp_healthcare_secret(SPARK_NLP_HEALTHCARE_VERSION)
 def PYPI_REPO_OCR_SECRET = sparknlp_helpers.spark_ocr_secret(SPARK_OCR_VERSION)
 
-databricks_runtime_1 = params.databricks_runtime == null ? '7.3.x-scala2.12' : params.databricks_runtime.tokenize('|')[1]
+databricks_runtime = params.databricks_runtime == null ? '7.3.x-scala2.12' : params.databricks_runtime.tokenize('|')[1]
 
 def String get_releases(repo)
 {
@@ -46,7 +46,7 @@ node {
 
     def databricksVersionsString = sh(returnStdout: true, script:'curl --header "Authorization: Bearer $TOKEN"  -X GET https://dbc-6ca13d9d-74bb.cloud.databricks.com/api/2.0/clusters/spark-versions')
     def databricksVersionsStringJson = readJSON text: databricksVersionsString
-    databricks_versions = databricksVersionsStringJson['versions'].collect{ it['name'] + " |" + it['key']}.sort().join("\n")
+    databricks_versions = databricksVersionsStringJson['versions'].collect{ it['name'] + " |" + it['key']}.sort(false) { it.tokenize(' ')[0] as Integer }.join("\n")
     }
 }
 
@@ -63,7 +63,7 @@ pipeline {
     parameters {
         choice(
             name:'databricks_runtime',
-            choices: databricks_versions,
+            choices: '7.3.x-scala2.12\n' + databricks_versions,
             description: 'Databricks runtime version'
         )
         choice(
@@ -108,12 +108,11 @@ pipeline {
                         credentialsId: 'a4362e3b-808e-45e0-b7d2-1c62b0572df4',
                         accessKeyVariable: 'AWS_ACCESS_KEY_ID',
                         secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
-                        echo databricks_runtime_1
                         def jsonCluster = """
                         {
                             "num_workers": 1,
                             "cluster_name": "Spark Ocr Notebook Test",
-                            "spark_version": "${databricks_runtime_1}",
+                            "spark_version": "${databricks_runtime}",
                             "spark_conf": {
                               "spark.sql.legacy.allowUntypedScalaUDF": "true"
                             },
@@ -210,6 +209,7 @@ pipeline {
     }
     post {
         always {
+            sh "databricks clusters delete --cluster-id ${cluster_id}"
             sh "find ${OUTFILEPATH} -name '*.json' -exec rm {} +"
             junit allowEmptyResults: true, testResults: "**/reports/junit/*.xml"
         }
