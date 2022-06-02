@@ -4,6 +4,7 @@ databricks_runtime = ""
 cluster_id = ""
 ocr_versions = ""
 nlp_versions = ""
+nlp_healthcare_versions = ""
 
 def DBTOKEN = "DATABRICKS_TOKEN"
 def DBURL = "https://dbc-6ca13d9d-74bb.cloud.databricks.com"
@@ -38,7 +39,13 @@ node {
                                                   passwordVariable: 'GITHUB_TOKEN')]) {
         ocr_versions = get_releases("johnsnowlabs/spark-ocr")
         nlp_versions = get_releases("johnsnowlabs/spark-nlp")
+        nlp_healthcare_versions = get_releases("johnsnowlabs/spark-nlp-internal")
 
+    }
+    withCredentials([string(credentialsId: DBTOKEN, variable: 'TOKEN')]) {
+
+    def databricks_versions = sh(returnStdout: true, script:'curl --header "Authorization: Bearer $TOKEN"  -X GET https://dbc-6ca13d9d-74bb.cloud.databricks.com/api/2.0/clusters/spark-versions')
+    echo(databricks_versions)
     }
 }
 
