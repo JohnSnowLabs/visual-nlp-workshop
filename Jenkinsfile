@@ -46,7 +46,7 @@ node {
 
     def databricksVersionsString = sh(returnStdout: true, script:'curl --header "Authorization: Bearer $TOKEN"  -X GET https://dbc-6ca13d9d-74bb.cloud.databricks.com/api/2.0/clusters/spark-versions')
     def databricksVersionsStringJson = readJSON text: databricksVersionsString
-    databricks_versions = databricksVersionsStringJson['versions'].collect{ it['name'] + " |" + it['key']}.join("\n")
+    databricks_versions = databricksVersionsStringJson['versions'].collect{ it['name'] + " |" + it['key']}.sort().join("\n")
     }
 }
 
@@ -69,12 +69,17 @@ pipeline {
         choice(
             name:'ocr_version',
             choices: ocr_versions,
-            description:'Spark Ocr Version'
+            description:'Spark Ocr version'
         )
         choice(
             name:'nlp_version',
             choices: nlp_versions,
-            description:'Spark Nlp Version'
+            description:'Spark Nlp version'
+        )
+        choice(
+            name:'nlp_healthcare_version',
+            choices: nlp_healthcare_versions,
+            description:'Spark Nlp for Healthcare version'
         )
     }
     stages {
