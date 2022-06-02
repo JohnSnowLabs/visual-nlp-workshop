@@ -24,7 +24,7 @@ def PYPI_REPO_OCR_SECRET = sparknlp_helpers.spark_ocr_secret(SPARK_OCR_VERSION)
 
 databricks_runtime = params.databricks_runtime == null ? '7.3.x-scala2.12' : params.databricks_runtime
 
-def get_releases(repo)
+def String get_releases(repo)
 {
     String sparkOcrVesrionsString = sh(returnStdout: true, script: """gh api   -H "Accept: application/vnd.github.v3+json" /repos/${repo}/releases""")
     String sparkOcrVesrionsStringJson = readJSON text: sparkOcrVesrionsString
