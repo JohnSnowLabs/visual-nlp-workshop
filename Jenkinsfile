@@ -5,6 +5,7 @@ cluster_id = ""
 ocr_versions = ""
 nlp_versions = ""
 nlp_healthcare_versions = ""
+databricks_versions = ""
 
 def DBTOKEN = "DATABRICKS_TOKEN"
 def DBURL = "https://dbc-6ca13d9d-74bb.cloud.databricks.com"
@@ -33,7 +34,6 @@ def String get_releases(repo)
 }
 
 node {
-
     withCredentials([usernamePassword(credentialsId: '55e7e818-4ccf-4d23-b54c-fd97c21081ba',
                                                   usernameVariable: 'GITHUB_USER',
                                                   passwordVariable: 'GITHUB_TOKEN')]) {
@@ -44,8 +44,9 @@ node {
     }
     withCredentials([string(credentialsId: DBTOKEN, variable: 'TOKEN')]) {
 
-    def databricks_versions = sh(returnStdout: true, script:'curl --header "Authorization: Bearer $TOKEN"  -X GET https://dbc-6ca13d9d-74bb.cloud.databricks.com/api/2.0/clusters/spark-versions')
-    echo(databricks_versions)
+    def databricksVersionsString = sh(returnStdout: true, script:'curl --header "Authorization: Bearer $TOKEN"  -X GET https://dbc-6ca13d9d-74bb.cloud.databricks.com/api/2.0/clusters/spark-versions')
+    def databricksVersionsStringJson = readJSON text: databricksVersionsString
+    databricks_versions = databricksVersionsStringJson['versions'].collect{ it['key']}.join("\n")
     }
 }
 
@@ -62,8 +63,8 @@ pipeline {
     parameters {
         choice(
             name:'databricks_runtime',
-            choices:'7.3.x-scala2.12\n6.4.x-esr-scala2.11\n7.3.x-cpu-ml-scala2.12\n7.3.x-hls-scala2.12\n10.2.x-gpu-ml-scala2.12\n10.5.x-aarch64-scala2.12\n7.3.x-gpu-ml-scala2.12\n10.2.x-aarch64-photon-scala2.12\n10.4.x-cpu-ml-scala2.12\n9.1.x-aarch64-scala2.12\n10.1.x-photon-scala2.12\n9.1.x-photon-scala2.12\n10.4.x-scala2.12\n10.2.x-photon-scala2.12\n10.4.x-photon-scala2.12\n11.0.x-photon-scala2.12\n10.3.x-photon-scala2.12\n10.5.x-photon-scala2.12\n10.1.x-gpu-ml-scala2.12\n9.1.x-scala2.12\n11.0.x-scala2.12\n10.3.x-cpu-ml-scala2.12\n10.3.x-aarch64-photon-scala2.12\n11.0.x-gpu-ml-scala2.12\n10.5.x-aarch64-photon-scala2.12\n10.1.x-cpu-ml-scala2.12\n10.4.x-aarch64-photon-scala2.12\n10.5.x-gpu-ml-scala2.12\napache-spark-2.4.x-esr-scala2.11\n10.1.x-scala2.12\n9.1.x-cpu-ml-scala2.12\n11.0.x-cpu-ml-scala2.12\n10.2.x-aarch64-scala2.12\n10.2.x-scala2.12\n10.2.x-cpu-ml-scala2.12\n11.0.x-aarch64-photon-scala2.12\n10.4.x-aarch64-scala2.12\n11.0.x-aarch64-scala2.12\n10.1.x-aarch64-scala2.12\n9.1.x-gpu-ml-scala2.12\napache-spark-2.4.x-scala2.11\n10.5.x-scala2.12\n10.3.x-scala2.12\n10.3.x-aarch64-scala2.12\n10.5.x-cpu-ml-scala2.12\n10.3.x-gpu-ml-scala2.12\n10.4.x-gpu-ml-scala2.12',
-            description:'define spark version'
+            choices: databricks_versions,
+            description: 'Databricks runtime version'
         )
         choice(
             name:'ocr_version',
