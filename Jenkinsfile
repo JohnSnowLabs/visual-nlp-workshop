@@ -1,6 +1,6 @@
 @Library('jenkinslib')_
 
-databricks_runtime = ""
+databricks_runtime_version = ""
 cluster_id = ""
 ocr_versions = ""
 nlp_versions = ""
@@ -24,7 +24,7 @@ def SPARK_OCR_VERSION = "3.12.0"
 def PYPI_REPO_HEALTHCARE_SECRET = sparknlp_helpers.spark_nlp_healthcare_secret(SPARK_NLP_HEALTHCARE_VERSION)
 def PYPI_REPO_OCR_SECRET = sparknlp_helpers.spark_ocr_secret(SPARK_OCR_VERSION)
 
-databricks_runtime = params.databricks_runtime == null ? '7.3.x-scala2.12' : params.databricks_runtime.tokenize('|')[1]
+databricks_runtime_version = params.databricks_runtime == null ? '7.3.x-scala2.12' : params.databricks_runtime.tokenize('|')[1]
 
 def String get_releases(repo)
 {
@@ -112,7 +112,7 @@ pipeline {
                         {
                             "num_workers": 1,
                             "cluster_name": "Spark Ocr Notebook Test",
-                            "spark_version": "${databricks_runtime}",
+                            "spark_version": "${databricks_runtime_version}",
                             "spark_conf": {
                               "spark.sql.legacy.allowUntypedScalaUDF": "true"
                             },
