@@ -6,10 +6,10 @@ ocr_versions = ""
 nlp_versions = ""
 nlp_healthcare_versions = ""
 databricks_versions = ""
+nlp_version_prefix = ""
 
 def DBTOKEN = "DATABRICKS_TOKEN"
 def DBURL = "https://dbc-6ca13d9d-74bb.cloud.databricks.com"
-//def cluster_id = "0428-112519-vaxgi8gx"
 def SCRIPTPATH = "./.ci"
 def NOTEBOOKPATH = "./databricks/python"
 def WORKSPACEPATH = "/Shared/Spark OCR/tests"
@@ -17,14 +17,22 @@ def OUTFILEPATH = "."
 def TESTRESULTPATH = "./reports/junit"
 def IGNORE = "3. Compare CPU and GPU image processing with Spark OCR.ipynb"
 
-def SPARK_NLP_VERSION = "3.4.2"
-def SPARK_NLP_HEALTHCARE_VERSION = "3.4.2"
-def SPARK_OCR_VERSION = "3.12.0"
-
-def PYPI_REPO_HEALTHCARE_SECRET = sparknlp_helpers.spark_nlp_healthcare_secret(SPARK_NLP_HEALTHCARE_VERSION)
-def PYPI_REPO_OCR_SECRET = sparknlp_helpers.spark_ocr_secret(SPARK_OCR_VERSION)
-
 databricks_runtime_version = params.databricks_runtime == null ? '7.3.x-scala2.12' : params.databricks_runtime.tokenize('|')[1]
+
+
+switch(spark_version) {
+case 'spark24':
+    nlp_version_prefix="-spark24"
+    break
+case 'spark23':
+    nlp_version_prefix="-spark23"
+    break
+case 'spark30':
+    nlp_version_prefix=""
+    break
+case 'spark32':
+    nlp_version_prefix="-spark32"
+}
 
 def String get_releases(repo)
 {
@@ -71,6 +79,11 @@ pipeline {
             choices: ocr_versions,
             description:'Spark Ocr version'
         )
+        choice(
+            name:'spark_version',
+            choices:'spark30\nspark32\nspark24\nspark23',
+            description:'define spark version'
+            )
         choice(
             name:'nlp_version',
             choices: nlp_versions,
@@ -145,11 +158,18 @@ pipeline {
         stage('Install deps to Cluster') {
             steps {
                 script {
+                    def SPARK_NLP_VERSION = params.nlp_version
+                    def SPARK_NLP_HEALTHCARE_VERSION = params.nlp_healthcare_version
+                    def SPARK_OCR_VERSION = params.ocr_version
+
+                    def PYPI_REPO_HEALTHCARE_SECRET = sparknlp_helpers.spark_nlp_healthcare_secret(SPARK_NLP_HEALTHCARE_VERSION)
+                    def PYPI_REPO_OCR_SECRET = sparknlp_helpers.spark_ocr_secret(SPARK_OCR_VERSION)
+
                     //sh("databricks libraries uninstall --cluster-id ${cluster_id} --all")
-                    sh("databricks libraries install --cluster-id ${cluster_id} --jar  s3://pypi.johnsnowlabs.com/${PYPI_REPO_OCR_SECRET}/jars/spark-ocr-assembly-${SPARK_OCR_VERSION}-spark30.jar")
-                    sh("databricks libraries install --cluster-id ${cluster_id} --jar  s3://pypi.johnsnowlabs.com/${PYPI_REPO_HEALTHCARE_SECRET}/spark-nlp-jsl-${SPARK_NLP_HEALTHCARE_VERSION}.jar")
-                    sh("databricks libraries install --cluster-id ${cluster_id} --maven-coordinates com.johnsnowlabs.nlp:spark-nlp_2.12:${SPARK_NLP_VERSION}")
-                    sh("databricks libraries install --cluster-id ${cluster_id} --whl s3://pypi.johnsnowlabs.com/${PYPI_REPO_OCR_SECRET}/spark-ocr/spark_ocr-${SPARK_OCR_VERSION}+spark30-py3-none-any.whl")
+                    sh("databricks libraries install --cluster-id ${cluster_id} --jar  s3://pypi.johnsnowlabs.com/${PYPI_REPO_OCR_SECRET}/jars/spark-ocr-assembly-${SPARK_OCR_VERSION}-${spark_version}.jar")
+                    sh("databricks libraries install --cluster-id ${cluster_id} --jar  s3://pypi.johnsnowlabs.com/${PYPI_REPO_HEALTHCARE_SECRET}/spark-nlp-jsl-${SPARK_NLP_HEALTHCARE_VERSION}${nlp_version_prefix}.jar")
+                    sh("databricks libraries install --cluster-id ${cluster_id} --maven-coordinates com.johnsnowlabs.nlp:spark-nlp${nlp_version_prefix}_2.12:${SPARK_NLP_VERSION}")
+                    sh("databricks libraries install --cluster-id ${cluster_id} --whl s3://pypi.johnsnowlabs.com/${PYPI_REPO_OCR_SECRET}/spark-ocr/spark_ocr-${SPARK_OCR_VERSION}+${spark_version}-py3-none-any.whl")
                     sh("databricks libraries install --cluster-id ${cluster_id} --whl s3://pypi.johnsnowlabs.com/${PYPI_REPO_HEALTHCARE_SECRET}/spark-nlp-jsl/spark_nlp_jsl-${SPARK_NLP_VERSION}-py3-none-any.whl")
                     sh("databricks libraries install --cluster-id ${cluster_id} --pypi-package spark-nlp==${SPARK_NLP_VERSION}")
                     timeout(10) {
