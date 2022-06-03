@@ -229,7 +229,7 @@ pipeline {
     }
     post {
         always {
-            sh "databricks clusters delete --cluster-id ${cluster_id}"
+            sh "databricks clusters permanent-delete --cluster-id ${cluster_id}"
             sh "find ${OUTFILEPATH} -name '*.json' -exec rm {} +"
             junit allowEmptyResults: true, testResults: "**/reports/junit/*.xml"
         }
