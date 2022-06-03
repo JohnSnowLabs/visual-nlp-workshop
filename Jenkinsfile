@@ -18,7 +18,7 @@ def TESTRESULTPATH = "./reports/junit"
 def IGNORE = "3. Compare CPU and GPU image processing with Spark OCR.ipynb"
 
 databricks_runtime_version = params.databricks_runtime == null ? '7.3.x-scala2.12' : params.databricks_runtime.tokenize('|')[1]
-
+def spark_version = params.spark_version == null ? 'spark30' : params.spark_version
 
 switch(spark_version) {
 case 'spark24':
