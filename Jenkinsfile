@@ -28,7 +28,7 @@ databricks_runtime_version = params.databricks_runtime == null ? '7.3.x-scala2.1
 
 def String get_releases(repo)
 {
-    def sparkOcrVesrionsString = sh(returnStdout: true, script: """gh api   -H "Accept: application/vnd.github.v3+json" /repos/${repo}/releases""")
+    def sparkOcrVesrionsString = sh(returnStdout: true, script: """gh api --paginate  -H "Accept: application/vnd.github.v3+json" /repos/${repo}/releases""")
     def sparkOcrVesrionsStringJson = readJSON text: sparkOcrVesrionsString
     return sparkOcrVesrionsStringJson.collect{ it['tag_name']}.join("\n")
 }
