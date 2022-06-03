@@ -1,6 +1,5 @@
 @Library('jenkinslib')_
 
-databricks_runtime_version = ""
 cluster_id = ""
 ocr_versions = ""
 nlp_versions = ""
@@ -24,10 +23,10 @@ def SPARK_OCR_VERSION = params.ocr_version
 def PYPI_REPO_HEALTHCARE_SECRET = sparknlp_helpers.spark_nlp_healthcare_secret(SPARK_NLP_HEALTHCARE_VERSION)
 def PYPI_REPO_OCR_SECRET = sparknlp_helpers.spark_ocr_secret(SPARK_OCR_VERSION)
 
-databricks_runtime_version = params.databricks_runtime == null ? '7.3.x-scala2.12' : params.databricks_runtime.tokenize('|')[1]
-def spark_version = params.spark_version == null ? 'spark30' : params.spark_version
+def DATABRICKS_RUNTIME_VERSION = params.databricks_runtime == null ? '7.3.x-scala2.12' : params.databricks_runtime.tokenize('|')[1]
+def SPARK_VERSION = params.spark_version == null ? 'spark30' : params.spark_version
 
-switch(spark_version) {
+switch(SPARK_VERSION) {
 case 'spark24':
     nlp_version_prefix="-spark24"
     break
@@ -132,7 +131,7 @@ pipeline {
                         {
                             "num_workers": 1,
                             "cluster_name": "Spark Ocr Notebook Test",
-                            "spark_version": "${databricks_runtime_version}",
+                            "spark_version": "${DATABRICKS_RUNTIME_VERSION}",
                             "spark_conf": {
                               "spark.sql.legacy.allowUntypedScalaUDF": "true"
                             },
@@ -165,11 +164,10 @@ pipeline {
         stage('Install deps to Cluster') {
             steps {
                 script {
-                    //sh("databricks libraries uninstall --cluster-id ${cluster_id} --all")
-                    sh("databricks libraries install --cluster-id ${cluster_id} --jar  s3://pypi.johnsnowlabs.com/${PYPI_REPO_OCR_SECRET}/jars/spark-ocr-assembly-${SPARK_OCR_VERSION}-${spark_version}.jar")
+                    sh("databricks libraries install --cluster-id ${cluster_id} --jar  s3://pypi.johnsnowlabs.com/${PYPI_REPO_OCR_SECRET}/jars/spark-ocr-assembly-${SPARK_OCR_VERSION}-${SPARK_VERSION}.jar")
                     sh("databricks libraries install --cluster-id ${cluster_id} --jar  s3://pypi.johnsnowlabs.com/${PYPI_REPO_HEALTHCARE_SECRET}/spark-nlp-jsl-${SPARK_NLP_HEALTHCARE_VERSION}${nlp_version_prefix}.jar")
                     sh("databricks libraries install --cluster-id ${cluster_id} --maven-coordinates com.johnsnowlabs.nlp:spark-nlp${nlp_version_prefix}_2.12:${SPARK_NLP_VERSION}")
-                    sh("databricks libraries install --cluster-id ${cluster_id} --whl s3://pypi.johnsnowlabs.com/${PYPI_REPO_OCR_SECRET}/spark-ocr/spark_ocr-${SPARK_OCR_VERSION}+${spark_version}-py3-none-any.whl")
+                    sh("databricks libraries install --cluster-id ${cluster_id} --whl s3://pypi.johnsnowlabs.com/${PYPI_REPO_OCR_SECRET}/spark-ocr/spark_ocr-${SPARK_OCR_VERSION}+${SPARK_VERSION}-py3-none-any.whl")
                     sh("databricks libraries install --cluster-id ${cluster_id} --whl s3://pypi.johnsnowlabs.com/${PYPI_REPO_HEALTHCARE_SECRET}/spark-nlp-jsl/spark_nlp_jsl-${SPARK_NLP_VERSION}-py3-none-any.whl")
                     sh("databricks libraries install --cluster-id ${cluster_id} --pypi-package spark-nlp==${SPARK_NLP_VERSION}")
                     timeout(10) {
@@ -184,28 +182,6 @@ pipeline {
                 }
             }
         }
-//         stage('Start cluster') {
-//             steps {
-//                 script {
-//                     def respString = sh script: "databricks clusters get --cluster-id ${cluster_id}", returnStdout: true
-//                     def respJson = readJSON text: respString
-//                     if (respJson['state'] == 'RUNNING') {
-//                         sh("databricks clusters restart --cluster-id ${cluster_id}")
-//                     } else {
-//                         sh("databricks clusters start --cluster-id ${cluster_id}")
-//                     }
-//                     timeout(10) {
-//                         waitUntil {
-//                            script {
-//                              def respStringWait = sh script: "databricks clusters get --cluster-id ${cluster_id}", returnStdout: true
-//                              def respJsonWait = readJSON text: respStringWait
-//                              return (respJsonWait['state'] == 'RUNNING');
-//                            }
-//                         }
-//                     }
-//                 }
-//             }
-//         }
         stage('Run Notebook Tests') {
             steps {
                 script {
