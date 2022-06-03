@@ -63,7 +63,7 @@ pipeline {
     parameters {
         choice(
             name:'databricks_runtime',
-            choices: '7.3.x-scala2.12\n' + databricks_versions,
+            choices: '7.3 LTS Spark 3.0.1 |7.3.x-scala2.12\n' + databricks_versions,
             description: 'Databricks runtime version'
         )
         choice(
