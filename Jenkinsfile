@@ -17,6 +17,13 @@ def OUTFILEPATH = "."
 def TESTRESULTPATH = "./reports/junit"
 def IGNORE = "3. Compare CPU and GPU image processing with Spark OCR.ipynb"
 
+def SPARK_NLP_VERSION = params.nlp_version
+def SPARK_NLP_HEALTHCARE_VERSION = params.nlp_healthcare_version
+def SPARK_OCR_VERSION = params.ocr_version
+
+def PYPI_REPO_HEALTHCARE_SECRET = sparknlp_helpers.spark_nlp_healthcare_secret(SPARK_NLP_HEALTHCARE_VERSION)
+def PYPI_REPO_OCR_SECRET = sparknlp_helpers.spark_ocr_secret(SPARK_OCR_VERSION)
+
 databricks_runtime_version = params.databricks_runtime == null ? '7.3.x-scala2.12' : params.databricks_runtime.tokenize('|')[1]
 def spark_version = params.spark_version == null ? 'spark30' : params.spark_version
 
@@ -158,13 +165,6 @@ pipeline {
         stage('Install deps to Cluster') {
             steps {
                 script {
-                    def SPARK_NLP_VERSION = params.nlp_version
-                    def SPARK_NLP_HEALTHCARE_VERSION = params.nlp_healthcare_version
-                    def SPARK_OCR_VERSION = params.ocr_version
-
-                    def PYPI_REPO_HEALTHCARE_SECRET = sparknlp_helpers.spark_nlp_healthcare_secret(SPARK_NLP_HEALTHCARE_VERSION)
-                    def PYPI_REPO_OCR_SECRET = sparknlp_helpers.spark_ocr_secret(SPARK_OCR_VERSION)
-
                     //sh("databricks libraries uninstall --cluster-id ${cluster_id} --all")
                     sh("databricks libraries install --cluster-id ${cluster_id} --jar  s3://pypi.johnsnowlabs.com/${PYPI_REPO_OCR_SECRET}/jars/spark-ocr-assembly-${SPARK_OCR_VERSION}-${spark_version}.jar")
                     sh("databricks libraries install --cluster-id ${cluster_id} --jar  s3://pypi.johnsnowlabs.com/${PYPI_REPO_HEALTHCARE_SECRET}/spark-nlp-jsl-${SPARK_NLP_HEALTHCARE_VERSION}${nlp_version_prefix}.jar")
