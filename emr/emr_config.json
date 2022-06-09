@@ -1,0 +1,30 @@
+[
+    {
+        "classification": "spark-env",
+        "configurations": [{
+            "classification": "export",
+            "properties": {
+                "PYSPARK_PYTHON": "/usr/bin/python3",
+                "HADOOP_CONF_DIR": "/etc/hadoop/conf",
+                "SPARK_JARS_DIR": "/usr/lib/spark/jars",
+                "SPARK_HOME": "/usr/lib/spark",
+                "JSL_OCR_LICENSE": "",
+                "AWS_ACCESS_KEY_ID": "",
+                "AWS_SECRET_ACCESS_KEY": ""
+            }
+        }]
+    },
+    {
+        "classification": "spark-defaults",
+        "properties": {
+            "spark.jars": "/usr/lib/spark/jars/*.jar",
+            "spark.driver.memory": "32G",
+            "spark.kryoserializer.buffer.max": "2000M",
+            "spark.driver.maxResultSize": "0",
+            "spark.serializer": "org.apache.spark.serializer.KryoSerializer",
+            "spark.yarn.stagingDir": "hdfs:///tmp",
+            "spark.yarn.preserve.staging.files": "true",
+            "spark.sql.legacy.allowUntypedScalaUDF": "true"
+        }
+    }
+]
