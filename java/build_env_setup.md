@@ -60,4 +60,6 @@ public class OcrSample {
 		String pdfPath = "{PATH_TO_YOUR_PDF}";
 		Dataset<Row> df = session.read().format("binaryFile").load(pdfPath);
 		transformer.transform(df).select("hocr").collect();
+		}
+}
 ```
