@@ -1,6 +1,11 @@
 ## Steps for building with Java
 
+There is possibility to use Spark-OCR with pure java. You may add local spark-ocr jar file to Maven's pom configuration file.
+
 ## Maven configuration
+
+At first download spark-ocr jar file to local environment and place to your project.
+Then add to pom.xml following part
 ```
       <dependency>
          <groupId>com.johnsnowlabs.nlp</groupId>
@@ -25,8 +30,11 @@
          <version>4.1.68.Final</version>
       </dependency>
 ```
+Please note that versions are given for the recentest 4.4.1 version at this moment. In the future you will need to update versions accordingly.
 
 ## Sample application
+
+It is simple sample application just to check that you added dependencies correctly. If it is build and run OK then most probably everythig is set up correctly and you may start building your Spark OCR java application.
 ```
 import org.apache.spark.SparkConf;
 import org.apache.spark.sql.Dataset;
