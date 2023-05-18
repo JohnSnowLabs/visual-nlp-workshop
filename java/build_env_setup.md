@@ -15,6 +15,10 @@ Then add to pom.xml following part
          <systemPath>{PATH_TO_spark-ocr-assembly-4.4.1.jar}</systemPath>
       </dependency>
       <dependency>
+         <groupId>com.johnsnowlabs.nlp</groupId>
+         <artifactId>spark-nlp_2.12</artifactId>
+         <version>4.4.1</version>
+      </dependency><dependency>
          <groupId>org.scala-lang</groupId>
          <artifactId>scala-library</artifactId>
          <version>2.12.15</version>
@@ -33,9 +37,9 @@ Then add to pom.xml following part
 Please note that versions are given for the recentest 4.4.1 version at this moment. In the future you will need to update versions accordingly.
 For spark-ocr 3.* and 4.* spark-core version should be 3.* You may try to use one which is already used or 3.2.1 as at this sample.
 Compatibility matrix
-| spark-ocr | spark-core |
-| --- | --- |
-| 4.4.1 | 3.2.1 |
+| spark-ocr | spark-nlp | spark-core |
+| --- | --- | --- |
+| 4.4.1 | 4.4.1 | 3.2.1 |
 
 ## Sample application
 
