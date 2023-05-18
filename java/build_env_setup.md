@@ -18,7 +18,8 @@ Then add to pom.xml following part
          <groupId>com.johnsnowlabs.nlp</groupId>
          <artifactId>spark-nlp_2.12</artifactId>
          <version>4.4.1</version>
-      </dependency><dependency>
+      </dependency>
+      <dependency>
          <groupId>org.scala-lang</groupId>
          <artifactId>scala-library</artifactId>
          <version>2.12.15</version>
