@@ -47,7 +47,7 @@ Then add to pom.xml following part
 ```
 Please note that versions are given for the recentest 4.4.1 version at this moment. In the future you will need to update versions accordingly.
 For spark-ocr 3.* and 4.* spark-core version should be 3.* You may try to use one which is already used or 3.2.1 as at this sample.
-Compatibility matrix5.0.1-1.5.7
+Compatibility matrix
 | spark-ocr | spark-nlp | spark-core |
 | --- | --- | --- |
 | 4.4.1 | 4.4.1 | 3.2.1 |
