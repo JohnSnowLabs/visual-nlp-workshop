@@ -34,10 +34,20 @@ Then add to pom.xml following part
          <artifactId>netty-all</artifactId>
          <version>4.1.68.Final</version>
       </dependency>
+      <dependency>
+         <groupId>org.bytedeco.javacpp-presets</groupId>
+         <artifactId>tesseract-platform</artifactId>
+         <version>4.0.0-1.4.4</version>
+      </dependency>
+      <dependency>
+         <groupId>org.bytedeco</groupId>
+         <artifactId>tesseract-platform</artifactId>
+         <version>5.0.1-1.5.7</version>
+      </dependency>
 ```
 Please note that versions are given for the recentest 4.4.1 version at this moment. In the future you will need to update versions accordingly.
 For spark-ocr 3.* and 4.* spark-core version should be 3.* You may try to use one which is already used or 3.2.1 as at this sample.
-Compatibility matrix
+Compatibility matrix5.0.1-1.5.7
 | spark-ocr | spark-nlp | spark-core |
 | --- | --- | --- |
 | 4.4.1 | 4.4.1 | 3.2.1 |
