@@ -52,6 +52,22 @@ Compatibility matrix
 | --- | --- | --- |
 | 4.4.1 | 4.4.1 | 3.2.1 |
 
+## Apple M1 environment
+
+For compiling for M1 envrionment you should substitute some of dependencies with one dedicated for that environment
+```
+      <dependency>
+         <groupId>com.johnsnowlabs.nlp</groupId>
+         <artifactId>spark-nlp-m1_2.12</artifactId>
+         <version>4.4.1</version>
+      </dependency>
+      <dependency>
+         <groupId>com.johnsnowlabs.nlp</groupId>
+         <artifactId>tensorflow-m1_2.13</artifactId>
+         <version>0.4.4</version>
+      </dependency>
+```
+
 ## Sample application
 
 It is simple sample application just to check that you added dependencies correctly. If it is build and run OK then most probably everythig is set up correctly and you may start building your Spark OCR java application.
