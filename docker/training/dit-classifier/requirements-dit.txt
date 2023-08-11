@@ -1,0 +1,14 @@
+torch==2.0.1
+torchvision==0.15.2
+timm==0.5.4
+Pillow==10.0.0
+blobfile==2.0.2
+mypy==1.4.1
+numpy==1.25.2
+pytest==7.4.0
+requests==2.31.0
+einops==0.6.1
+tensorboardX==1.8
+deepspeed==0.4.0
+scipy==1.11.1
+opencv-python==4.8.0.76
