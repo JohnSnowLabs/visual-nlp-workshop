@@ -1,3 +1,8 @@
 fastapi==0.101.0
 uvicorn==0.23.2
 python-multipart==0.0.6
+onnx==1.14.1
+onnxruntime==1.15.1
+onnxruntime-tools==1.7.0
+jupyter
+
