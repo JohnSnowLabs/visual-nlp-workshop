@@ -1,36 +1,20 @@
-FROM python:3.10
+FROM datamechanics/spark:3.2.1-dm17 
+USER root
+RUN apt-get update --allow-unauthenticated --allow-insecure-repositories && apt-get install nginx vim g++ -y --no-install-recommends && apt-get clean
 
-RUN apt-get update
-RUN apt-get update && apt-get install nginx vim g++ -y --no-install-recommends && apt-get clean
-RUN ln -sf /dev/stdout /var/log/nginx/access.log \
-    && ln -sf /dev/stderr /var/log/nginx/error.log
-
+RUN apt install python3-pip -y
+RUN pip3 install --upgrade pip
 
 # Run pipenv to install the dependencies
 COPY ./requirements-dit.txt ./requirements-dit.txt
 COPY ./requirements-new.txt ./requirements-new.txt
 COPY ./requirements.txt ./requirements.txt
-RUN pip install torch
-RUN pip install -r requirements-dit.txt
-RUN pip install -r requirements-new.txt
-RUN pip install -r requirements.txt
 
-
-
-RUN pip uninstall -y protobuf
-RUN pip install protobuf==3.20
-RUN pip uninstall -y deepspeed
-RUN pip install deepspeed
-
-
+RUN pip3 install -r requirements-dit.txt
+RUN pip3 install -r requirements-new.txt
+RUN pip3 install -r requirements.txt
 
 # Set and add the working directory in the container to /app
-WORKDIR /app
-COPY ./ /app/
 
 ENV PYTHONPATH "${PYTHONPATH}:.:./classification"
-
-# Execute the application
-RUN chown -R www-data:www-data /app/
-EXPOSE 8020
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8020"]
+EXPOSE 8888
