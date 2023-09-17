@@ -42,5 +42,5 @@ This will allow you to access Jupyer notebooks running in the instance from your
 (*)aws-public-name is something like ec2-5-176-14-99.us-east-3.compute.amazonaws.com.
 
 ### Run the fine-tuning notebook
-At this point you must be ready to jump into the [TrainDitRvlCdip.ipynb](https://github.com/JohnSnowLabs/spark-ocr-workshop/blob/table_exstraction_pipeline/docker/training/dit-classifier/TrainDitRvlCdip.ipynb) notebook.
+At this point you must be ready to jump into the [TrainDitRvlCdip.ipynb](https://github.com/JohnSnowLabs/spark-ocr-workshop/blob/master/docker/training/dit-classifier/TrainDitRvlCdip.ipynb) notebook.
 
