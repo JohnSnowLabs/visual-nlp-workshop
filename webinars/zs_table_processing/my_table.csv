@@ -1,0 +1,8 @@
+,,
+Load balancing,"Dynamic, by queue Iengths at worker nodes",Static partitioning of read-only data
+Application layer,Composable TACC workers,Fixed search service application
+Service layer,"Worker dispatch logic, HTML / Java- Script UL","Dynamic HTML, generation, HTML, UL"
+Failure manage- ment,Centralized but fault-tolerant using process-peers,Distributed each to node
+Worker place- ment,FE’s and caches bound their nodes to,All workers bound their nodes to
+User profile (ACID) database,Berkeley DB with read caches,Parallel Informix server
+Caching,Harvest caches store pre-and post- transformation Web data,"integrated cache of recent searches, for incremental delivery"
