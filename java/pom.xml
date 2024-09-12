@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+   <modelVersion>4.0.0</modelVersion>
+   <parent>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-parent</artifactId>
+      <version>2.3.3.RELEASE</version>
+   </parent>
+   <groupId>com.johnsnowlabs.nlp</groupId>
+   <artifactId>spark-ocr-java-example</artifactId>
+   <version>0.0.1-SNAPSHOT</version>
+   <name>spark-ocr-java-example</name>
+   <description>Samples of using Spark OCR from Java</description>
+   <properties>
+      <java.version>8</java.version>
+      <!-- dependency versions -->
+      <logback-classic.version>1.2.3</logback-classic.version>
+      <spark.version>3.2.1</spark.version>
+      <sparknlp.version>4.4.2</sparknlp.version>
+      <spring-boot.version>2.2.6.RELEASE</spring-boot.version>
+      <sparkocr.version>4.4.2</sparkocr.version>
+      <sparkocr.jarpath>/home/alexander_jsl/Workspace/spark-ocr/target/scala-2.12/spark-ocr-assembly-4.4.3rc2.jar</sparkocr.jarpath>
+   </properties>
+
+   <dependencies>
+      <!-- Spring Boot -->
+      <dependency>
+         <groupId>org.springframework.boot</groupId>
+         <artifactId>spring-boot-starter-web</artifactId>
+         <version>${spring-boot.version}</version>
+      </dependency>
+      <!-- Spark -->
+      <dependency>
+         <groupId>org.apache.spark</groupId>
+         <artifactId>spark-mllib_2.12</artifactId>
+         <version>3.4.0</version>
+         <exclusions>
+            <exclusion>
+               <groupId>org.slf4j</groupId>
+               <artifactId>slf4j-log4j12</artifactId>
+            </exclusion>
+         </exclusions>
+      </dependency>
+
+      <dependency>
+         <groupId>org.apache.spark</groupId>
+         <artifactId>spark-sql_2.12</artifactId>
+         <version>3.2.2</version>
+         <exclusions>
+            <exclusion>
+               <groupId>org.slf4j</groupId>
+               <artifactId>slf4j-log4j12</artifactId>
+            </exclusion>
+         </exclusions>
+      </dependency>
+      <!-- spark SQL needs older version of janino -->
+      <dependency>
+         <groupId>org.codehaus.janino</groupId>
+         <artifactId>commons-compiler</artifactId>
+         <version>3.0.8</version>
+      </dependency>
+      <dependency>
+         <groupId>org.codehaus.janino</groupId>
+         <artifactId>janino</artifactId>
+         <version>3.0.8</version>
+      </dependency>
+      <!-- Spark NLP -->
+      <dependency>
+         <groupId>com.johnsnowlabs.nlp</groupId>
+         <artifactId>spark-nlp_2.12</artifactId>
+         <version>${sparknlp.version}</version>
+      </dependency>
+
+      <!-- Spark OCR -->
+      <dependency>
+         <groupId>com.johnsnowlabs.nlp</groupId>
+         <artifactId>spark-ocr</artifactId>
+         <version>${sparkocr.version}</version>
+         <scope>system</scope>
+         <systemPath>${sparkocr.jarpath}</systemPath>
+      </dependency>
+      <dependency>
+         <groupId>org.scala-lang</groupId>
+         <artifactId>scala-library</artifactId>
+         <version>2.12.15</version>
+      </dependency>
+      <dependency>
+         <groupId>org.apache.spark</groupId>
+         <artifactId>spark-core_2.12</artifactId>
+         <version>3.2.1</version>
+      </dependency>
+      <dependency>
+         <groupId>io.netty</groupId>
+         <artifactId>netty-all</artifactId>
+         <version>4.1.68.Final</version>
+      </dependency>
+
+      <!-- Logging  -->
+      <dependency>
+         <groupId>ch.qos.logback</groupId>
+         <artifactId>logback-classic</artifactId>
+         <version>${logback-classic.version}</version>
+      </dependency>
+   </dependencies>
+   <build>
+      <plugins>
+         <plugin>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-maven-plugin</artifactId>
+         </plugin>
+      </plugins>
+   </build>
+</project>
