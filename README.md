@@ -1,4 +1,4 @@
-# Spark OCR Workshop
+﻿# Spark OCR Workshop
 Public examples of using John Snow Labs' OCR for Apache Spark.
 
 ## Installing and Quickstart Instructions
@@ -68,3 +68,10 @@ jupyter-notebook
 * Run all cells: Cell -> Run all.
 * Restart runtime: Kernel -> Restart (Need restart first time after installing new packages).
 * Run all cellls again.
+
+### Run at java project
+
+It is possible to call functionality from Java project.
+`./java/` folder contains sample of Java project that could be built with Maven.
+
+
