@@ -72,6 +72,6 @@ jupyter-notebook
 ### Run at java project
 
 It is possible to call functionality from Java project.
-‘./java/ folder’ contains sample of Java project that could be built with Maven.
+`./java/ folder` contains sample of Java project that could be built with Maven.
 
 
