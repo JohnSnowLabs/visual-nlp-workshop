@@ -1,7 +1,7 @@
 torch==2.0.1
 torchvision==0.15.2
 timm==0.5.4
-Pillow==10.0.0
+Pillow==10.3.0
 blobfile==2.0.2
 mypy==1.4.1
 numpy==1.24.3
