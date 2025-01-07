@@ -1,4 +1,4 @@
 webdataset==0.2.48
 tensorboard==2.14.0
-deepspeed==0.4.0
+deepspeed==0.15.1
 jupyter
