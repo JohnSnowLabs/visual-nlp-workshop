@@ -1,4 +1,4 @@
-onnx==1.14.1
+onnx==1.17.0
 onnxruntime==1.15.1
 onnxruntime-tools==1.7.0
 jupyter
