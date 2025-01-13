@@ -18,7 +18,7 @@
       <logback-classic.version>1.2.13</logback-classic.version>
       <spark.version>3.2.1</spark.version>
       <sparknlp.version>4.4.2</sparknlp.version>
-      <spring-boot.version>2.5.12.RELEASE</spring-boot.version>
+      <spring-boot.version>2.5.12</spring-boot.version>
       <sparkocr.version>4.4.2</sparkocr.version>
       <sparkocr.jarpath>/home/alexander_jsl/Workspace/spark-ocr/target/scala-2.12/spark-ocr-assembly-4.4.3rc2.jar</sparkocr.jarpath>
    </properties>
