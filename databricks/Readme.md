@@ -15,7 +15,8 @@ maven:com.microsoft.onnxruntime:onnxruntime_gpu:1.19.0
 ```
 The final config for spark-nlp-gpu must look like this,
 
-![db_config](https://github.com/user-attachments/assets/c53f33a9-6eb5-4634-9907-074b35b94c87)
+
+![db_config](https://github.com/user-attachments/assets/aed2e0ec-36bd-4a25-849e-31bf31917e5a)
 
 
 
