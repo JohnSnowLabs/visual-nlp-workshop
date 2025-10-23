@@ -1,0 +1,12 @@
+{
+    "text": {
+        "invoice_date": "February 15, 2022",
+        "invoice_number": "NV-2022-001",
+        "due_date": "February 15, 2022",
+        "billing_address": "123 Main Street, Anytown, USA",
+        "vendor": "ABC Company",
+        "customer": "ABC Company",
+        "total_amount": "$165.00",
+        "tax_amount": "$15.00"
+    }
+}
