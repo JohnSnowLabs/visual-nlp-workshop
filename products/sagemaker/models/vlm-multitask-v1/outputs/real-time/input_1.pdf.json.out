@@ -1,0 +1,16 @@
+{
+    "pages": [
+        {
+            "page": 1,
+            "text": {
+                "<OCR>": "This is an example of handwritten\nbest.\nLet's oe check the performance!\nI hope it will be awesome.\n"
+            }
+        },
+        {
+            "page": 2,
+            "text": {
+                "<OCR>": "STARBUCKS Store #10208\n11302 Euclid Avenue\nCleveland, OH (216) 229-0749\nCHK 664290\n12/07/2014 06:43 PM\n1912003 Drawer: 2 Reg: 2\nVt Pep Mocha\n4.95\nShux Card\n4,95\nXXXXXXXXXXXXX3228\nSubtotal\n$4.96\nTotal\n$44.95.\nChange Due\n$0.00\nCheck Closed\n12 /07/ 2014 06: 43 PM\nSBUX Card x3228 New Balance: 37.45\nCard is registertal.\n"
+            }
+        }
+    ]
+}
