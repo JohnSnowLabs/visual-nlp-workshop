@@ -97,20 +97,21 @@ A representative sample image is included in the repository.
 
 ## Dataset Structure
 
+```text
 data/
 │
 ├── MedJSLPrint/
-│ ├── medication_extraction/
-│ │ ├── prescriptions/
-│ │ └── samples/
-│ │
-│ ├── medication_test_extraction/
-│ │ ├── prescriptions/
-│ │ └── samples/
+│   ├── medication_extraction/
+│   │   ├── prescriptions/
+│   │   └── samples/
+│   │
+│   ├── medication_test_extraction/
+│   │   ├── prescriptions/
+│   │   └── samples/
 │
 └── MedJSLHw/
-├── prescriptions/
-└── samples/
+    ├── prescriptions/
+    └── samples/
 
 
 > **Note:** Folder names may vary depending on the repository organization.
