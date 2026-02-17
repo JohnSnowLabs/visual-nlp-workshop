@@ -1,0 +1,39 @@
+```json
+{
+  "medications": [
+    {
+      "startDate": "7-1",
+      "medicineName": "Syp Augmentin DS",
+      "route": "PO",
+      "dose": "6 ml",
+      "frequency": "BD X 7 days",
+      "timeOfDay": []
+    },
+    {
+      "startDate": "7-1",
+      "medicineName": "Syp Ambrodil",
+      "route": "PO",
+      "dose": "4ml",
+      "frequency": "BD",
+      "timeOfDay": []
+    },
+    {
+      "startDate": "7-1",
+      "medicineName": "Saline Nasoclear Nasal Drops",
+      "route": "nasal",
+      "dose": "4ml",
+      "frequency": "QID",
+      "timeOfDay": []
+    },
+    {
+      "startDate": "7-1",
+      "medicineName": "Tab LCZ 5mg",
+      "route": "PO",
+      "dose": "1/2",
+      "frequency": null,
+      "timeOfDay": []
+    }
+  ]
+}
+```
+------------------------------

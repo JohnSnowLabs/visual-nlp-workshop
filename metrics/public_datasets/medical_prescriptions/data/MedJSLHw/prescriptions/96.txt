@@ -1,0 +1,15 @@
+```json
+{
+  "medications": [
+    {
+      "startDate": "10-03",
+      "medicineName": "Ferrous Sulfate",
+      "route": "PO",
+      "dose": "4 mL",
+      "frequency": "TID",
+      "timeOfDay": []
+    }
+  ]
+}
+```
+------------------------------

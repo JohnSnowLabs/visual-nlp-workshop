@@ -1,0 +1,47 @@
+```json
+{
+  "medications": [
+    {
+      "startDate": "13-7",
+      "medicineName": "Inj Diclo",
+      "route": "IM",
+      "dose": "1 ampule",
+      "frequency": "stat",
+      "timeOfDay": []
+    },
+    {
+      "startDate": "13-7",
+      "medicineName": "Inj Rantac",
+      "route": "PO",
+      "dose": "1 ampule",
+      "frequency": "stat",
+      "timeOfDay": []
+    },
+    {
+      "startDate": "13-7",
+      "medicineName": "ORS",
+      "route": "PO",
+      "dose": "null,
+      "frequency": null,
+      "timeOfDay": []
+    },
+    {
+      "startDate": "13-7",
+      "medicineName": "Tab Diclo",
+      "route": "PO",
+      "dose": "1 tab",
+      "frequency": "BD",
+      "timeOfDay": []
+    },
+    {
+      "startDate": "13-7",
+      "medicineName": "Tab Rantac",
+      "route": "PO",
+      "dose": "1 tab",
+      "frequency": "OD",
+      "timeOfDay": []
+    }
+  ]
+}
+```
+------------------------------

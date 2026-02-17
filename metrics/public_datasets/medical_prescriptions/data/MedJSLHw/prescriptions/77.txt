@@ -1,0 +1,22 @@
+```json
+{
+  "medications": [
+    {
+      "startDate": "01-11",
+      "medicineName": "Paracetamol",
+      "route": "tab.",
+      "dose": "500 mg",
+      "frequency": "twice daily",
+      "timeOfDay": ["20 min. after the Metoclopramide"]
+    },
+    {
+      "startDate": "01-11",
+      "medicineName": "Suspension Metoclopramide",
+      "route": "P.O",
+      "dose": "10 mg",
+      "frequency": "as soon as an attack is felt"
+    }
+  ]
+}
+```
+------------------------------

@@ -1,0 +1,15 @@
+```json
+{
+  "medications": [
+    {
+      "startDate": "14-11",
+      "medicineName": null,
+      "route": null,
+      "dose": null,
+      "frequency": null,
+      "timeOfDay": []
+    }
+  ]
+}
+```
+------------------------------

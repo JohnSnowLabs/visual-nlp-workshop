@@ -1,0 +1,31 @@
+```json
+{
+  "medications": [
+    {
+      "startDate": "12-10",
+      "medicineName": "Tab. Augmentin 625mg",
+      "route": "PO",
+      "dose": "625 mg","1 tab",
+      "frequency": "bd x 5 days",
+      "timeOfDay": ["After meals"]
+    },
+    {
+      "startDate": "12-10",
+      "medicineName": "Tab. Enzoflam",
+      "route": "PO",
+      "dose": "1 tab",
+      "frequency": "bd x 5 days",
+      "timeOfDay": ["After meals"]
+    },
+    {
+      "startDate": "12-10",
+      "medicineName": "Tab. Pan-D",
+      "route": "PO",
+      "dose": "40 mg", "1 tab",
+      "frequency": "od x 5 days",
+      "timeOfDay": ["Before meals"]
+    }
+  ]
+}
+```
+------------------------------

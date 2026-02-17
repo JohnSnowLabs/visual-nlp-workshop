@@ -1,0 +1,15 @@
+```json
+{
+  "medications": [
+    {
+      "startDate": "11-10",
+      "medicineName": "Phenytoin Sodium Extended",
+      "route": null,
+      "dose": "100 mg",
+      "frequency": "tid",
+      "timeOfDay": []
+    }
+  ]
+}
+```
+------------------------------

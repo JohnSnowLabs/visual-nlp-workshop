@@ -1,0 +1,23 @@
+```json
+{
+  "medications": [
+    {
+      "startDate": "01-11",
+      "medicineName": "Tolbutamide",
+      "route": "oral",
+      "dose": "1000 mg",
+      "frequency": "1 dd",
+      "timeOfDay": ["before breakfast"]
+    },
+    {
+      "startDate": "01-11",
+      "medicineName": "Morphine",
+      "route": "oral",
+      "dose": "ten milligram, 1 tablet",
+      "frequency": "q6h",
+      "timeOfDay": ["before night"]
+    }
+  ]
+}
+```
+------------------------------

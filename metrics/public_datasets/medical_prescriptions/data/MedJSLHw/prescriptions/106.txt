@@ -1,0 +1,55 @@
+```json
+{
+  "medications": [
+    {
+      "startDate": "06-06",
+      "medicineName": "Trilock 10 mg",
+      "route": "PO",
+      "dose": "10mg",
+      "frequency": null,
+      "timeOfDay": []
+    },
+    {
+      "startDate": "06-06",
+      "medicineName": "SEA-GO",
+      "route": "PO",
+      "dose": "1 tab",
+      "frequency": "bd",
+      "timeOfDay": []
+    },
+    {
+      "startDate": "06-06",
+      "medicineName": "Tab Naxim",
+      "route": "PO",
+      "dose": "5/10mg",
+      "frequency": "OD for 5 days",
+      "timeOfDay": []
+    },
+    {
+      "startDate": "06-06",
+      "medicineName": "Tab Argenta",
+      "route": "PO",
+      "dose": "1 tab",
+      "frequency": "OD",
+      "timeOfDay": []
+    },
+    {
+      "startDate": "06-06",
+      "medicineName": "Tab PAC",
+      "route": "PO",
+      "dose": "1 tab",
+      "frequency": "TDS",
+      "timeOfDay": []
+    },
+    {
+      "startDate": "06-06",
+      "medicineName": "Eragut",
+      "route": "PO",
+      "dose": "1 tab",
+      "frequency": "TDS",
+      "timeOfDay": ["22:00"]
+    }
+  ]
+}
+```
+------------------------------

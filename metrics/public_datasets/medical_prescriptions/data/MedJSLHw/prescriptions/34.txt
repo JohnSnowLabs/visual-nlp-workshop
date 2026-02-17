@@ -1,0 +1,23 @@
+```json
+{
+  "medications": [
+    {
+      "startDate": null,
+      "medicineName": "Velcox",
+      "route": "PO",
+      "dose": "120mg",
+      "frequency": "BD x 5 days",
+      "timeOfDay": []
+    },
+    {
+      "startDate": null,
+      "medicineName": "jedbrar eff",
+      "route": "PO",
+      "dose": null,
+      "frequency": "BD x 5 days",
+      "timeOfDay": []
+    }
+  ]
+}
+```
+------------------------------

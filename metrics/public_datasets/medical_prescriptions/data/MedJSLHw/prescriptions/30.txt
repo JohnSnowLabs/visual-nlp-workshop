@@ -1,0 +1,47 @@
+```json
+{
+  "medications": [
+    {
+      "startDate": "13-10",
+      "medicineName": "Cap. Phexin",
+      "route": "PO",
+      "dose": "500mg",
+      "frequency": "BD x 5 days",
+      "timeOfDay": []
+    },
+    {
+      "startDate": "13-10",
+      "medicineName": "Tab. Zerodol PT",
+      "route": "PO",
+      "dose": "BD",
+      "frequency": "x 5 days",
+      "timeOfDay": []
+    },
+    {
+      "startDate": "13-10",
+      "medicineName": "Stolin gum paint",
+      "route": "PO",
+      "dose": "BD",
+      "frequency": "x 5 days",
+      "timeOfDay": []
+    },
+    {
+      "startDate": "13-10",
+      "medicineName": "Colgate Plax mouthwash",
+      "route": "PO",
+      "dose": null,
+      "frequency": "1 week",
+      "timeOfDay": []
+    },
+    {
+      "startDate": "13-10",
+      "medicineName": "Oral B Pro 2 2000N electric brush",
+      "route": "PO",
+      "dose": null,
+      "frequency": null,
+      "timeOfDay": []
+    }
+  ]
+}
+```
+------------------------------

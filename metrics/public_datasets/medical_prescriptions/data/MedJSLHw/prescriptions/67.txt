@@ -1,0 +1,39 @@
+```json
+{
+  "medications": [
+    {
+      "startDate": "17-10",
+      "medicineName": "Tab. Stamlo",
+      "route": "PO",
+      "dose": "5mg",
+      "frequency": "OD X Morning",
+      "timeOfDay": []
+    },
+    {
+      "startDate": "17-10",
+      "medicineName": "Tab. Arvast 5mg",
+      "route": "PO",
+      "dose": "5mg",
+      "frequency": "OD X Morning",
+      "timeOfDay": []
+    },
+    {
+      "startDate": "17-10",
+      "medicineName": "Tab. Thyrox",
+      "route": "PO",
+      "dose": "75mcg",
+      "frequency": "OD X Morning",
+      "timeOfDay": []
+    },
+    {
+      "startDate": "17-10",
+      "medicineName": "Tab. Beplex Forte",
+      "route": "PO",
+      "dose": null,
+      "frequency": "OD X Evening",
+      "timeOfDay": []
+    }
+  ]
+}
+```
+------------------------------

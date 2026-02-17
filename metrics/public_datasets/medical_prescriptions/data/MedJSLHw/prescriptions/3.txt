@@ -1,0 +1,31 @@
+```json
+{
+  "medications": [
+    {
+      "startDate": "12-04",
+      "medicineName": "Cocaine Hydrochloride",
+      "route": "Local",
+      "dose": "8%",
+      "frequency": null,
+      "timeOfDay": []
+    },
+    {
+      "startDate": "12-04",
+      "medicineName": "Adrenaline",
+      "route": "Local",
+      "dose": null,
+      "frequency": null,
+      "timeOfDay": []
+    },
+    {
+      "startDate": "12-04",
+      "medicineName": "Saline Solution (Normal)",
+      "route": "Local",
+      "dose": null,
+      "frequency": null,
+      "timeOfDay": []
+    }
+  ]
+}
+```
+------------------------------
