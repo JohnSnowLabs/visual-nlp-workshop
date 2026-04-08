@@ -1,0 +1,15 @@
+```json
+{
+  "medications": [
+    {
+      "startDate": null,
+      "medicineName": "Spiritus Frumenti",
+      "route": null,
+      "dose": null,
+      "frequency": "q4h",
+      "timeOfDay": []
+    }
+  ]
+}
+```
+------------------------------

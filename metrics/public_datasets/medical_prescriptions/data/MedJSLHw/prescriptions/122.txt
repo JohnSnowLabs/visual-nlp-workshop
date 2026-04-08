@@ -1,0 +1,63 @@
+```json
+{
+  "medications": [
+    {
+      "startDate": null,
+      "medicineName": "Nicardia R",
+      "route": null,
+      "dose": "20mg",
+      "frequency": "TID",
+      "timeOfDay": []
+    },
+    {
+      "startDate": null,
+      "medicineName": "Lasix",
+      "route": null,
+      "dose": "40 mg",
+      "frequency": "BD",
+      "timeOfDay": []
+    },
+    {
+      "startDate": null,
+      "medicineName": "Rantac",
+      "route": null,
+      "dose": "150",
+      "frequency": "BD",
+      "timeOfDay": []
+    },
+    {
+      "startDate": null,
+      "medicineName": "Emeset-4",
+      "route": null,
+      "dose": "4 mg",
+      "frequency": "TID",
+      "timeOfDay": []
+    },
+    {
+      "startDate": null,
+      "medicineName": "Acelish",
+      "route": null,
+      "dose": "100 mg",
+      "frequency": null,
+      "timeOfDay": []
+    },
+    {
+      "startDate": null,
+      "medicineName": "Nodosis",
+      "route": null,
+      "dose": "1 tab",
+      "frequency": "bd",
+      "timeOfDay": []
+    },
+    {
+      "startDate": null,
+      "medicineName": "Disopan",
+      "route": null,
+      "dose": "1 tab",
+      "frequency": "bd",
+      "timeOfDay": []
+    }
+  ]
+}
+```
+------------------------------

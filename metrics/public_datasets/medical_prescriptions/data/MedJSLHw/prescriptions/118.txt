@@ -1,0 +1,31 @@
+```json
+{
+  "medications": [
+    {
+      "startDate": null,
+      "medicineName": "Gramocef",
+      "route": "oral",
+      "dose": null,
+      "frequency": "3-5 days",
+      "timeOfDay": []
+    },
+    {
+      "startDate": null,
+      "medicineName": "Furolin",
+      "route": "oral",
+      "dose": null,
+      "frequency": " x 5 days",
+      "timeOfDay": []
+    },
+    {
+      "startDate": null,
+      "medicineName": "Nasivion S Nasal Drop",
+      "route": "nasal",
+      "dose": "2 drops",
+      "frequency": "6 hourly for 2 weeks",
+      "timeOfDay": []
+    }
+  ]
+}
+```
+------------------------------

@@ -1,0 +1,31 @@
+```json
+{
+  "medications": [
+    {
+      "startDate": "01-12",
+      "medicineName": "Acetaminophen 650mg",
+      "route": "PO",
+      "dose": "650mg",
+      "frequency": "Q4h prn",
+      "timeOfDay": []
+    },
+    {
+      "startDate": "01-12",
+      "medicineName": "Aspirin",
+      "route": "PO",
+      "dose": "81mg",
+      "frequency": "daily",
+      "timeOfDay": []
+    },
+    {
+      "startDate": "01-12",
+      "medicineName": "Clopidogrel",
+      "route": "PO",
+      "dose": "75mg",
+      "frequency": "daily",
+      "timeOfDay": []
+    }
+  ]
+}
+```
+------------------------------

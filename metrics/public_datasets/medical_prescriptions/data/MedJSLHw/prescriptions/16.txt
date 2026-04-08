@@ -1,0 +1,15 @@
+```json
+{
+  "medications": [
+    {
+      "startDate": "17-01",
+      "medicineName": "PARACETAMOL",
+      "route": "PO",
+      "dose": "1g",
+      "frequency": "QDS", "4 hourly sos"
+      "timeOfDay": []
+    }
+  ]
+}
+```
+------------------------------

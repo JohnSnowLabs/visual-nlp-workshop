@@ -1,0 +1,15 @@
+```json
+{
+  "medications": [
+    {
+      "startDate": "28-03",
+      "medicineName": "NOVORAPID FLEXPEN",
+      "route": "subcutaneous",
+      "dose": "6 units",
+      "frequency": "TDS",
+      "timeOfDay": ["08:00", "12:00", "18:00"]
+    }
+  ]
+}
+```
+------------------------------

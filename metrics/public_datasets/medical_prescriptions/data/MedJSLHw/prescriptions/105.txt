@@ -1,0 +1,55 @@
+```json
+{
+  "medications": [
+    {
+      "startDate": null,
+      "medicineName": "TAB HYDROXYCHLOROQUINE",
+      "route": null,
+      "dose": "400 mg",
+      "frequency": "once a week",
+      "timeOfDay": []
+    },
+    {
+      "startDate": null,
+      "medicineName": "TAB VITAMIN C",
+      "route": null,
+      "dose": "one gram",
+      "frequency": "once a day",
+      "timeOfDay": []
+    },
+    {
+      "startDate": null,
+      "medicineName": "TAB ZINC",
+      "route": null,
+      "dose": "50 mg",
+      "frequency": "once a day",
+      "timeOfDay": []
+    },
+    {
+      "startDate": null,
+      "medicineName": "TAB CROCIN/CALPOL",
+      "route": null,
+      "dose": "650 mg",
+      "frequency": "SOS",
+      "timeOfDay": []
+    },
+    {
+      "startDate": null,
+      "medicineName": "TAB CETRIZINE",
+      "route": null,
+      "dose": "10 mg",
+      "frequency": "once a day",
+      "timeOfDay": []
+    },
+    {
+      "startDate": null,
+      "medicineName": "SYRUP ALEX",
+      "route": null,
+      "dose": "2/3 teaspoon",
+      "frequency": "3 times a day",
+      "timeOfDay": []
+    }
+  ]
+}
+```
+------------------------------

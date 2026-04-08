@@ -1,0 +1,23 @@
+```json
+{
+  "medications": [
+    {
+      "startDate": "06-09",
+      "medicineName": "Eptolac",
+      "route": null,
+      "dose": null,
+      "frequency": null,
+      "timeOfDay": []
+    },
+    {
+      "startDate": "05-09",
+      "medicineName": "Novalgin fix",
+      "route": "PO",
+      "dose": "20 Trpf",
+      "frequency": "QID",
+      "timeOfDay": []
+    }
+  ]
+}
+```
+------------------------------

@@ -1,0 +1,15 @@
+```json
+{
+  "medications": [
+    {
+      "startDate": null,
+      "medicineName": "MINIPRESS (prazosin HCl)",
+      "route": null,
+      "dose": "1 mg, 2 mg, 5 mg",
+      "frequency": null,
+      "timeOfDay": []
+    }
+  ]
+}
+```
+------------------------------

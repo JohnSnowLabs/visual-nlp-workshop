@@ -1,0 +1,23 @@
+```json
+{
+  "medications": [
+    {
+      "startDate": null,
+      "medicineName": "Extract of Cannabis Indica",
+      "route": "PO",
+      "dose": "gr iv",
+      "frequency": null,
+      "timeOfDay": []
+    },
+    {
+      "startDate": null,
+      "medicineName": "Croton Chlorohydrate",
+      "route": "PO",
+      "dose": "gr x v",
+      "frequency": null,
+      "timeOfDay": []
+    }
+  ]
+}
+```
+------------------------------
