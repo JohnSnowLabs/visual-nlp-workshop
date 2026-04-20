@@ -3,7 +3,7 @@
 ## Overview
 
 This repository contains Jupyter notebooks that demonstrate how to use key-value and table extraction services provided by various cloud providers. Specifically, we use Amazon Textract, Google Document AI, and Azure Form Recognizer to extract information from images. Additionally, there is a notebook for extracting key-value and table information as JSON files from in-house labeled ground truth.
-
+We provide 2 ground-truth files and the results of our in-house models. The cloud providers results can be extracted with the ressources below.
 ## File Structure
 
 - `credentials.json`: Configuration file containing the necessary credentials for accessing the cloud services.
@@ -17,21 +17,21 @@ This repository contains Jupyter notebooks that demonstrate how to use key-value
     - `Generic_Report_GT_KV_Table_Extraction.ipynb`: Notebook for extracting key-value pairs and tables from in-house labeled ground truth.
   - `Evaluate_KV_Results.ipynb`: Notebook for evaluating key-value results.
 
-- `data/`: datasets to reproduce metrics.
-
-
+- `data/`: datasets to reproduce metrics. Images folder contains all the images used, and the rest of the zip files contains the inference results in json format.
+   - `images/`: This folder contain the images used 
+    - `FUNSD_images.zip`: Funsd images
+    - `GenericReport01_images.zip`: GenericReport data images
    - `FUNSD_GT.zip`: FUNSD Ground-Truth
    - `GenericReports01_GT.zip`: Generic Report Ground-Truth
    - `vLLM_v1_GenericReports01_fixoutput.zip`: Result of vLLM_v1 in Generic_Report01
    - `vLLM_v1_funsd_fixoutput.zip`: Result of vLLM_v1 in FUNSD
-   - `vLLM_v2_GenericReports01_fixoutput.zip`: Result of vLLM_v in Generic_Report01
+   - `vLLM_v2_GenericReports01_fixoutput.zip`: Result of vLLM_v2 in Generic_Report01
    - `vLLM_v2_funsd_fixoutput.zip`: Result of vLLM_v2 in FUNSD
    - `vLLM_v3_GenericReports01_fixoutput.zip`: Result of vLLM_v3 in Generic_Report01
    - `vLLM_v3_funsd_fixoutput.zip`: Result of vLLM_v3 in FUNSD
 
 ## Prerequisites
 
-- Make sure images are available for processing.
 - Add your credentials to the `credentials.json` file, before attempting to run any of the notebooks.
 - Python 3.7+
 - Jupyter Notebook
