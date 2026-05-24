@@ -1,0 +1,15 @@
+```json
+{
+  "medications": [
+    {
+      "startDate": null,
+      "medicineName": "Zolpidem 10mg",
+      "route": null,
+      "dose": "1 tab, 1/2 tab",
+      "frequency": "H.S",
+      "timeOfDay": []
+    }
+  ]
+}
+```
+------------------------------

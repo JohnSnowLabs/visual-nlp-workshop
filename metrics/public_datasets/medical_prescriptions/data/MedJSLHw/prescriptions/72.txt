@@ -1,0 +1,71 @@
+```json
+{
+  "medications": [
+    {
+      "startDate": "13-11",
+      "medicineName": "Tab. Ultrafen plus",
+      "route": "PO",
+      "dose": "2 x 50mg",
+      "frequency": "2 times a day for 2 months",
+      "timeOfDay": []
+    },
+    {
+      "startDate": "13-11",
+      "medicineName": "Tab. Relentus",
+      "route": "PO",
+      "dose": "2",
+      "frequency": "H.S for 2 months",
+      "timeOfDay": []
+    },
+    {
+      "startDate": "13-11",
+      "medicineName": "Cap. Prognt",
+      "route": "PO",
+      "dose": "2",
+      "frequency": "BD for 2 months",
+      "timeOfDay": []
+    },
+    {
+      "startDate": "13-11",
+      "medicineName": "Tab. Ultracal-D",
+      "route": "PO",
+      "dose": "2",
+      "frequency": "OD X Evening for 2 months",
+      "timeOfDay": []
+    },
+    {
+      "startDate": "13-11",
+      "medicineName": "Tab. Cartilex",
+      "route": "PO",
+      "dose": "2",
+      "frequency": "2 times a day for 2 months",
+      "timeOfDay": []
+    },
+    {
+      "startDate": "11-12",
+      "medicineName": "Tab. Diclofenac",
+      "route": "PO",
+      "dose": "2 X 50 mg",
+      "frequency": "2 times a day for 10 days",
+      "timeOfDay": ["07:00", "12:00", "19:00"]
+    },
+    {
+      "startDate": "11-12",
+      "medicineName": "Tab. Ultracal-D",
+      "route": "PO",
+      "dose": "2",
+      "frequency": "Evening for 10 days",
+      "timeOfDay": []
+    },
+    {
+      "startDate": "11-12",
+      "medicineName": "Cap. Omeprazol",
+      "route": "PO",
+      "dose": "2",
+      "frequency": "2 times a day for 10 days",
+      "timeOfDay": []
+    }
+  ]
+}
+```
+------------------------------

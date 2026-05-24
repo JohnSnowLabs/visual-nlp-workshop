@@ -1,0 +1,15 @@
+```json
+{
+  "medications": [
+    {
+      "startDate": null,
+      "medicineName": "Metadol",
+      "route": "PO",
+      "dose": "10mg",
+      "frequency": "x 8 days",
+      "timeOfDay": ["08:00"]
+    }
+  ]
+}
+```
+------------------------------

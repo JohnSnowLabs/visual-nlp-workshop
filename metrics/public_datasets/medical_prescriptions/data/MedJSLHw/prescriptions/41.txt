@@ -1,0 +1,15 @@
+```json
+{
+  "medications": [
+    {
+      "startDate": "01-11",
+      "medicineName": "Amoxicillin 50 mg/ml susp.",
+      "route": "PO",
+      "dose": "5ml",
+      "frequency": "TDS",
+      "timeOfDay": []
+    }
+  ]
+}
+```
+------------------------------

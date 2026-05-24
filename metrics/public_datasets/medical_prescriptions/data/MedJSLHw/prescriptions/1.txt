@@ -1,0 +1,15 @@
+```json
+{
+  "medications": [
+    {
+      "startDate": "01-11",
+      "medicineName": "Digoxin",
+      "route": "tablet",
+      "dose": "1 X 0.125 mg",
+      "frequency": "daily",
+      "timeOfDay": []
+    }
+  ]
+}
+```
+------------------------------

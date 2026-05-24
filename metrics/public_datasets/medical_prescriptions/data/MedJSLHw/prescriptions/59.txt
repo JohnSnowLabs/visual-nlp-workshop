@@ -1,0 +1,31 @@
+```json
+{
+  "medications": [
+    {
+      "startDate": "26-01",
+      "medicineName": "saline",
+      "route": "oral rinse",
+      "dose": null,
+      "frequency": "TDS X 15 days",
+      "timeOfDay": []
+    },
+    {
+      "startDate": "26-01",
+      "medicineName": "clohex plus mouthwash",
+      "route": "oral rinse",
+      "dose": null,
+      "frequency": "BD X 15 days",
+      "timeOfDay": []
+    },
+    {
+      "startDate": "26-01",
+      "medicineName": "Tab Ketoford DT",
+      "route": "oral",
+      "dose": null,
+      "frequency": "prn",
+      "timeOfDay": []
+    }
+  ]
+}
+```
+------------------------------

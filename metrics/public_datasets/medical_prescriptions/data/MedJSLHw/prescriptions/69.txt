@@ -1,0 +1,15 @@
+```json
+{
+  "medications": [
+    {
+      "startDate": "1-1",
+      "medicineName": "PABRINEX",
+      "route": "IV",
+      "dose": "2 pairs",
+      "frequency": "TDS",
+      "timeOfDay": []
+    }
+  ]
+}
+```
+------------------------------

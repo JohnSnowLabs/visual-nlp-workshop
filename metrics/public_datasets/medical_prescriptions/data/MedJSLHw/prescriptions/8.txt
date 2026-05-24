@@ -1,0 +1,23 @@
+```json
+{
+  "medications": [
+    {
+      "startDate": "22-04",
+      "medicineName": "T. Sompraz 40 mg",
+      "route": "PO",
+      "dose": "40 mg",
+      "frequency": "OD X 1 month",
+      "timeOfDay": ["Morning", "Before meals"]
+    },
+    {
+      "startDate": "22-04",
+      "medicineName": "T. Normaxin-RT",
+      "route": "PO",
+      "dose": null
+      "frequency": "OD X 1 month",
+      "timeOfDay": ["Night", "Before meals"]
+    }
+  ]
+}
+```
+------------------------------

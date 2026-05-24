@@ -1,0 +1,15 @@
+```json
+{
+  "medications": [
+    {
+      "startDate": null,
+      "medicineName": "Erythromycin ethylsuccinate 400 mg /5 ml",
+      "route": "oral",
+      "dose": "400mg/5ml",
+      "frequency": "qid",
+      "timeOfDay": []
+    }
+  ]
+}
+```
+------------------------------

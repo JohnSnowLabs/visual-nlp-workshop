@@ -1,0 +1,15 @@
+```json
+{
+  "medications": [
+    {
+      "startDate": "11-11",
+      "medicineName": "OxyContin",
+      "route": "PO",
+      "dose": "80mg",
+      "frequency": "tid",
+      "timeOfDay": []
+    }
+  ]
+}
+```
+------------------------------

@@ -1,0 +1,23 @@
+```json
+{
+  "medications": [
+    {
+      "startDate": null,
+      "medicineName": "Nurokind Plus",
+      "route": "PO",
+      "dose": "30",
+      "frequency": "h.s",
+      "timeOfDay": []
+    },
+    {
+      "startDate": null,
+      "medicineName": "C. Oro T gargles",
+      "route": "PO",
+      "dose": "with 1/2 glass of water",
+      "frequency": null,
+      "timeOfDay": []
+    }
+  ]
+}
+```
+------------------------------

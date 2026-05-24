@@ -1,0 +1,39 @@
+```json
+{
+  "medications": [
+    {
+      "startDate": "25-07",
+      "medicineName": "Digitalis",
+      "route": "tropical",
+      "dose": null,
+      "frequency": "bd", "morning and Evening",
+      "timeOfDay": []
+    },
+    {
+      "startDate": "25-07",
+      "medicineName": "Opium",
+      "route": "tropical",
+      "dose": null,
+      "frequency": "bd", "morning and Evening",
+      "timeOfDay": []
+    },
+    {
+      "startDate": "25-07",
+      "medicineName": "Belladonna",
+      "route": "tropical",
+      "dose": null,
+      "frequency": "bd", "morning and Evening",
+      "timeOfDay": []
+    },
+    {
+      "startDate": "25-07",
+      "medicineName": "Aconite",
+      "route": "tropical",
+      "dose": null,
+      "frequency": "bd", "morning and Evening",
+      "timeOfDay": []
+    }
+  ]
+}
+```
+------------------------------

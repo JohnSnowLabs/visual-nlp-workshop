@@ -1,0 +1,39 @@
+```json
+{
+  "medications": [
+    {
+      "startDate": "21-08",
+      "medicineName": "Syp Mega cv forte",
+      "route": "oral",
+      "dose": "4ml",
+      "frequency": "BD x 5 days",
+      "timeOfDay": []
+    },
+    {
+      "startDate": "21-08",
+      "medicineName": "Syp Ibugesic",
+      "route": "oral",
+      "dose": "3ml",
+      "frequency": "prn for fever >102",
+      "timeOfDay": []
+    },
+    {
+      "startDate": "21-08",
+      "medicineName": "Syp Alerid",
+      "route": "oral",
+      "dose": "3.75",
+      "frequency": "H.S x 5 days",
+      "timeOfDay": []
+    },
+    {
+      "startDate": "21-08",
+      "medicineName": "Anmol rectal supp",
+      "route": "rectal",
+      "dose": "125mg",
+      "frequency": "once daily",
+      "timeOfDay": []
+    }
+  ]
+}
+```
+------------------------------

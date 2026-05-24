@@ -1,0 +1,95 @@
+```json
+{
+  "medications": [
+    {
+      "startDate": null,
+      "medicineName": "Inj. Clexane",
+      "route": "s/c",
+      "dose": "60",
+      "frequency": "BD",
+      "timeOfDay": ["morning, evening"]
+    },
+    {
+      "startDate": null,
+      "medicineName": "Cap. Doxy",
+      "route": "po",
+      "dose": "100",
+      "frequency": "bd",
+      "timeOfDay": ["morning, evening"]
+    },
+    {
+      "startDate": null,
+      "medicineName": "Tab. Myth",
+      "route": "po",
+      "dose": "16 mg",
+      "frequency": "BD",
+      "timeOfDay": ["morning, evening"]
+    },
+    {
+      "startDate": null,
+      "medicineName": "Montair fx",
+      "route": "po",
+      "dose": null,
+      "frequency": "OD",
+      "timeOfDay": ["evening"]
+    },
+    {
+      "startDate": null,
+      "medicineName": "Vit C",
+      "route": "po",
+      "dose": "500 mg",
+      "frequency": "BD",
+      "timeOfDay": ["morning, evening"]
+    },
+    {
+      "startDate": null,
+      "medicineName": "Ziacet M",
+      "route": "po",
+      "dose": null,
+      "frequency": "OD",
+      "timeOfDay": ["evening"]
+    },
+    {
+      "startDate": null,
+      "medicineName": "Metocard Xl",
+      "route": "po",
+      "dose": "25 mg",
+      "frequency": "OD",
+      "timeOfDay": ["morning"]
+    },
+    {
+      "startDate": null,
+      "medicineName": "Envas",
+      "route": "po",
+      "dose": "5 mg",
+      "frequency": "OD",
+      "timeOfDay": ["morning"]
+    },
+    {
+      "startDate": null,
+      "medicineName": "Xoten C 10",
+      "route": "po",
+      "dose": null,
+      "frequency": "OD",
+      "timeOfDay": ["morning"]
+    },
+    {
+      "startDate": null,
+      "medicineName": "Budecort",
+      "route": "Inhalation",
+      "dose": null,
+      "frequency": null,
+      "timeOfDay": []
+    },,
+    {
+      "startDate": null,
+      "medicineName": "Duolin",
+      "route": "Inhalation",
+      "dose": null,
+      "frequency": null,
+      "timeOfDay": []
+    }
+  ]
+}
+```
+------------------------------

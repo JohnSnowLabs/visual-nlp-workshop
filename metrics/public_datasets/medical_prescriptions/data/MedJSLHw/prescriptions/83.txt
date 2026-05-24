@@ -1,0 +1,15 @@
+```json
+{
+  "medications": [
+    {
+      "startDate": null,
+      "medicineName": "Losartan 50 milligram Tabs",
+      "route": "PO",
+      "dose": "50 milligram",
+      "frequency": "Daily",
+      "timeOfDay": ["morning"]
+    }
+  ]
+}
+```
+------------------------------
