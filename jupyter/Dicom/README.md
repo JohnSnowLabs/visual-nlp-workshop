@@ -8,17 +8,23 @@ Use this README as a routing guide: start with the notebook that matches your us
 
 | If you want to... | Start with | Why |
 |---|---|---|
-| Extract and inspect DICOM metadata | [`SparkOcrDicomMetadata.ipynb`](SparkOcrDicomMetadata.ipynb) | Focused `DicomToMetadata` examples, including VR filtering and `cleanTag` extraction for NER. |
+| Extract and inspect DICOM metadata | [`SparkOcrDicomMetadata.ipynb`](SparkOcrDicomMetadata.ipynb) | Focused `DicomToMetadata` examples, including VR filtering and `cleanTag` extraction for NER based PHI cleaning for free text. |
 | De-identify metadata only | [`SparkOcrMetadataDeIdentification.ipynb`](SparkOcrMetadataDeIdentification.ipynb) | Primary metadata workflow with strategy files, private tag removal, mappings, group rules, NER cleaning, and UID/patient mapping extraction. |
-| De-identify PHI in image pixels | Start with [`SparkOcrDicomToImageV3.ipynb`](SparkOcrDicomToImageV3.ipynb), then choose [`SparkOcrDicomVLM.ipynb`](SparkOcrDicomVLM.ipynb), [`SparkOcrDicomDeIdentificationV3.ipynb`](SparkOcrDicomDeIdentificationV3.ipynb), or [`SparkOcrDicomDeIdentificationV2.ipynb`](SparkOcrDicomDeIdentificationV2.ipynb), and finish with [`SparkOcrDicomDrawRegions.ipynb`](SparkOcrDicomDrawRegions.ipynb). | Pixel de-id starts by extracting DICOM pixels into images, then uses either VLM OCR or standard OCR/NER pipelines, then renders redactions back onto the DICOM. |
-| De-identify both metadata and pixels | [`SparkOcrMIDIBSolution.ipynb`](SparkOcrMIDIBSolution.ipynb) | End-to-end MIDI-B-oriented solution combining metadata and pixel de-identification. |
+| De-identify PHI in image pixels | [`SparkOcrDicomToImageV3.ipynb`](SparkOcrDicomToImageV3.ipynb), an OCR option below, then [`SparkOcrDicomDrawRegions.ipynb`](SparkOcrDicomDrawRegions.ipynb) | Extract pixels into images, identify PHI, then render redactions back onto the DICOM. |
+| MIDI-B | [`SparkOcrMIDIBSolution.ipynb`](SparkOcrMIDIBSolution.ipynb) | End-to-end MIDI-B-oriented solution combining metadata and pixel de-identification. |
 | Convert or render DICOM images | [`SparkOcrDicomToImageV3.ipynb`](SparkOcrDicomToImageV3.ipynb) | Best entry point for `DicomToImageV3`, frame sampling, scaling, and compression. |
 | Draw or redact regions on DICOMs | [`SparkOcrDicomDrawRegions.ipynb`](SparkOcrDicomDrawRegions.ipynb) | Shows detection-only masking, OCR/NER-based coordinates, image previews, and final DICOM redaction. |
 | Remove all detected image text | [`SparkOcrDicomRemoveText.ipynb`](SparkOcrDicomRemoveText.ipynb) | Smaller legacy example for broad text removal from DICOM images. |
 | De-identify encapsulated PDFs inside DICOM | [`SparkOcrDeidentificationDicomWithEncapsulatedPDF.ipynb`](SparkOcrDeidentificationDicomWithEncapsulatedPDF.ipynb) | Extracts PDF from DICOM, OCRs pages, redacts PHI, rebuilds the PDF, and updates the DICOM. |
-| Use VLM OCR for DICOM text detection | [`SparkOcrDicomVLM.ipynb`](SparkOcrDicomVLM.ipynb) | Uses `MedicalVisionLLM` for OCR with coordinates, then supports blanket or PHI-only redaction. |
+| Use VLM OCR for DICOM text detection | [`SparkOcrDicomVLM.ipynb`](SparkOcrDicomVLM.ipynb) | Uses 1B VLM for OCR with coordinates, then supports blanket or PHI-only redaction. |
 | Run de-identification in streaming mode | [`SparkOcrDicomDeIdentificationV2Streaming.ipynb`](SparkOcrDicomDeIdentificationV2Streaming.ipynb) | Spark Structured Streaming example based on the V2 image/OCR pipeline. |
 | Try pretrained de-identification pipelines | [`SparkOcrDicomPretrainedPipelines.ipynb`](SparkOcrDicomPretrainedPipelines.ipynb) | Compares ready-made minimal, full anonymization, and pseudonymization DICOM pipelines. |
+
+Pixel PHI OCR options:
+
+- [`SparkOcrDicomVLM.ipynb`](SparkOcrDicomVLM.ipynb): latest VLM-based option for handwritten text, printed text, and DICOMs containing PDF packets.
+- [`SparkOcrDicomDeIdentificationV3.ipynb`](SparkOcrDicomDeIdentificationV3.ipynb): CPU-based option for printed text.
+- [`SparkOcrDicomDeIdentificationV2.ipynb`](SparkOcrDicomDeIdentificationV2.ipynb): GPU-based option for printed text and simple handwritten text; use the VLM notebook for complex handwriting.
 
 ## Latest Notebooks
 
@@ -86,7 +92,9 @@ Check your license file for the correct open-source Spark NLP version.
 !apt-get install -y openjdk-8-jdk
 ```
 
-Restart the notebook session after installing JSL components.
+## 🔴 WARNING: Restart Your Notebook Session
+
+> Restart the notebook session after installing JSL components, before starting Spark OCR.
 
 ### Start Spark OCR
 
@@ -104,6 +112,9 @@ if aws_access_key:
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
+jsl_version = nlp_secret.split("-")[0]
+ocr_version = secret.split("-")[0]
+
 extra_configurations = {
     "spark.extraListeners": "com.johnsnowlabs.license.LicenseLifeCycleManager"
 }
@@ -112,7 +123,7 @@ spark = start(
     secret=secret,
     nlp_secret=nlp_secret,
     jar_path=spark_ocr_jar_path,
-    nlp_internal="6.4.1",
+    nlp_internal=jsl_version,
     extra_conf=extra_configurations
 )
 
