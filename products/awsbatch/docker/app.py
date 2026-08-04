@@ -10,6 +10,7 @@ from johnsnowlabs import nlp
 from pyspark.ml import PipelineModel
 from sparkocr.enums import *
 from sparkocr.transformers import *
+from pyspark.sql.functions import size
 
 def show_boto3_credentials(mask=True):
     session = boto3.Session()
@@ -88,7 +89,7 @@ def load_pipeline():
     .setImageType(ImageType.TYPE_BYTE_GRAY) \
     .setKeepInput(False)
 
-    text_detector = ImageTextDetector.load("/opt/ml/image_text_detector_mem_opt") \
+    text_detector = ImageTextDetectorCraft().load("/opt/ml/image_text_detector_mem_opt") \
     .setInputCol("image_raw") \
     .setOutputCol("text_regions") \
     .setScoreThreshold(0.7) \
@@ -99,11 +100,13 @@ def load_pipeline():
     .setUseGPU(False) \
     .setWidth(640)
     
-    pipeline = PipelineModel.load("/opt/ml/model")
-    pipeline.stages =  [bin_to_image, text_detector] + pipeline.stages[2:]
-    return pipeline
+    img_pipeline = PipelineModel(stages=[bin_to_image, text_detector])
 
-def process_file(deid_pipeline, input_file, output_folder):
+    nlp_pipeline = PipelineModel.load("/opt/ml/model")
+    nlp_pipeline.stages = nlp_pipeline.stages[1:]
+    return img_pipeline, nlp_pipeline
+
+def process_file(img_p, nlp_p, input_file, output_folder):
     """Run the de-id pipeline on a single local file and return the local
     path to its output file inside output_folder."""
     from sparkocr.utils.svs.phi_cleaning import remove_phi
@@ -132,10 +135,16 @@ def process_file(deid_pipeline, input_file, output_folder):
     
     image_df = spark.read.format("binaryFile").load(selected_level_paths)
     print(f"number of images:{image_df.count()}")
-    result_deid = deid_pipeline.transform(image_df)
-    deid_info = result_deid.select("path", "coordinates").distinct()
+    regions_df = img_p.transform(image_df)
+    regions_df = regions_df.filter(size(regions_df["text_regions"]) > 0).cache()
+    print(f"number of tiles w/text {regions_df.count()}")
+
+    if regions_df.count() > 0:
+      coords_df = nlp_p.transform(regions_df)
+      deid_info = coords_df.select("path", "coordinates").distinct()
     
-    redact_phi_in_tiles("deid_svs_copy", deid_info, tiles_output_tmp, output_svs_path=output_folder, create_new_svs_file = True)
+      redact_phi_in_tiles(cleaned_header_tmp, deid_info, tiles_output_tmp, output_svs_path=output_folder, create_new_svs_file = True)
+    return cleaned_header_tmp
     
 # ---- S3 helpers ----
 def parse_s3_uri(uri):
@@ -164,7 +173,7 @@ def process_folder(s3, input_s3, output_s3):
     in_bucket, in_prefix = parse_s3_uri(input_s3)
     out_bucket, out_prefix = parse_s3_uri(output_s3)
 
-    pipeline = load_pipeline()
+    img_p, nlp_p = load_pipeline()
 
     with tempfile.TemporaryDirectory() as tmpdir, tempfile.TemporaryDirectory() as output_folder:
         keys = list(list_s3_files(s3, in_bucket, in_prefix))
@@ -178,16 +187,16 @@ def process_folder(s3, input_s3, output_s3):
             logger.info("Downloading %s...", key)
             s3.download_file(in_bucket, key, local_path)
 
-            print("Processing {filename}")
+            print("Processing %s...", filename)
             output_local = process_file(img_p, nlp_p, tmpdir, output_folder)
 
             out_key = os.path.join(out_prefix, filename)
 
-            print(f"Uploading to {out_key}..." )
+            print("Uploading to %s...", out_key)
             s3.upload_file(output_local + '/' + filename, out_bucket, out_key)
 
-            os.remove(local_path)
-            os.remove(output_local)
+            #os.remove(local_path)
+            #os.remove(output_local)
 
     logger.info("Done!")
 
