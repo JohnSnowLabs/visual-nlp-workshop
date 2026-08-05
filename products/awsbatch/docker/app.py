@@ -59,7 +59,7 @@ def get_logger(logger_name):
 
 
 logger = get_logger("deid-batch-job")
-
+CACHE_PRETRAINED_PATH = "/home/jose/cache_pretrained" # "/opt/ml"
 
 def start_spark():
     # SPARK_OCR_LICENSE is read directly by nlp.start() from the process
@@ -89,7 +89,7 @@ def load_pipeline():
     .setImageType(ImageType.TYPE_BYTE_GRAY) \
     .setKeepInput(False)
 
-    text_detector = ImageTextDetectorCraft().load("/opt/ml/image_text_detector_mem_opt") \
+    text_detector = ImageTextDetectorCraft().load(f"{CACHE_PRETRAINED_PATH}/image_text_detector_mem_opt") \
     .setInputCol("image_raw") \
     .setOutputCol("text_regions") \
     .setScoreThreshold(0.7) \
@@ -102,11 +102,11 @@ def load_pipeline():
     
     img_pipeline = PipelineModel(stages=[bin_to_image, text_detector])
 
-    nlp_pipeline = PipelineModel.load("/opt/ml/model")
+    nlp_pipeline = PipelineModel.load(f"{CACHE_PRETRAINED_PATH}/model")
     nlp_pipeline.stages = nlp_pipeline.stages[1:]
     return img_pipeline, nlp_pipeline
 
-def process_file(img_p, nlp_p, input_file, output_folder):
+def process_file(img_p, nlp_p, input_file, filename, output_folder):
     """Run the de-id pipeline on a single local file and return the local
     path to its output file inside output_folder."""
     from sparkocr.utils.svs.phi_cleaning import remove_phi
@@ -139,13 +139,16 @@ def process_file(img_p, nlp_p, input_file, output_folder):
     regions_df = regions_df.filter(size(regions_df["text_regions"]) > 0).cache()
     print(f"number of tiles w/text {regions_df.count()}")
 
+    fully_qualified_filename = os.path.join(cleaned_header_tmp, filename)
     if regions_df.count() > 0:
       coords_df = nlp_p.transform(regions_df)
       deid_info = coords_df.select("path", "coordinates").distinct()
-    
-      redact_phi_in_tiles(cleaned_header_tmp, deid_info, tiles_output_tmp, output_svs_path=output_folder, create_new_svs_file = True)
-    return cleaned_header_tmp
-    
+
+      redact_phi_in_tiles(fully_qualified_filename, deid_info, tiles_output_tmp, output_svs_path=output_folder, create_new_svs_file = False)
+
+    return fully_qualified_filename
+
+
 # ---- S3 helpers ----
 def parse_s3_uri(uri):
     parsed = urlparse(uri)
@@ -175,28 +178,29 @@ def process_folder(s3, input_s3, output_s3):
 
     img_p, nlp_p = load_pipeline()
 
-    with tempfile.TemporaryDirectory() as tmpdir, tempfile.TemporaryDirectory() as output_folder:
+    with tempfile.TemporaryDirectory() as tmp_input_folder, tempfile.TemporaryDirectory() as tmp_output_folder:
         keys = list(list_s3_files(s3, in_bucket, in_prefix))
         if not keys:
             raise ValueError(f"No input files found under s3://{in_bucket}/{in_prefix}")
 
         for key in keys:
             filename = os.path.basename(key)
-            local_path = os.path.join(tmpdir, filename)
+            local_path = os.path.join(tmp_input_folder, filename)
 
             logger.info("Downloading %s...", key)
             s3.download_file(in_bucket, key, local_path)
 
             print("Processing %s...", filename)
-            output_local = process_file(img_p, nlp_p, tmpdir, output_folder)
-
+            output_local = process_file(img_p, nlp_p, tmp_input_folder, filename, tmp_output_folder)
             out_key = os.path.join(out_prefix, filename)
 
             print("Uploading to %s...", out_key)
-            s3.upload_file(output_local + '/' + filename, out_bucket, out_key)
+            s3.upload_file(output_local, out_bucket, out_key)
 
-            #os.remove(local_path)
-            #os.remove(output_local)
+            # remove the local .svs file.
+            os.remove(local_path)
+            # remove the tiles, the copies, and the final result
+            os.remove(tmp_output_folder)
 
     logger.info("Done!")
 
