@@ -4,6 +4,7 @@ import sys
 import traceback
 import boto3
 import tempfile
+import shutil
 import argparse
 from urllib.parse import urlparse
 from johnsnowlabs import nlp
@@ -117,12 +118,9 @@ def process_file(img_p, nlp_p, input_file, filename, output_folder):
     cleaned_header_tmp = tempfile.mkdtemp(dir=output_folder, prefix="cleaned_header_")
     remove_phi(input_file, cleaned_header_tmp, verbose=True, rename=False)
     tiles_output_tmp = tempfile.mkdtemp(dir=output_folder, prefix="tiles_output_")
-
     svs_to_tiles(input_file, tiles_output_tmp, level="auto", thumbnail = True)
-    
 
     selected_level_paths = []
-
     # Iterate over each folder inside tiles_output
     for svs_folder in os.listdir(tiles_output_tmp):
         svs_folder_path = os.path.join(tiles_output_tmp, svs_folder)
@@ -164,9 +162,10 @@ def list_s3_files(s3, bucket, prefix):
                 yield key
 
 
-def write_failure_marker(s3, output_s3, error_message):
+def write_failure_marker(s3, output_s3, error_message, filename=None):
     out_bucket, out_prefix = parse_s3_uri(output_s3)
-    key = os.path.join(out_prefix, "_FAILURE") if out_prefix else "_FAILURE"
+    marker_name = f"_FAILURE_{filename}" if filename else "_FAILURE"
+    key = os.path.join(out_prefix, marker_name) if out_prefix else marker_name
     s3.put_object(Bucket=out_bucket, Key=key, Body=error_message.encode("utf-8"))
     logger.info("Wrote failure marker to s3://%s/%s", out_bucket, key)
 
@@ -183,26 +182,45 @@ def process_folder(s3, input_s3, output_s3):
         if not keys:
             raise ValueError(f"No input files found under s3://{in_bucket}/{in_prefix}")
 
+        failed_files = []
+
         for key in keys:
             filename = os.path.basename(key)
             local_path = os.path.join(tmp_input_folder, filename)
 
-            logger.info("Downloading %s...", key)
-            s3.download_file(in_bucket, key, local_path)
+            try:
+                logger.info("Downloading %s...", key)
+                s3.download_file(in_bucket, key, local_path)
 
-            print("Processing %s...", filename)
-            output_local = process_file(img_p, nlp_p, tmp_input_folder, filename, tmp_output_folder)
-            out_key = os.path.join(out_prefix, filename)
+                logger.info("Processing %s...", filename)
+                output_local = process_file(img_p, nlp_p, local_path, filename, tmp_output_folder)
+                out_key = os.path.join(out_prefix, filename)
 
-            print("Uploading to %s...", out_key)
-            s3.upload_file(output_local, out_bucket, out_key)
+                logger.info("Uploading to %s...", out_key)
+                s3.upload_file(output_local, out_bucket, out_key)
+            except Exception:
+                error_message = traceback.format_exc()
+                logger.error("Failed to process %s:\n%s", filename, error_message)
+                failed_files.append(filename)
+                try:
+                    write_failure_marker(s3, output_s3, error_message, filename=filename)
+                except Exception:
+                    logger.exception("Failed to write failure marker for %s", filename)
+            finally:
+                # remove the tiles, the copies, and the final result for this file
+                shutil.rmtree(tmp_output_folder, ignore_errors=True)
+                # remove the local .svs file, whether or not processing got that far
+                if os.path.exists(local_path):
+                    os.remove(local_path)
 
-            # remove the local .svs file.
-            os.remove(local_path)
-            # remove the tiles, the copies, and the final result
-            os.remove(tmp_output_folder)
+        if failed_files:
+            logger.error(
+                "Failed to process %d/%d file(s): %s",
+                len(failed_files), len(keys), failed_files,
+            )
 
     logger.info("Done!")
+    return failed_files
 
 
 def get_config():
@@ -230,7 +248,7 @@ if __name__ == "__main__":
     spark.sparkContext.setLogLevel("ERROR")
 
     try:
-        process_folder(s3_client, input_s3, output_s3)
+        failed_files = process_folder(s3_client, input_s3, output_s3)
     except Exception:
         error_message = traceback.format_exc()
         logger.error(error_message)
@@ -238,4 +256,7 @@ if __name__ == "__main__":
             write_failure_marker(s3_client, output_s3, error_message)
         except Exception:
             logger.exception("Failed to write _FAILURE marker to %s", output_s3)
+        sys.exit(1)
+
+    if failed_files:
         sys.exit(1)
