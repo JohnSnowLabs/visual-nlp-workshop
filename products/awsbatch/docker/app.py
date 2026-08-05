@@ -175,7 +175,7 @@ def process_folder(s3, input_s3, output_s3):
     in_bucket, in_prefix = parse_s3_uri(input_s3)
     out_bucket, out_prefix = parse_s3_uri(output_s3)
 
-    img_p, nlp_p = load_pipeline()
+    img_p, nlp_p = None, None # load_pipeline()
 
     with tempfile.TemporaryDirectory() as tmp_input_folder, tempfile.TemporaryDirectory() as tmp_output_folder:
         keys = list(list_s3_files(s3, in_bucket, in_prefix))
@@ -186,14 +186,15 @@ def process_folder(s3, input_s3, output_s3):
 
         for key in keys:
             filename = os.path.basename(key)
-            local_path = os.path.join(tmp_input_folder, filename)
+            per_file_folder = tempfile.mkdtemp(dir=tmp_input_folder, prefix='tmp_input')
+            local_path = os.path.join(per_file_folder, filename)
 
             try:
                 logger.info("Downloading %s...", key)
                 s3.download_file(in_bucket, key, local_path)
 
                 logger.info("Processing %s...", filename)
-                output_local = process_file(img_p, nlp_p, local_path, filename, tmp_output_folder)
+                output_local = process_file(img_p, nlp_p, per_file_folder, filename, tmp_output_folder)
                 out_key = os.path.join(out_prefix, filename)
 
                 logger.info("Uploading to %s...", out_key)
