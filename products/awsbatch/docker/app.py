@@ -60,7 +60,7 @@ def get_logger(logger_name):
 
 
 logger = get_logger("deid-batch-job")
-CACHE_PRETRAINED_PATH = "/home/jose/cache_pretrained" # "/opt/ml"
+CACHE_PRETRAINED_PATH = "/opt/ml"
 
 def start_spark():
     # SPARK_OCR_LICENSE is read directly by nlp.start() from the process
@@ -72,25 +72,20 @@ def start_spark():
     # Batch job's IAM task role for S3 access without any collision.
     return nlp.start(visual=True)
 
-
 spark = None
 
-
-
 def load_pipeline():
-    """Load the Spark OCR de-id pipeline.
-
-    Either load a model baked into the image at build time (see
-    docker/installer.py) from a local path, or download one at runtime
-    (e.g. via johnsnowlabs' pretrained pipeline API) if it isn't present.
     """
+    Load the Spark OCR de-id pipeline.
+    """
+
     bin_to_image = BinaryToImage() \
     .setInputCol("content") \
     .setOutputCol("image_raw") \
     .setImageType(ImageType.TYPE_BYTE_GRAY) \
     .setKeepInput(False)
 
-    text_detector = ImageTextDetectorCraft().load(f"{CACHE_PRETRAINED_PATH}/image_text_detector_mem_opt") \
+    text_detector = ImageTextDetectorCraft().load(os.path.join(CACHE_PRETRAINED_PATH, "image_text_detector_mem_opt")) \
     .setInputCol("image_raw") \
     .setOutputCol("text_regions") \
     .setScoreThreshold(0.7) \
@@ -103,7 +98,7 @@ def load_pipeline():
     
     img_pipeline = PipelineModel(stages=[bin_to_image, text_detector])
 
-    nlp_pipeline = PipelineModel.load(f"{CACHE_PRETRAINED_PATH}/model")
+    nlp_pipeline = PipelineModel.load(os.path.join(CACHE_PRETRAINED_PATH, "model"))
     nlp_pipeline.stages = nlp_pipeline.stages[1:]
     return img_pipeline, nlp_pipeline
 
