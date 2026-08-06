@@ -1,0 +1,31 @@
+```json
+{
+  "medications": [
+    {
+      "startDate": null,
+      "medicineName": "T. Deplatt A",
+      "route": "PO",
+      "dose": "150 mg",
+      "frequency": "daily",
+      "timeOfDay": []
+    },
+    {
+      "startDate": null,
+      "medicineName": "T. Aztoc",
+      "route": "PO",
+      "dose": "80 mg",
+      "frequency": "daily",
+      "timeOfDay": []
+    },
+    {
+      "startDate": null,
+      "medicineName": "T. Nitrocontin 2.6mg",
+      "route": "PO",
+      "dose": "2.6 mg",
+      "frequency": "Twice daily",
+      "timeOfDay": []
+    }
+  ]
+}
+```
+------------------------------

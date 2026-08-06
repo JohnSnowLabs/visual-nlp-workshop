@@ -1,0 +1,15 @@
+```json
+{
+  "medications": [
+    {
+      "startDate": "16-05",
+      "medicineName": "Liposomal Amphotericin B",
+      "route": "Inj.",
+      "dose": "50mg",
+      "frequency": "6 vials/day",
+      "timeOfDay": []
+    }
+  ]
+}
+```
+------------------------------

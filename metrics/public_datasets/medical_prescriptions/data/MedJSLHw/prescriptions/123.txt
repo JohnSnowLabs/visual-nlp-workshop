@@ -1,0 +1,23 @@
+```json
+{
+  "medications": [
+    {
+      "startDate": "11-01",
+      "medicineName": "Heroin Hydrochloride",
+      "route": "PO",
+      "dose": null,
+      "frequency": "q3h",
+      "timeOfDay": []
+    },
+    {
+      "startDate": "11-01",
+      "medicineName": "Cannabis Creosote Emul",
+      "route": "PO",
+      "dose": null,
+      "frequency": "q3h",
+      "timeOfDay": []
+    }
+  ]
+}
+```
+------------------------------

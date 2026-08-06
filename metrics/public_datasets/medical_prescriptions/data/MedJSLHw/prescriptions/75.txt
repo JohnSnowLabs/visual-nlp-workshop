@@ -1,0 +1,15 @@
+```json
+{
+  "medications": [
+    {
+      "startDate": "12-3",
+      "medicineName": "Cap Amoxicillin (Himox) 500mg",
+      "route": "PO",
+      "dose": "1 cap",
+      "frequency": "3x a day for seven days",
+      "timeOfDay": []
+    }
+  ]
+}
+```
+------------------------------

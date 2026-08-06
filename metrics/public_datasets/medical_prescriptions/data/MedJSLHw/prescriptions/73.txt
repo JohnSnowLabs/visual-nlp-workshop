@@ -1,0 +1,39 @@
+```json
+{
+  "medications": [
+    {
+      "startDate": null,
+      "medicineName": "Syp. onset",
+      "route": "PO",
+      "dose": "4 ml",
+      "frequency": "TDS x2d",
+      "timeOfDay": ["before meals"]
+    },
+    {
+      "startDate": null,
+      "medicineName": "T. lanzol",
+      "route": "PO",
+      "dose": "15 mg",
+      "frequency": "BD x3d",
+      "timeOfDay": []
+    },
+    {
+      "startDate": null,
+      "medicineName": "Enterogermina",
+      "route": "PO",
+      "dose": "5 ml",
+      "frequency": "once in a day x 5day",
+      "timeOfDay": []
+    },
+    {
+      "startDate": null,
+      "medicineName": "Syp. Relent plus",
+      "route": "PO",
+      "dose": "2.5ml",
+      "frequency": "BD x 3days",
+      "timeOfDay": []
+    }
+  ]
+}
+```
+------------------------------

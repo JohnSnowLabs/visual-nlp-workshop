@@ -1,0 +1,15 @@
+```json
+{
+  "medications": [
+    {
+      "startDate": null,
+      "medicineName": "Inj Remdesivir",
+      "route": "IV",
+      "dose": "200 mg", "100 mg",
+      "frequency": "stat", "OD X 4 days",
+      "timeOfDay": []
+    }
+  ]
+}
+```
+------------------------------
