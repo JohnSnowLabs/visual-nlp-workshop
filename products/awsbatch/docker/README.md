@@ -18,7 +18,7 @@ docker run --rm \
   -e AWS_SESSION_TOKEN="**********************************************"\
   -e AWS_DEFAULT_REGION=******* \
   deid-container \
-  --input s3://dev.johnsnowlabs.com/ocr/svs/ --output s3://dev.johnsnowlabs.com/ocr/svs_output/
+  --input s3://my.bucket/ocr/svs/ --output s3://my.bucket/ocr/svs_output/
 ```
 
 See `../README.md` and `../cdk/README.md` for the full Batch-based deployment
