@@ -2,8 +2,18 @@
 
 # Image de-identification pipeline
 
-S3 → EventBridge → Lambda → AWS Batch (EC2, `c7a.4xlarge`) → container.
+## Introduction
+In a nutshell, this architecture works as follows,
 
+S3 → EventBridge → Lambda → AWS Batch (EC2, `c7a.4xlarge`) → container → S3. 
+
+* S3: stores the data.
+* EventBridge: notices that something happened.
+* Lambda: decides what should be processed and submits a Batch job.
+* AWS Batch: allocates compute and starts your container.
+* A container: reads from S3, performs inference, and writes results back to S3.
+
+## The details
 Files land under `s3://<bucket>/<folder>/`. Nothing happens until an empty
 `_READY` dummy file is created under that same prefix - that triggers a Batch
 job that reads `s3://<bucket>/<folder>/`, runs the Visual-NLP de-id pipeline,
