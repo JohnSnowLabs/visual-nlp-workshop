@@ -1,6 +1,17 @@
+if we had to prepare a landing page README.md for the jupyter/Dicom folder, to help users to navigate it, how would you organize it? one idea is to do it across topics, like,
+ 
++ Basic Getting Started pipelines.
++ Blanket, all texts, deid.
++ PHI, just entities, deid.
++ Tags & Strategy Files.
++ Estimating infra costs: link to benchmarks.
+
+
+
+
 # DICOM Notebooks Guide
 
-This folder contains Visual NLP / Spark OCR notebooks for working with DICOM data. The examples cover metadata inspection, metadata de-identification, pixel-level redaction, DICOM image rendering, encapsulated PDF workflows, VLM-based OCR, streaming, pretrained pipelines, and a full MIDI-B solution.
+This folder contains Visual NLP / Spark OCR notebooks for working with DICOM data. The examples cover metadata inspection, metadata de-identification, pixel-level redaction, DICOM image rendering, encapsulated PDF workflows, VLM-based Dicom de-identification, streaming, pretrained pipelines, and a full solution for the [MIDI-B challenge dataset](https://www.cancerimagingarchive.net/collection/midi-b-test-midi-b-validation/).
 
 Use this README as a routing guide: start with the notebook that matches your use case, then move to the more specialized notebooks when you need a particular implementation pattern.
 
@@ -20,9 +31,10 @@ Use this README as a routing guide: start with the notebook that matches your us
 | Run de-identification in streaming mode | [`SparkOcrDicomDeIdentificationV2Streaming.ipynb`](SparkOcrDicomDeIdentificationV2Streaming.ipynb) | Spark Structured Streaming example based on the V2 image/OCR pipeline. |
 | Try pretrained de-identification pipelines | [`SparkOcrDicomPretrainedPipelines.ipynb`](SparkOcrDicomPretrainedPipelines.ipynb) | Compares ready-made minimal, full anonymization, and pseudonymization DICOM pipelines. |
 
-Pixel PHI OCR options:
+## Pixel PHI OCR options
+Here we list notebooks according to how they extract text from the image.
 
-- [`SparkOcrDicomVLM.ipynb`](SparkOcrDicomVLM.ipynb): latest VLM-based option for handwritten text, printed text, and DICOMs containing PDF packets.
+- [`SparkOcrDicomVLM.ipynb`](SparkOcrDicomVLM.ipynb): latest VLM-based option for handwritten text, printed text, and DICOMs containing PDF packets(PDF documents embedded into the Dicom). This can deliver acceptable performance in both CPU[^1] and GPU.
 - [`SparkOcrDicomDeIdentificationV3.ipynb`](SparkOcrDicomDeIdentificationV3.ipynb): CPU-based option for printed text.
 - [`SparkOcrDicomDeIdentificationV2.ipynb`](SparkOcrDicomDeIdentificationV2.ipynb): GPU-based option for printed text and simple handwritten text; use the VLM notebook for complex handwriting.
 
@@ -129,3 +141,6 @@ spark = start(
 
 spark
 ```
+
+
+[^1]: try, for instance AWS' c7a family. 
