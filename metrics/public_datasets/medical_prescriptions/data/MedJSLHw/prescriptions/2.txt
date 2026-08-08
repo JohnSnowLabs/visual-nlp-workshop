@@ -1,0 +1,39 @@
+```json
+{
+  "medications": [
+    {
+      "startDate": "15-03",
+      "medicineName": "TAB OFLAZEST OZ",
+      "route": "PO",
+      "dose": "1",
+      "frequency": "bd",
+      "timeOfDay": []
+    },
+    {
+      "startDate": "15-03",
+      "medicineName": "TAB AZENAC MR",
+      "route": "PO",
+      "dose": "1",
+      "frequency": "bd",
+      "timeOfDay": []
+    },
+    {
+      "startDate": "15-03",
+      "medicineName": "TAB ANDIAL",
+      "route": "PO",
+      "dose": "2", "1", "1",
+      "frequency": "tds",
+      "timeOfDay": ["08:00", "14:00", "20:00"]
+    },
+    {
+      "startDate": "15-03",
+      "medicineName": "TAB ZOFER U-R",
+      "route": "PO",
+      "dose": "1",
+      "frequency": "bd",
+      "timeOfDay": []
+    }
+  ]
+}
+```
+------------------------------

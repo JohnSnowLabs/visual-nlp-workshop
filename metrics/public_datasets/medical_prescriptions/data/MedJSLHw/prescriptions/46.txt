@@ -1,0 +1,15 @@
+```json
+{
+  "medications": [
+    {
+      "startDate": "15-5",
+      "medicineName": "Inj. AmBisome (Amphotericin) 50mg",
+      "route": null,
+      "dose": "120",
+      "frequency": null,
+      "timeOfDay": []
+    }
+  ]
+}
+```
+------------------------------

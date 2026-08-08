@@ -1,0 +1,39 @@
+```json
+{
+  "medications": [
+    {
+      "startDate": null,
+      "medicineName": "Liposomal Amphotericin B",
+      "route": "IV",
+      "dose": "350 mg",
+      "frequency": "daily X 4 Weeks",
+      "timeOfDay": []
+    },
+    {
+      "startDate": null,
+      "medicineName": "Amphotericin B",
+      "route": "IV",
+      "dose": "70 mg",
+      "frequency": "daily X 4 Weeks",
+      "timeOfDay": []
+    },
+    {
+      "startDate": null,
+      "medicineName": "Inj. Isavuconazole",
+      "route": "IV",
+      "dose": "200 mg",
+      "frequency": "TDS X 2 Weeks",
+      "timeOfDay": []
+    },
+    {
+      "startDate": null,
+      "medicineName": "Capsule Isavuconazole",
+      "route": "IV",
+      "dose": "200 mg",
+      "frequency": "BD X 2 days",
+      "timeOfDay": []
+    }
+  ]
+}
+```
+------------------------------

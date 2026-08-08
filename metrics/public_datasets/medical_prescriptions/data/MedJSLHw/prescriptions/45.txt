@@ -1,0 +1,39 @@
+```json
+{
+  "medications": [
+    {
+      "startDate": "17-10",
+      "medicineName": "Croxim",
+      "route": "PO",
+      "dose": "1/2",
+      "frequency": "BD",
+      "timeOfDay": []
+    },
+    {
+      "startDate": "17-10",
+      "medicineName": "Cleaf",
+      "route": "PO",
+      "dose": "1/3",
+      "frequency": "TDS",
+      "timeOfDay": []
+    },
+    {
+      "startDate": "17-10",
+      "medicineName": "Ascof",
+      "route": "PO",
+      "dose": "6",
+      "frequency": "TDS",
+      "timeOfDay": []
+    },
+    {
+      "startDate": "17-10",
+      "medicineName": "Polymal",
+      "route": "PO",
+      "dose": "10",
+      "frequency": "TDS",
+      "timeOfDay": []
+    }
+  ]
+}
+```
+------------------------------

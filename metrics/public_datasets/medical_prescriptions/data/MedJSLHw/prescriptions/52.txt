@@ -1,0 +1,31 @@
+```json
+{
+  "medications": [
+    {
+      "startDate": "31-03",
+      "medicineName": "Potass Brom",
+      "route": "PO",
+      "dose": null,
+      "frequency": "Q3H",
+      "timeOfDay": []
+    },
+    {
+      "startDate": "31-03",
+      "medicineName": "Spts. Ammon Aromat",
+      "route": "PO",
+      "dose": null,
+      "frequency": "Q3H",
+      "timeOfDay": []
+    },
+    {
+      "startDate": "31-03",
+      "medicineName": "Elix Simplex",
+      "route": "PO",
+      "dose": null,
+      "frequency": "Q3H",
+      "timeOfDay": []
+    }
+  ]
+}
+```
+------------------------------

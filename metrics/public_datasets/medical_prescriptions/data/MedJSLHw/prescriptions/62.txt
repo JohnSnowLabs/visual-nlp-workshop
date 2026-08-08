@@ -1,0 +1,39 @@
+```json
+{
+  "medications": [
+    {
+      "startDate": "13-04",
+      "medicineName": "Inj Monocef 500 mg",
+      "route": "IV",
+      "dose": "3/4 vial in 12h",
+      "frequency": "twice a day",
+      "timeOfDay": []
+    },
+    {
+      "startDate": "13-04",
+      "medicineName": "Syp Flexon",
+      "route": "PO",
+      "dose": "6 ml",
+      "frequency": "nocte",
+      "timeOfDay": []
+    },
+    {
+      "startDate": "13-04",
+      "medicineName": "Frisium 10",
+      "route": "PO",
+      "dose": "1/2",
+      "frequency": "twice a day",
+      "timeOfDay": []
+    },
+    {
+      "startDate": "13-04",
+      "medicineName": "Tonoflex P",
+      "route": "PO",
+      "dose": "2.5ml",
+      "frequency": "twice a day",
+      "timeOfDay": []
+    }
+  ]
+}
+```
+------------------------------

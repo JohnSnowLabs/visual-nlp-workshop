@@ -1,0 +1,39 @@
+```json
+{
+  "medications": [
+    {
+      "startDate": "20-09",
+      "medicineName": "candibiotic ear drops",
+      "route": "Otic",
+      "dose": "10 drops",
+      "frequency": "3 times for 3 days",
+      "timeOfDay": []
+    },
+    {
+      "startDate": "20-09",
+      "medicineName": "Taxim O drops",
+      "route": "Otic",
+      "dose": "0.4ml, 4 drops",
+      "frequency": "3 times for 5 days",
+      "timeOfDay": []
+    },
+    {
+      "startDate": "20-05",
+      "medicineName": "Bonnisan drops",
+      "route": "nasal",
+      "dose": "0.5ml",
+      "frequency": "2 times",
+      "timeOfDay": []
+    },
+    {
+      "startDate": "20-05",
+      "medicineName": "Nasoclear nasal drops",
+      "route": "nasal",
+      "dose": null,
+      "frequency": "OD",
+      "timeOfDay": []
+    }
+  ]
+}
+```
+------------------------------

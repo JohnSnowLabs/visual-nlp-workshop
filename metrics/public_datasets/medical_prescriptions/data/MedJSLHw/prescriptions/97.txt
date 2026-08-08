@@ -1,0 +1,39 @@
+```json
+{
+  "medications": [
+    {
+      "startDate": "09-11",
+      "medicineName": "Betaloc",
+      "route": "oral",
+      "dose": "100mg 1tab",
+      "frequency": "BD",
+      "timeOfDay": []
+    },
+    {
+      "startDate": "09-11",
+      "medicineName": "Dorzolamidum",
+      "route": "oral",
+      "dose": "10 mg, 1tab",
+      "frequency": "BD",
+      "timeOfDay": []
+    },
+    {
+      "startDate": "09-11",
+      "medicineName": "Cimetidine",
+      "route": "oral",
+      "dose": "50 mg, 1tab",
+      "frequency": "TID",
+      "timeOfDay": []
+    },
+    {
+      "startDate": "09-11",
+      "medicineName": "Oxprelol",
+      "route": "oral",
+      "dose": "50 mg, 1tab",
+      "frequency": "QD",
+      "timeOfDay": []
+    }
+  ]
+}
+```
+------------------------------
