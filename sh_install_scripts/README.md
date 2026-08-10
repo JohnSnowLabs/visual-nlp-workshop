@@ -3,53 +3,91 @@
 ## 1. Upload secrets  
 Upload your `spark_ocr.json` and `spark_nlp_for_healthcare.json` to the default Google Colab or Sagemaker directory.
 
-## 2. Set environment variables 
-After uploading the json files run the following script in a cell after the upload to set environment variables.
-You need to re-run after every notebook restart.
-```python
-import json
-import os
-
-# Upload your spark_nlp_for_healthcare.json  to the default directory and then run this cell to set env variables 
-with open('spark_nlp_for_healthcare.json', 'r') as f:
-    for k, v in json.load(f).items():
-        %set_env $k=$v
-
-# Upload your spark_ocr.json  to the default directory and then run this cell to set env variables 
-with open('spark_ocr.json', 'r') as f:
-    for k, v in json.load(f).items():
-        %set_env $k=$v
-        if k == 'SPARK_OCR_LICENSE' :
-            k = 'JSL_OCR_LICENSE'
-            %set_env $k=$v
-        if k == 'JSL_OCR_SECRET' :
-            k = 'SPARK_OCR_SECRET'
-            %set_env $k=$v
-```
-
-
-## 3. Run the 1-line install script
+## 2. Run the 1-line install script
 For `AWS Sagemaker`
 ```sh
-!wget https://raw.githubusercontent.com/JohnSnowLabs/spark-ocr-workshop/master/sh/jsl_sagemaker_setup_with_OCR.sh -O - | bash
+!wget https://raw.githubusercontent.com/JohnSnowLabs/spark-ocr-workshop/master/sh/jsl_sagemaker_setup_with_OCR.sh
+!bash jsl_sagemaker_setup_with_OCR.sh spark_ocr.json
 
 ```
 
 For `Google Colab`
 ```sh
-!wget https://raw.githubusercontent.com/JohnSnowLabs/spark-ocr-workshop/master/sh/jsl_sagemaker_setup_with_OCR.sh -O - | bash
+!wget https://raw.githubusercontent.com/JohnSnowLabs/spark-ocr-workshop/master/sh/jsl_colab_setup_with_OCR.sh
+!bash jsl_colab_setup_with_OCR.sh spark_ocr.json
 ```
 
-## 4. Restart Notebook and run Code from (2.) again
+## 3. Restart Notebook/Session
 The Python kernel must be restarted for the new packages to become importable
 
-## 5. Start a Spark Session with OCR 
+## 4. Grab Credentials from License File
+```python
+import json
+import os
+
+license = "/content/spark_ocr.json"
+
+if license and "json" in license:
+
+    with open(license, "r") as creds_in:
+        creds = json.loads(creds_in.read())
+
+        for key in creds.keys():
+            os.environ[key] = creds[key]
+else:
+    raise Exception("License JSON File is not specified")
 ```
-import os 
-import sparkocr
+
+## 5. Start a Spark Session with Visual NLP  
+```python
 from sparkocr import start
-print(f"OCR VERSION: {sparkocr.version()}")
-spark = start(secret=os.environ['SPARK_OCR_SECRET'], nlp_secret=os.environ['SECRET'], nlp_version=os.environ['PUBLIC_VERSION'], nlp_internal=os.environ['JSL_VERSION'])
+import os
+
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+
+extra_configurations = {
+    "spark.extraListeners": "com.johnsnowlabs.license.LicenseLifeCycleManager"
+}
+
+spark = start(
+    secret = os.environ.get("SPARK_OCR_SECRET"),
+    nlp_secret = os.environ.get("SECRET"),
+    jar_path = None,
+    nlp_internal = os.environ.get("JSL_VERSION"),
+    extra_conf=extra_configurations
+)
+
+spark
 ```
 
+## 6. Import Spark + John Snow Labs 
+```python
+import os
+import json
+import time
+import sys
+import shutil 
+import pkg_resources 
+import pandas as pd
+from textwrap import dedent
 
+from sparknlp.annotator import *
+from sparknlp.base import *
+
+import sparknlp_jsl
+from sparknlp_jsl.annotator import *
+
+import sparkocr
+from sparkocr.transformers import *
+from sparkocr.utils import *
+from sparkocr.enums import *
+from sparkocr.schemas import *
+
+from pyspark.ml import PipelineModel, Pipeline
+import pyspark.sql.functions as F
+from pyspark.sql.types import *
+
+print(f"Spark NLP Version: {sparknlp.version()}")
+print(f"Healthcare NLP Version: {sparknlp_jsl.version()}")
+print(f"Visual NLP Version: {sparkocr.version()}")
+```
