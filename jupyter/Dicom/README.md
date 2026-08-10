@@ -35,6 +35,7 @@ DICOM skill that you can download, zip, and provide to Claude, Codex, or Gemini.
 | Use VLM OCR for DICOM text detection | [`SparkOcrDicomVLM.ipynb`](SparkOcrDicomVLM.ipynb) | Uses 1B VLM for OCR with coordinates, then supports blanket or PHI-only redaction. |
 | Run de-identification in streaming mode | [`SparkOcrDicomDeIdentificationV2Streaming.ipynb`](SparkOcrDicomDeIdentificationV2Streaming.ipynb) | Spark Structured Streaming example based on the V2 image/OCR pipeline. |
 | Try pretrained de-identification pipelines | [`SparkOcrDicomPretrainedPipelines.ipynb`](SparkOcrDicomPretrainedPipelines.ipynb) | Compares ready-made minimal, full anonymization, and pseudonymization DICOM pipelines. |
+| Pipeline Builder Clinical NER Models | [`SparkOcrDicomPipelineBuilder.ipynb`](SparkOcrDicomPipelineBuilder.ipynb) | Latest notebook to help wrap dicom pipelines around state of the Healthcare clinical pretrained pipelines. |
 
 Pixel PHI OCR options:
 
@@ -48,6 +49,7 @@ These are the latest notebooks to use for the main DICOM workflows in this folde
 
 | Use case | Latest notebook(s) | Notes |
 |---|---|---|
+| Dicom Pipeline Builder | [`SparkOcrDicomPipelineBuilder.ipynb`](SparkOcrDicomPipelineBuilder.ipynb) | Latest notebook to help wrap dicom pipelines around state of the Healthcare clinical pretrained pipelines. |
 | Metadata de-identification | [`SparkOcrDicomMetadata.ipynb`](SparkOcrDicomMetadata.ipynb) | Latest DICOM-to-metadata notebook for extracting and preparing metadata fields, including tags that can be routed into de-identification flows. |
 | PHI identification in DICOM images | [`SparkOcrDicomToImageV3.ipynb`](SparkOcrDicomToImageV3.ipynb), [`SparkOcrDicomVLM.ipynb`](SparkOcrDicomVLM.ipynb), [`SparkOcrDicomDrawRegions.ipynb`](SparkOcrDicomDrawRegions.ipynb) | Use `DicomToImageV3` to extract pixels into images, the VLM notebook for VLM-based OCR/PHI identification, and Draw Regions to render detected regions back onto the DICOM. |
 | Encapsulated PDF de-identification | [`SparkOcrDeidentificationDicomWithEncapsulatedPDF.ipynb`](SparkOcrDeidentificationDicomWithEncapsulatedPDF.ipynb) | Latest notebook for DICOM files that contain encapsulated PDFs. |
