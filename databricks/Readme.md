@@ -54,17 +54,17 @@ For Databricks Runtime `15.4 LTS GPU`, exclude the packaged ONNX Runtime GPU dep
 
 This is required because of a cuDNN version mismatch.
 
-![Spark NLP Maven Coordinate](../jupyter/data/readme/databricks/Spark_NLP_Maven.png)
-
 Exclude coordinate:
 
 - `com.microsoft.onnxruntime:onnxruntime_gpu:1.19.2`
 
-![ONNX Runtime GPU Maven Coordinate](../jupyter/data/readme/databricks/Onnx_Runtime_GPU_Maven.png)
+![Spark NLP Maven Coordinate](../jupyter/data/readme/databricks/Spark_NLP_Maven.png)
 
 Additional Maven coordinate:
 
 - `com.microsoft.onnxruntime:onnxruntime_gpu:1.18.0`
+
+![ONNX Runtime GPU Maven Coordinate](../jupyter/data/readme/databricks/Onnx_Runtime_GPU_Maven.png)
 
 For CPU runtimes, this override is usually not required.
 
