@@ -54,3 +54,10 @@ These are the latest notebooks to use for the main DICOM workflows in this folde
 | PHI identification in DICOM images | [`SparkOcrDicomToImageV3.ipynb`](SparkOcrDicomToImageV3.ipynb), [`SparkOcrDicomVLM.ipynb`](SparkOcrDicomVLM.ipynb), [`SparkOcrDicomDrawRegions.ipynb`](SparkOcrDicomDrawRegions.ipynb) | Use `DicomToImageV3` to extract pixels into images, the VLM notebook for VLM-based OCR/PHI identification, and Draw Regions to render detected regions back onto the DICOM. |
 | Encapsulated PDF de-identification | [`SparkOcrDeidentificationDicomWithEncapsulatedPDF.ipynb`](SparkOcrDeidentificationDicomWithEncapsulatedPDF.ipynb) | Latest notebook for DICOM files that contain encapsulated PDFs. |
 | MIDI-B solution | [`SparkOcrMIDIBSolution.ipynb`](SparkOcrMIDIBSolution.ipynb) | Use this when you want to run the JSL solution on the MIDI-B dataset. |
+
+## Other Resource
+
+- [DICOM Paper](https://link.springer.com/chapter/10.1007/978-3-032-26211-0_12)
+- [DICOM Blogpost](https://medium.com/john-snow-labs/de-identifying-dicom-files-a-step-by-step-guide-with-john-snow-labs-visual-nlp-2c21b60f92a8)
+- [DICOM Dataset + Speed Accuracy Benchmarks + Comparisons](https://github.com/JohnSnowLabs/dicom-deid-dataset)
+- [DICOM Databricks Benchmarks](https://medium.com/john-snow-labs/de-identifying-dicom-files-a-step-by-step-guide-with-john-snow-labs-visual-nlp-2c21b60f92a8#:~:text=MIDI%2DB%20Subset.-,Databricks%20Speed%20Benchmarks,-To%20evaluate%20processing)
