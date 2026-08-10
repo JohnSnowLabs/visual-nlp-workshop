@@ -103,7 +103,7 @@ Use local skill references and local workshop examples first. If external John S
 
 ## Using With Codex, Claude, And Gemini
 
-Zip the full `dicom_skill/` folder and upload that ZIP directly to Claude, Codex, or Gemini.
+Zip this folder and upload that ZIP directly to Claude, Codex, or Gemini.
 
 The ZIP must include:
 
