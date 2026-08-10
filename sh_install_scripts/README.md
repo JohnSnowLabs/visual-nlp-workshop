@@ -6,14 +6,14 @@ Upload your `spark_ocr.json` and `spark_nlp_for_healthcare.json` to the default 
 ## 2. Run the 1-line install script
 For `AWS Sagemaker`
 ```sh
-!wget https://raw.githubusercontent.com/JohnSnowLabs/spark-ocr-workshop/master/sh/jsl_sagemaker_setup_with_OCR.sh
+!wget https://raw.githubusercontent.com/JohnSnowLabs/spark-ocr-workshop/master/sh_install_scripts/jsl_sagemaker_setup_with_OCR.sh
 !bash jsl_sagemaker_setup_with_OCR.sh spark_ocr.json
 
 ```
 
 For `Google Colab`
 ```sh
-!wget https://raw.githubusercontent.com/JohnSnowLabs/spark-ocr-workshop/master/sh/jsl_colab_setup_with_OCR.sh
+!wget https://raw.githubusercontent.com/JohnSnowLabs/spark-ocr-workshop/master/sh_install_scripts/jsl_colab_setup_with_OCR.sh
 !bash jsl_colab_setup_with_OCR.sh spark_ocr.json
 ```
 
@@ -49,6 +49,7 @@ extra_configurations = {
     "spark.extraListeners": "com.johnsnowlabs.license.LicenseLifeCycleManager"
 }
 
+# jar_path is used Internaly for development
 spark = start(
     secret = os.environ.get("SPARK_OCR_SECRET"),
     nlp_secret = os.environ.get("SECRET"),
