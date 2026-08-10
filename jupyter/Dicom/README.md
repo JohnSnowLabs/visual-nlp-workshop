@@ -61,5 +61,5 @@ These are the latest notebooks to use for the main DICOM workflows in this folde
 |---|---|
 | [DICOM Paper](https://link.springer.com/chapter/10.1007/978-3-032-26211-0_12) | Research paper covering DICOM de-identification methodology and results. |
 | [DICOM Blogpost](https://medium.com/john-snow-labs/de-identifying-dicom-files-a-step-by-step-guide-with-john-snow-labs-visual-nlp-2c21b60f92a8) | Step-by-step guide for de-identifying DICOM files with John Snow Labs Visual NLP. |
-| [DICOM Dataset + Speed Accuracy Benchmarks + Comparisons](https://github.com/JohnSnowLabs/dicom-deid-dataset) | Public dataset, benchmark results, and comparison materials. |
-| [DICOM Databricks Benchmarks](https://medium.com/john-snow-labs/de-identifying-dicom-files-a-step-by-step-guide-with-john-snow-labs-visual-nlp-2c21b60f92a8#:~:text=MIDI%2DB%20Subset.-,Databricks%20Speed%20Benchmarks,-To%20evaluate%20processing) | Databricks-specific speed benchmark results for DICOM de-identification. |
+| [DICOM Repo](https://github.com/JohnSnowLabs/dicom-deid-dataset) | Public dataset, benchmark results, and comparison materials. |
+| [DICOM Databricks Benchmarks](https://medium.com/john-snow-labs/de-identifying-dicom-files-a-step-by-step-guide-with-john-snow-labs-visual-nlp-2c21b60f92a8#:~:text=MIDI%2DB%20Subset.-,Databricks%20Speed%20Benchmarks,-To%20evaluate%20processing) | Databricks-specific speed benchmark results for DICOM pixel and metadata de-identification. |
