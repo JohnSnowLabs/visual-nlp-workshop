@@ -8,7 +8,7 @@ Use this README as a routing guide: start with the notebook that matches your us
 
 For Databricks setup instructions, see:
 
-- [Databricks Setup](../../databricks/README.md)
+- [Databricks Setup](../../databricks/Readme.md)
 
 For Colab, SageMaker, and local setup instructions, see:
 
