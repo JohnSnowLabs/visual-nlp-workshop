@@ -54,19 +54,19 @@ For Databricks Runtime `15.4 LTS GPU`, exclude the packaged ONNX Runtime GPU dep
 
 This is required because of a cuDNN version mismatch.
 
+![Spark NLP Maven Coordinate](../jupyter/data/readme/databricks/Spark_NLP_Maven.png)
+
 Exclude coordinate:
 
 - `com.microsoft.onnxruntime:onnxruntime_gpu:1.19.2`
+
+![ONNX Runtime GPU Maven Coordinate](../jupyter/data/readme/databricks/Onnx_Runtime_GPU_Maven.png)
 
 Additional Maven coordinate:
 
 - `com.microsoft.onnxruntime:onnxruntime_gpu:1.18.0`
 
 For CPU runtimes, this override is usually not required.
-
-![Spark NLP Maven Coordinate](../jupyter/data/readme/databricks/Spark_NLP_Maven.png)
-
-![ONNX Runtime GPU Maven Coordinate](../jupyter/data/readme/databricks/Onnx_Runtime_GPU_Maven.png)
 
 ### Install Visual NLP
 
@@ -111,11 +111,9 @@ For Databricks Runtime `15.4 LTS`, override the following default packages:
 
 ### Spark Configuration and Environment Variables
 
-Depending on your license scope, the variables you need to add may change.
+Depending on your license scope, the variables you need to add may change. In this example, only the Spark OCR license is added. You may also need to add AWS credentials.
 
-In this example, only the Spark OCR license is added. You may also need to add AWS credentials.
-
-You can add either the `SPARK_OCR_LICENSE` or the Spark NLP license. Both values should be the same.
+You can add either the `SPARK_OCR_LICENSE` or the `Spark_NLP_LICENSE`. Both values should be the same.
 
 Add the following Spark configuration:
 
