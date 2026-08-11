@@ -85,6 +85,5 @@ We encourage the reader the review our [dicom benchmarks](https://nlp.johnsnowla
 | [DICOM Repo](https://github.com/JohnSnowLabs/dicom-deid-dataset) | Public dataset, benchmark results, and comparison materials. |
 | [DICOM Databricks Benchmarks](https://medium.com/john-snow-labs/de-identifying-dicom-files-a-step-by-step-guide-with-john-snow-labs-visual-nlp-2c21b60f92a8#:~:text=MIDI%2DB%20Subset.-,Databricks%20Speed%20Benchmarks,-To%20evaluate%20processing) | Databricks-specific speed benchmark results for DICOM pixel and metadata de-identification. |
 
-
+</br>
 [^1]: try, for instance AWS' c7a family. 
->>>>>>> 2527bcd6f812cf82b6b9105c473433c109d4982e
