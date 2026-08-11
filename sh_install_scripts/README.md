@@ -49,7 +49,7 @@ extra_configurations = {
     "spark.extraListeners": "com.johnsnowlabs.license.LicenseLifeCycleManager"
 }
 
-# jar_path is used Internaly for development
+# jar_path is used Internally for development
 spark = start(
     secret = os.environ.get("SPARK_OCR_SECRET"),
     nlp_secret = os.environ.get("SECRET"),
