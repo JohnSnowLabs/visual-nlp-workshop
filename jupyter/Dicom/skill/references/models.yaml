@@ -1,0 +1,160 @@
+version: 1
+
+model_policy:
+  default_for_dicom_deidentification: "Use GPU and pretrained/model-backed stages unless the user explicitly asks otherwise."
+  first_example: "For pixel PHI workflows, show the configurable DICOM pipeline builder before custom manual stages."
+  pretrained_format: "Keep every pretrained call on one line."
+  registry_style: "Prefer structured fields such as family, size, mode, entities, model_card, code, and concise summary. Long use_case text may exist for user-provided descriptions, but summarize it when presenting options."
+
+clinical_pipeline:
+  import: "from sparknlp.pretrained import PretrainedPipeline"
+  default: clinical_deidentification_docwise_benchmark_medium
+  purpose: "Healthcare NLP PretrainedPipeline inventory used by the DICOM pipeline builder."
+  builder_only_note: "Use these with PretrainedPipeline(...). Some names contain zeroshot, but they are not stackable PretrainedZeroShotNER stages."
+  options:
+    clinical_deidentification_docwise_benchmark_optimized:
+      code: 'PretrainedPipeline("clinical_deidentification_docwise_benchmark_optimized", "en", "clinical/models")'
+      use_case: "De-identifies PHI from medical texts. Masks and obfuscates LOCATION, CONTACT, PROFESSION, NAME, DATE, AGE, MEDICALRECORD, ORGANIZATION, HEALTHPLAN, DOCTOR, USERNAME, LOCATION-OTHER, URL, DEVICE, CITY, ZIP, STATE, PATIENT, STREET, PHONE, HOSPITAL, EMAIL, IDNUM, BIOID, FAX, LOCATION_OTHER, DLN, SSN, ACCOUNT, PLATE, VIN, LICENSE, and IP entities."
+      hardware: gpu_preferred
+    clinical_deidentification_docwise_benchmark_medium:
+      code: 'PretrainedPipeline("clinical_deidentification_docwise_benchmark_medium", "en", "clinical/models")'
+      use_case: "De-identifies PHI from medical texts. Masks and obfuscates CONTACT, DATE, ID, LOCATION, PROFESSION, DOCTOR, EMAIL, PATIENT, URL, USERNAME, CITY, COUNTRY, DLN, HOSPITAL, IDNUM, LOCATION_OTHER, MEDICALRECORD, STATE, STREET, ZIP, AGE, PHONE, ORGANIZATION, SSN, ACCOUNT, PLATE, VIN, LICENSE, and IP entities."
+      hardware: gpu_preferred
+    clinical_deidentification_docwise_benchmark_medium_v2:
+      code: 'PretrainedPipeline("clinical_deidentification_docwise_benchmark_medium_v2", "en", "clinical/models")'
+      use_case: "De-identifies PHI from medical texts. Masks and obfuscates DATE, LOCATION, PROFESSION, DOCTOR, EMAIL, PATIENT, URL, USERNAME, CITY, COUNTRY, DLN, HOSPITAL, IDNUM, MEDICALRECORD, STATE, STREET, ZIP, AGE, PHONE, ORGANIZATION, SSN, ACCOUNT, PLATE, VIN, LICENSE, and IP entities."
+      hardware: gpu_preferred
+    clinical_deidentification_docwise_zeroshot_medium:
+      code: 'PretrainedPipeline("clinical_deidentification_docwise_zeroshot_medium", "en", "clinical/models")'
+      use_case: "De-identifies PHI from medical texts. Masks and obfuscates DATE, PROFESSION, DOCTOR, EMAIL, PATIENT, URL, USERNAME, CITY, COUNTRY, DLN, HOSPITAL, IDNUM, MEDICALRECORD, STATE, STREET, ZIP, AGE, PHONE, ORGANIZATION, SSN, ACCOUNT, PLATE, VIN, LICENSE, and IP entities."
+      hardware: gpu_preferred
+    clinical_deidentification_docwise_SingleStage_zeroshot_medium:
+      code: 'PretrainedPipeline("clinical_deidentification_docwise_SingleStage_zeroshot_medium", "en", "clinical/models")'
+      use_case: "De-identifies PHI from medical texts. Masks and obfuscates DOCTOR, PATIENT, AGE, DATE, HOSPITAL, CITY, STREET, STATE, COUNTRY, PHONE, IDNUM, EMAIL, ZIP, ORGANIZATION, PROFESSION, and USERNAME entities."
+      hardware: gpu_preferred
+    clinical_deidentification_docwise_benchmark_large:
+      code: 'PretrainedPipeline("clinical_deidentification_docwise_benchmark_large", "en", "clinical/models")'
+      use_case: "De-identifies PHI from medical texts. Masks and obfuscates CONTACT, DATE, ID, LOCATION, PROFESSION, DOCTOR, EMAIL, PATIENT, URL, USERNAME, CITY, COUNTRY, DLN, HOSPITAL, IDNUM, LOCATION_OTHER, MEDICALRECORD, STATE, STREET, ZIP, AGE, PHONE, ORGANIZATION, SSN, ACCOUNT, PLATE, VIN, LICENSE, and IP entities."
+      hardware: gpu_preferred
+    clinical_deidentification_docwise_benchmark_large_v2:
+      code: 'PretrainedPipeline("clinical_deidentification_docwise_benchmark_large_v2", "en", "clinical/models")'
+      use_case: "De-identifies PHI from medical texts. Masks and obfuscates DATE, LOCATION, PROFESSION, DOCTOR, EMAIL, PATIENT, URL, USERNAME, CITY, COUNTRY, DLN, HOSPITAL, IDNUM, MEDICALRECORD, STATE, STREET, ZIP, AGE, PHONE, ORGANIZATION, SSN, ACCOUNT, PLATE, VIN, LICENSE, and IP entities."
+      hardware: gpu_preferred
+    clinical_deidentification_docwise_zeroshot_large:
+      code: 'PretrainedPipeline("clinical_deidentification_docwise_zeroshot_large", "en", "clinical/models")'
+      use_case: "De-identifies PHI from medical texts. Masks and obfuscates DATE, PROFESSION, DOCTOR, EMAIL, PATIENT, URL, USERNAME, CITY, COUNTRY, DLN, HOSPITAL, IDNUM, MEDICALRECORD, STATE, STREET, ZIP, AGE, PHONE, ORGANIZATION, SSN, ACCOUNT, PLATE, VIN, LICENSE, and IP entities."
+      hardware: gpu_preferred
+    clinical_deidentification_docwise_SingleStage_zeroshot_large:
+      code: 'PretrainedPipeline("clinical_deidentification_docwise_SingleStage_zeroshot_large", "en", "clinical/models")'
+      use_case: "De-identifies PHI from medical texts. Masks and obfuscates DOCTOR, PATIENT, AGE, DATE, HOSPITAL, CITY, STREET, STATE, COUNTRY, PHONE, IDNUM, EMAIL, ZIP, ORGANIZATION, PROFESSION, and USERNAME entities."
+      hardware: gpu_preferred
+
+zero_shot_ner_models:
+  import: "from sparknlp_jsl.annotator import PretrainedZeroShotNER"
+  reference: "zero-shot-models.md"
+  purpose: "Stackable zero-shot NER models for configurable PHI detection in pixel OCR text and metadata free-text cleanTag workflows."
+  not_for_builder: "Do not pass these names as clinical_pipeline_name to dicom_pipeline_builder(...). Use them as stage-level PretrainedZeroShotNER models inside a fitted NER PipelineModel."
+  default_for_stacking:
+    - zeroshot_ner_deid_subentity_merged_medium
+  usage: "Use PretrainedZeroShotNER().pretrained(...) as a one-line pretrained call, keep labels in a separate variable, convert each model output to chunks, and merge chunks with ChunkMergeApproach."
+  options:
+    zeroshot_ner_deid_subentity_merged_medium:
+      code: 'PretrainedZeroShotNER().pretrained("zeroshot_ner_deid_subentity_merged_medium", "en", "clinical/models")'
+      model_card: "https://nlp.johnsnowlabs.com/2024/11/27/zeroshot_ner_deid_subentity_merged_medium_en.html"
+      entities: [DOCTOR, PATIENT, AGE, DATE, HOSPITAL, CITY, STREET, STATE, COUNTRY, PHONE, IDNUM, EMAIL, ZIP, ORGANIZATION, PROFESSION, USERNAME]
+    zeroshot_ner_deid_subentity_merged_large:
+      code: 'PretrainedZeroShotNER().pretrained("zeroshot_ner_deid_subentity_merged_large", "en", "clinical/models")'
+      model_card: "https://nlp.johnsnowlabs.com/2024/12/17/zeroshot_ner_deid_subentity_merged_large_en.html"
+      entities: [DOCTOR, PATIENT, AGE, DATE, HOSPITAL, CITY, STREET, STATE, COUNTRY, PHONE, IDNUM, EMAIL, ZIP, ORGANIZATION, PROFESSION, USERNAME]
+    zeroshot_ner_deid_subentity_docwise_medium:
+      code: 'PretrainedZeroShotNER().pretrained("zeroshot_ner_deid_subentity_docwise_medium", "en", "clinical/models")'
+      model_card: "https://nlp.johnsnowlabs.com/2024/11/28/zeroshot_ner_deid_subentity_docwise_medium_en.html"
+      entities: [AGE, CITY, COUNTRY, DATE, DOCTOR, HOSPITAL, IDNUM, ORGANIZATION, PATIENT, PHONE, PROFESSION, STATE, STREET, ZIP]
+    zeroshot_ner_deid_subentity_docwise_large:
+      code: 'PretrainedZeroShotNER().pretrained("zeroshot_ner_deid_subentity_docwise_large", "en", "clinical/models")'
+      model_card: "https://nlp.johnsnowlabs.com/2024/11/29/zeroshot_ner_deid_subentity_docwise_large_en.html"
+      entities: [AGE, CITY, COUNTRY, DATE, DOCTOR, HOSPITAL, IDNUM, ORGANIZATION, PATIENT, PHONE, PROFESSION, STATE, STREET, ZIP]
+    zeroshot_ner_deid_generic_docwise_medium:
+      code: 'PretrainedZeroShotNER().pretrained("zeroshot_ner_deid_generic_docwise_medium", "en", "clinical/models")'
+      model_card: "https://nlp.johnsnowlabs.com/2024/11/28/zeroshot_ner_deid_generic_docwise_medium_en.html"
+      entities: [AGE, CONTACT, DATE, ID, LOCATION, NAME, PROFESSION]
+    zeroshot_ner_deid_generic_docwise_large:
+      code: 'PretrainedZeroShotNER().pretrained("zeroshot_ner_deid_generic_docwise_large", "en", "clinical/models")'
+      model_card: "https://nlp.johnsnowlabs.com/2024/11/28/zeroshot_ner_deid_generic_docwise_large_en.html"
+      entities: [AGE, CONTACT, DATE, ID, LOCATION, NAME, PROFESSION]
+    zeroshot_ner_deid_generic_nonMedical_medium:
+      code: 'PretrainedZeroShotNER().pretrained("zeroshot_ner_deid_generic_nonMedical_medium", "en", "clinical/models")'
+      model_card: "https://nlp.johnsnowlabs.com/2025/12/28/zeroshot_ner_deid_generic_nonMedical_medium_en.html"
+      entities: [NAME, AGE, DATE, LOCATION, ID, CONTACT, PROFESSION]
+    zeroshot_ner_deid_generic_nonMedical_large:
+      code: 'PretrainedZeroShotNER().pretrained("zeroshot_ner_deid_generic_nonMedical_large", "en", "clinical/models")'
+      model_card: "https://nlp.johnsnowlabs.com/2025/12/27/zeroshot_ner_deid_generic_nonMedical_large_en.html"
+      entities: [NAME, AGE, DATE, LOCATION, ID, CONTACT, PROFESSION]
+    zeroshot_ner_deid_subentity_nonMedical_medium:
+      code: 'PretrainedZeroShotNER().pretrained("zeroshot_ner_deid_subentity_nonMedical_medium", "en", "clinical/models")'
+      model_card: "https://nlp.johnsnowlabs.com/2025/12/28/zeroshot_ner_deid_subentity_nonMedical_medium_en.html"
+      entities: [ACCOUNTNUM, AGE, CITY, COUNTRY, DATE, DEVICE, DLN, DOCTOR, EMAIL, GENDER, HOSPITAL, IDNUM, IP, LOCATION_OTHER, MEDICALRECORD, NAME, ORGANIZATION, PATIENT, PHONE, PLATE, PROFESSION, SSN, STATE, STREET, TIME, URL, USERNAME, VIN, ZIP]
+    zeroshot_ner_deid_subentity_nonMedical_large:
+      code: 'PretrainedZeroShotNER().pretrained("zeroshot_ner_deid_subentity_nonMedical_large", "en", "clinical/models")'
+      model_card: "https://nlp.johnsnowlabs.com/2025/12/28/zeroshot_ner_deid_subentity_nonMedical_large_en.html"
+      entities: [ACCOUNTNUM, AGE, CITY, COUNTRY, DATE, DEVICE, DLN, DOCTOR, EMAIL, GENDER, HOSPITAL, IDNUM, IP, LOCATION_OTHER, MEDICALRECORD, NAME, ORGANIZATION, PATIENT, PHONE, PLATE, PROFESSION, SSN, STATE, STREET, TIME, URL, USERNAME, VIN, ZIP]
+
+ocr_engine:
+  default: VLM
+  options:
+    VLM:
+      code: 'MedicalVisionLLM.pretrained("jsl-ocr-gguf-vlm1", "en", "clinical/ocr")'
+      runtime: "CPU/GPU; GPU recommended"
+      use_case: "Highest-accuracy OCR for DICOM images and encapsulated PDF pages."
+      output_stage: "DocumentCoordinatesToText produces text, positions, and regions."
+      required_params: [setNGpuLayers(99), setNCtx(32768), setNParallel(1), setNBatch(2048), setNUbatch(1024), setNPredict(1024), setTemperature(0.01), setTopK(1), setTopP(1.0), setRepeatPenalty(1.03), setRepeatLastN(256), setMinKeep(0), setNProbs(0), setBatchSize(1), setDisableLog(False)]
+    V2:
+      detector: 'ImageTextDetector.pretrained("image_text_detector_mem_opt", "en", "clinical/ocr")'
+      recognizer: 'ImageToTextV2.pretrained("ocr_large_printed_v2_opt", "en", "clinical/ocr")'
+      runtime: "CPU/GPU"
+      use_case: "Cheaper printed-text OCR path."
+    V3:
+      detector: 'ImageTextDetector.pretrained("image_text_detector_mem_opt", "en", "clinical/ocr")'
+      recognizer: "ImageToTextV3()"
+      runtime: "CPU only recognizer; detector can run CPU/GPU"
+      use_case: "Cheaper CPU-only OCR recognizer path."
+
+text_detector:
+  default: image_text_detector_mem_opt
+  allowed_for_blanket_redaction: [ImageTextDetector, ImageTextDetectorV2]
+  selection_key: text_detector
+  selection_values:
+    ImageTextDetector: "Default Scala-based pretrained detector."
+    ImageTextDetectorV2: "Python-based detector alternative."
+  defaults:
+    input_col: image
+    output_col: text_regions
+    use_gpu: true
+    score_threshold: 0.5
+    text_threshold: 0.2
+    size_threshold: 10
+    with_refiner: true
+  options:
+    image_text_detector_mem_opt:
+      code: 'ImageTextDetector.pretrained("image_text_detector_mem_opt", "en", "clinical/ocr")'
+      runtime: "CPU/GPU"
+      use_case: "Scala-based text detection only; feeds ImageToTextV2/ImageToTextV3 or blanket text redaction."
+    ImageTextDetectorV2:
+      code: 'ImageTextDetectorV2.pretrained("image_text_detector_v2", "en", "clinical/ocr")'
+      runtime: "CPU/GPU"
+      use_case: "Python-based text detection only; can feed ImageToTextV2/ImageToTextV3."
+
+spark_ocr_pretrained_pipeline:
+  import: "from sparkocr.pretrained import PretrainedPipeline"
+  default: dicom_deid_generic_augmented_minimal
+  purpose: "Fast DICOM/PDF/image pretrained baselines from Spark OCR."
+  options:
+    dicom_deid_generic_augmented_minimal:
+      code: 'PretrainedPipeline("dicom_deid_generic_augmented_minimal", "en", "clinical/ocr")'
+      use_case: "Least intrusive DICOM de-identification. Removes only the most critical personal identifiers while preserving as much metadata as possible. Strips PHI from both image and metadata while keeping non-sensitive details intact for research and analysis. Minimal removal eliminates only PII from images and the most essential metadata fields while keeping most DICOM tags untouched."
+    dicom_deid_full_anonymization:
+      code: 'PretrainedPipeline("dicom_deid_full_anonymization", "en", "clinical/ocr")'
+      use_case: "Highest level of anonymization. Completely removes all text from both image and metadata. Ideal for preparing DICOM files for public sharing, research, or regulatory compliance when no traceable information should remain. Comprehensive removal eliminates all visible text within images and removes or anonymizes most metadata fields, including patient identifiers, physician details, and hospital information."
+    dicom_deid_generic_augmented_pseudonym:
+      code: 'PretrainedPipeline("dicom_deid_generic_augmented_pseudonym", "en", "clinical/ocr")'
+      use_case: "Anonymizes DICOM metadata by replacing personal identifiers with pseudonyms instead of removing them. Ensures PHI is no longer traceable while maintaining data integrity for longitudinal studies and collaborations. Obfuscation mode removes PII from images and replaces sensitive metadata values, such as patient names and IDs, with randomized or pseudonymized data, preserving metadata structure and usability."

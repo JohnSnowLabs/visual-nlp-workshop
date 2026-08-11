@@ -1,52 +1,36 @@
-#!/bin/bash
+#!/bin/sh
 
-#default values for pyspark, spark-nlp, and SPARK_HOME
+JSON_FILE="${1:-license.json}"
 
-PYSPARK="3.1.1"
-SPARKNLP=$PUBLIC_VERSION
-SPARKNLP_JSL=$JSL_VERSION
-SPARK_NLP_LICENSE=$SPARK_NLP_LICENSE
-AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
-AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
-JSL_SECRET=$SECRET
+if [ -f "$JSON_FILE" ]; then
+  echo "Reading License file from $JSON_FILE"
 
-while getopts p: option
-do
- case "${option}"
- in
- p) PYSPARK=${OPTARG};;
- esac
-done
+  export PUBLIC_VERSION=$(jq -r '.PUBLIC_VERSION // empty' "$JSON_FILE")
+  export SPARK_OCR_SECRET=$(jq -r '.SPARK_OCR_SECRET // empty' "$JSON_FILE")
+  export OCR_VERSION=$(jq -r '.OCR_VERSION // empty' "$JSON_FILE")
+  export SECRET=$(jq -r '.SECRET // empty' "$JSON_FILE")
+  export JSL_VERSION=$(jq -r '.JSL_VERSION // empty' "$JSON_FILE")
+  export AWS_ACCESS_KEY_ID=$(jq -r '.AWS_ACCESS_KEY_ID // empty' "$JSON_FILE")
+  export AWS_SECRET_ACCESS_KEY=$(jq -r '.AWS_SECRET_ACCESS_KEY // empty' "$JSON_FILE")
+  export AWS_SESSION_TOKEN=$(jq -r '.AWS_SESSION_TOKEN // empty' "$JSON_FILE")
 
-SPARKHOME="/content/spark-3.1.1-bin-hadoop2.7"
-
-echo "setup Colab for PySpark $PYSPARK and Spark NLP $SPARKNLP"
-apt-get update
-apt-get purge -y openjdk-11* -qq > /dev/null && sudo apt-get autoremove -y -qq > /dev/null
-apt-get install -y openjdk-8-jdk-headless -qq > /dev/null
-
-if [[ "$PYSPARK" == "3.1"* ]]; then
-  wget -q "https://downloads.apache.org/spark/spark-3.1.1/spark-3.1.1-bin-hadoop2.7.tgz" > /dev/null
-  tar -xvf spark-3.1.1-bin-hadoop2.7.tgz > /dev/null
-  SPARKHOME="/content/spark-3.1.1-bin-hadoop2.7"
-elif [[ "$PYSPARK" == "3.0"* ]]; then
-  wget -q "https://downloads.apache.org/spark/spark-3.0.2/spark-3.0.2-bin-hadoop2.7.tgz" > /dev/null
-  tar -xvf spark-3.0.2-bin-hadoop2.7.tgz > /dev/null
-  SPARKHOME="/content/spark-3.0.2-bin-hadoop2.7"
-elif [[ "$PYSPARK" == "2"* ]]; then
-  wget -q "https://downloads.apache.org/spark/spark-2.4.7/spark-2.4.7-bin-hadoop2.7.tgz" > /dev/null
-  tar -xvf spark-2.4.7-bin-hadoop2.7.tgz > /dev/null
-  SPARKHOME="/content/spark-2.4.7-bin-hadoop2.7"
+  echo "License file loaded"
 else
-  wget -q "https://downloads.apache.org/spark/spark-3.1.1/spark-3.1.1-bin-hadoop2.7.tgz" > /dev/null
-  tar -xvf spark-3.1.1-bin-hadoop2.7.tgz > /dev/null
-  SPARKHOME="/content/spark-3.1.1-bin-hadoop2.7"
+  echo "JSON file not found: $JSON_FILE"
 fi
 
-export SPARK_HOME=$SPARKHOME
-export JAVA_HOME="/usr/lib/jvm/java-8-openjdk-amd64"
+echo "Installing Visual NLP ( SPARK-OCR ) - $OCR_VERSION"
+pip install -q --force-reinstall spark-ocr==$OCR_VERSION --user --extra-index-url=https://pypi.johnsnowlabs.com/$SPARK_OCR_SECRET
 
-! pip install implicits
-! pip install --upgrade -q pyspark==$PYSPARK spark-nlp==$SPARKNLP findspark
-! pip install spark-ocr==$OCR_VERSION --user --extra-index-url=https://pypi.johnsnowlabs.com/$JSL_OCR_SECRET --upgrade --no-deps
+echo "Installing Healthcare NLP - $JSL_VERSION"
+pip install -q --force-reinstall spark_nlp_jsl==$JSL_VERSION --user --extra-index-url=https://pypi.johnsnowlabs.com/$SECRET
 
+echo "Installing Spark NLP - $PUBLIC_VERSION"
+pip install -q spark-nlp==$PUBLIC_VERSION
+
+echo "Installing Java 8"
+apt-get update
+apt-get remove -y openjdk-11-jdk openjdk-11-jre openjdk-17-jdk openjdk-17-jre
+apt-get autoremove -y
+apt-get update -qq
+apt-get install -y openjdk-8-jdk

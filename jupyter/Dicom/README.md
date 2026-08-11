@@ -4,6 +4,22 @@ This folder contains Visual NLP / Spark OCR notebooks for working with DICOM dat
 
 Use this README as a routing guide: start with the notebook that matches your use case, then move to the more specialized notebooks when you need a particular implementation pattern.
 
+## Environment-Specific Setup
+
+For Databricks setup instructions, see:
+
+- [Databricks Setup](../../databricks/Readme.md)
+
+For Colab, SageMaker, and local setup instructions, see:
+
+- [Colab / SageMaker / Local Setup](../../sh_install_scripts/README.md)
+
+## LLM Skill
+
+DICOM skill that you can download, zip, and provide to Claude, Codex, or Gemini. The skill includes the information from these notebooks along with recommended best practices, so you can ask questions or get help with DICOM-related tasks.
+
+- [DICOM Skill](./skill/README.md)
+
 ## Quick Notebook Picker
 
 | If you want to... | Start with | Why |
@@ -19,6 +35,7 @@ Use this README as a routing guide: start with the notebook that matches your us
 | Use VLM OCR for DICOM text detection | [`SparkOcrDicomVLM.ipynb`](SparkOcrDicomVLM.ipynb) | Uses 1B VLM for OCR with coordinates, then supports blanket or PHI-only redaction. |
 | Run de-identification in streaming mode | [`SparkOcrDicomDeIdentificationV2Streaming.ipynb`](SparkOcrDicomDeIdentificationV2Streaming.ipynb) | Spark Structured Streaming example based on the V2 image/OCR pipeline. |
 | Try pretrained de-identification pipelines | [`SparkOcrDicomPretrainedPipelines.ipynb`](SparkOcrDicomPretrainedPipelines.ipynb) | Compares ready-made minimal, full anonymization, and pseudonymization DICOM pipelines. |
+| Pipeline Builder Clinical NER Models | [`SparkOcrDicomPipelineBuilder.ipynb`](SparkOcrDicomPipelineBuilder.ipynb) | Latest notebook to help wrap dicom pipelines around state of the Healthcare clinical pretrained pipelines. |
 
 Pixel PHI OCR options:
 
@@ -32,100 +49,17 @@ These are the latest notebooks to use for the main DICOM workflows in this folde
 
 | Use case | Latest notebook(s) | Notes |
 |---|---|---|
+| Dicom Pipeline Builder | [`SparkOcrDicomPipelineBuilder.ipynb`](SparkOcrDicomPipelineBuilder.ipynb) | Latest notebook to help wrap dicom pipelines around state of the Healthcare clinical pretrained pipelines. |
 | Metadata de-identification | [`SparkOcrDicomMetadata.ipynb`](SparkOcrDicomMetadata.ipynb) | Latest DICOM-to-metadata notebook for extracting and preparing metadata fields, including tags that can be routed into de-identification flows. |
 | PHI identification in DICOM images | [`SparkOcrDicomToImageV3.ipynb`](SparkOcrDicomToImageV3.ipynb), [`SparkOcrDicomVLM.ipynb`](SparkOcrDicomVLM.ipynb), [`SparkOcrDicomDrawRegions.ipynb`](SparkOcrDicomDrawRegions.ipynb) | Use `DicomToImageV3` to extract pixels into images, the VLM notebook for VLM-based OCR/PHI identification, and Draw Regions to render detected regions back onto the DICOM. |
 | Encapsulated PDF de-identification | [`SparkOcrDeidentificationDicomWithEncapsulatedPDF.ipynb`](SparkOcrDeidentificationDicomWithEncapsulatedPDF.ipynb) | Latest notebook for DICOM files that contain encapsulated PDFs. |
 | MIDI-B solution | [`SparkOcrMIDIBSolution.ipynb`](SparkOcrMIDIBSolution.ipynb) | Use this when you want to run the JSL solution on the MIDI-B dataset. |
 
-## Common Setup
+## Other Resources
 
-Most notebooks follow the same setup pattern:
-
-### Variables
-
-Define the variables from your license file before running a notebook:
-
-```python
-# Required variables from your license file:
-license = "..."
-secret = "..."          # Visual Product Secret
-nlp_secret = "..."      # Healthcare Product Secret
-public_version = "..."  # Open Source Version
-aws_access_key = "..."
-aws_secret_key = "..."
-spark_ocr_jar_path = None
-```
-
-Many notebooks include `spark_ocr_jar_path` for internal/local testing. In normal licensed environments, the `secret` and `nlp_secret` values are usually the important configuration inputs.
-
-### Install Visual NLP
-
-```python
-ocr_version = secret.split("-")[0]
-
-!pip install --upgrade -q spark-ocr==$ocr_version \
-  --extra-index-url=https://pypi.johnsnowlabs.com/$secret \
-  --upgrade
-```
-
-### Install Healthcare NLP
-
-```python
-jsl_version = nlp_secret.split("-")[0]
-
-!pip -q install --upgrade spark-nlp-jsl==$jsl_version \
-  --extra-index-url https://pypi.johnsnowlabs.com/$nlp_secret
-```
-
-### Install Open-Source Spark NLP and PySpark
-
-Check your license file for the correct open-source Spark NLP version.
-
-```python
-!pip install --upgrade -q pyspark==3.4.0 spark-nlp==$public_version
-```
-
-### Install Java 8
-
-```python
-!apt-get update
-!apt-get install -y openjdk-8-jdk
-```
-
-## 🔴 WARNING: Restart Your Notebook Session
-
-> Restart the notebook session after installing JSL components, before starting Spark OCR.
-
-### Start Spark OCR
-
-```python
-from sparkocr import start
-import os
-
-if license:
-    os.environ["JSL_OCR_LICENSE"] = license
-    os.environ["SPARK_NLP_LICENSE"] = license
-
-if aws_access_key:
-    os.environ["AWS_ACCESS_KEY"] = aws_access_key
-    os.environ["AWS_SECRET_ACCESS_KEY"] = aws_secret_key
-
-os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
-
-jsl_version = nlp_secret.split("-")[0]
-ocr_version = secret.split("-")[0]
-
-extra_configurations = {
-    "spark.extraListeners": "com.johnsnowlabs.license.LicenseLifeCycleManager"
-}
-
-spark = start(
-    secret=secret,
-    nlp_secret=nlp_secret,
-    jar_path=spark_ocr_jar_path,
-    nlp_internal=jsl_version,
-    extra_conf=extra_configurations
-)
-
-spark
-```
+| Resource | Description |
+|---|---|
+| [DICOM Paper](https://link.springer.com/chapter/10.1007/978-3-032-26211-0_12) | Research paper covering DICOM de-identification methodology and results. |
+| [DICOM Blogpost](https://medium.com/john-snow-labs/de-identifying-dicom-files-a-step-by-step-guide-with-john-snow-labs-visual-nlp-2c21b60f92a8) | Step-by-step guide for de-identifying DICOM files with John Snow Labs Visual NLP. |
+| [DICOM Repo](https://github.com/JohnSnowLabs/dicom-deid-dataset) | Public dataset, benchmark results, and comparison materials. |
+| [DICOM Databricks Benchmarks](https://medium.com/john-snow-labs/de-identifying-dicom-files-a-step-by-step-guide-with-john-snow-labs-visual-nlp-2c21b60f92a8#:~:text=MIDI%2DB%20Subset.-,Databricks%20Speed%20Benchmarks,-To%20evaluate%20processing) | Databricks-specific speed benchmark results for DICOM pixel and metadata de-identification. |
