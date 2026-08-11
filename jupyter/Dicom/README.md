@@ -1,13 +1,3 @@
-if we had to prepare a landing page README.md for the jupyter/Dicom folder, to help users to navigate it, how would you organize it? one idea is to do it across topics, like,
- 
-+ Basic Getting Started pipelines.
-+ Blanket, all texts, deid.
-+ PHI, just entities, deid.
-+ Estimating infra costs: link to benchmarks.
-
-
-
-
 # DICOM Notebooks Guide
 
 This folder contains Visual NLP / Spark OCR notebooks for working with DICOM data. The examples cover metadata inspection, metadata de-identification, pixel-level redaction, DICOM image rendering, encapsulated PDF workflows, VLM-based Dicom de-identification, streaming, pretrained pipelines, and a full solution for the [MIDI-B challenge dataset](https://www.cancerimagingarchive.net/collection/midi-b-test-midi-b-validation/).
@@ -144,6 +134,9 @@ spark = start(
 
 spark
 ```
+
+### Performance & Benchmarks
+We encourage the reader the review our [dicom benchmarks](https://nlp.johnsnowlabs.com/docs/en/ocr_benchmark#dicom-de-identification-benchmark) for different platforms and pipelines.
 
 
 [^1]: try, for instance AWS' c7a family. 
