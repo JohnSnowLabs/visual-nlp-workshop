@@ -1,6 +1,6 @@
 # DICOM Notebooks Guide
 
-This folder contains Visual NLP / Spark OCR notebooks for working with DICOM data. The examples cover metadata inspection, metadata de-identification, pixel-level redaction, DICOM image rendering, encapsulated PDF workflows, VLM-based OCR, streaming, pretrained pipelines, and a full MIDI-B solution.
+This folder contains Visual NLP / Spark OCR notebooks for working with DICOM data. The examples cover metadata inspection, metadata de-identification, pixel-level redaction, DICOM image rendering, encapsulated PDF workflows, VLM-based Dicom de-identification, streaming, pretrained pipelines, and a full solution for the [MIDI-B challenge dataset](https://www.cancerimagingarchive.net/collection/midi-b-test-midi-b-validation/).
 
 Use this README as a routing guide: start with the notebook that matches your use case, then move to the more specialized notebooks when you need a particular implementation pattern.
 
@@ -37,9 +37,14 @@ DICOM skill that you can download, zip, and provide to Claude, Codex, or Gemini.
 | Try pretrained de-identification pipelines | [`SparkOcrDicomPretrainedPipelines.ipynb`](SparkOcrDicomPretrainedPipelines.ipynb) | Compares ready-made minimal, full anonymization, and pseudonymization DICOM pipelines. |
 | Pipeline Builder Clinical NER Models | [`SparkOcrDicomPipelineBuilder.ipynb`](SparkOcrDicomPipelineBuilder.ipynb) | Latest notebook to help wrap dicom pipelines around state of the Healthcare clinical pretrained pipelines. |
 
-Pixel PHI OCR options:
+## Tags & Strategy Files
+[Dicom Tags](https://www.dicomlibrary.com/dicom/dicom-tags/), encoded in the header of Dicom files, are a key/value data structure that may contain PHI. To handle PHI removal in Dicom Tags, Visual NLP relies on the Strategy Files.
+Strategy Files enumerate a list of `actions` targeted for a specific tag or group of tags. These actions will do things like replacing a name with a pseudonym, or randomizing a date. For an exhaustive list check this [list of actions in strategy files](strategy_actions.md).
 
-- [`SparkOcrDicomVLM.ipynb`](SparkOcrDicomVLM.ipynb): latest VLM-based option for handwritten text, printed text, and DICOMs containing PDF packets.
+## Pixel PHI OCR options
+Here we list notebooks according to how they extract text from the image.
+
+- [`SparkOcrDicomVLM.ipynb`](SparkOcrDicomVLM.ipynb): latest VLM-based option for handwritten text, printed text, and DICOMs containing PDF packets(PDF documents embedded into the Dicom). This can deliver acceptable performance in both CPU[^1] and GPU.
 - [`SparkOcrDicomDeIdentificationV3.ipynb`](SparkOcrDicomDeIdentificationV3.ipynb): CPU-based option for printed text.
 - [`SparkOcrDicomDeIdentificationV2.ipynb`](SparkOcrDicomDeIdentificationV2.ipynb): GPU-based option for printed text and simple handwritten text; use the VLM notebook for complex handwriting.
 
@@ -67,6 +72,9 @@ Some predefined pipelines are made accessible through AWS Marketplace as Sagemak
 [DICOM Images De-identification - Base](https://aws.amazon.com/marketplace/pp/prodview-y6of2kcxqt7ta): this pipeline enables automated PHI redaction in DICOM images, ensuring compliance with HIPAA and other healthcare privacy regulations. The model performs the least intrusive form of DICOM de-identification removing only the most critical PHI from images and most essential metadata fields while preserving all non-sensitive details for research and analysis. 
 </br>
 
+## Performance & Benchmarks
+We encourage the reader the review our [dicom benchmarks](https://nlp.johnsnowlabs.com/docs/en/ocr_benchmark#dicom-de-identification-benchmark) for different platforms and pipelines.
+
 
 ## Other Resources
 
@@ -76,3 +84,7 @@ Some predefined pipelines are made accessible through AWS Marketplace as Sagemak
 | [DICOM Blogpost](https://medium.com/john-snow-labs/de-identifying-dicom-files-a-step-by-step-guide-with-john-snow-labs-visual-nlp-2c21b60f92a8) | Step-by-step guide for de-identifying DICOM files with John Snow Labs Visual NLP. |
 | [DICOM Repo](https://github.com/JohnSnowLabs/dicom-deid-dataset) | Public dataset, benchmark results, and comparison materials. |
 | [DICOM Databricks Benchmarks](https://medium.com/john-snow-labs/de-identifying-dicom-files-a-step-by-step-guide-with-john-snow-labs-visual-nlp-2c21b60f92a8#:~:text=MIDI%2DB%20Subset.-,Databricks%20Speed%20Benchmarks,-To%20evaluate%20processing) | Databricks-specific speed benchmark results for DICOM pixel and metadata de-identification. |
+
+
+[^1]: try, for instance AWS' c7a family. 
+>>>>>>> 2527bcd6f812cf82b6b9105c473433c109d4982e
