@@ -3,7 +3,6 @@ if we had to prepare a landing page README.md for the jupyter/Dicom folder, to h
 + Basic Getting Started pipelines.
 + Blanket, all texts, deid.
 + PHI, just entities, deid.
-+ Tags & Strategy Files.
 + Estimating infra costs: link to benchmarks.
 
 
@@ -30,6 +29,10 @@ Use this README as a routing guide: start with the notebook that matches your us
 | Use VLM OCR for DICOM text detection | [`SparkOcrDicomVLM.ipynb`](SparkOcrDicomVLM.ipynb) | Uses 1B VLM for OCR with coordinates, then supports blanket or PHI-only redaction. |
 | Run de-identification in streaming mode | [`SparkOcrDicomDeIdentificationV2Streaming.ipynb`](SparkOcrDicomDeIdentificationV2Streaming.ipynb) | Spark Structured Streaming example based on the V2 image/OCR pipeline. |
 | Try pretrained de-identification pipelines | [`SparkOcrDicomPretrainedPipelines.ipynb`](SparkOcrDicomPretrainedPipelines.ipynb) | Compares ready-made minimal, full anonymization, and pseudonymization DICOM pipelines. |
+
+## Tags & Strategy Files
+[Dicom Tags](https://www.dicomlibrary.com/dicom/dicom-tags/), encoded in the header of Dicom files, are a key/value data structure that may contain PHI. To handle PHI removal in Dicom Tags, Visual NLP relies on the Strategy Files.
+Strategy Files enumerate a list of `actions` targeted for a specific tag or group of tags. These actions will do things like replacing a name with a pseudonym, or randomizing a date. For an exhaustive list check this [list of actions in strategy files](strategy_actions.md).
 
 ## Pixel PHI OCR options
 Here we list notebooks according to how they extract text from the image.
