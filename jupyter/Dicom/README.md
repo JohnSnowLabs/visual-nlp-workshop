@@ -55,6 +55,19 @@ These are the latest notebooks to use for the main DICOM workflows in this folde
 | Encapsulated PDF de-identification | [`SparkOcrDeidentificationDicomWithEncapsulatedPDF.ipynb`](SparkOcrDeidentificationDicomWithEncapsulatedPDF.ipynb) | Latest notebook for DICOM files that contain encapsulated PDFs. |
 | MIDI-B solution | [`SparkOcrMIDIBSolution.ipynb`](SparkOcrMIDIBSolution.ipynb) | Use this when you want to run the JSL solution on the MIDI-B dataset. |
 
+## AWS Marketplace listings
+Some predefined pipelines are made accessible through AWS Marketplace as Sagemaker products,
+
+[Dicom Images De-identification - Full](https://aws.amazon.com/marketplace/pp/prodview-jb2mn4ionsi2s): this advanced pipeline eliminates all visible text within DICOM images and removes or anonymizes most metadata fields, including patient identifiers, physician details, and hospital information.
+</br>
+
+[DICOM Images De-identification - Alias](https://aws.amazon.com/marketplace/pp/prodview-uqh2xim2fcbxa): this pipeline offers a cutting-edge solution for healthcare data scientists focused on data privacy and adherence to health regulations, effectively masking PHI information in DICOM images, by replacing personal identifiers with pseudonyms instead of removing them, ensuring that PHI is no longer traceable while maintaining data integrity for longitudinal studies and collaborations.
+</br>
+
+[DICOM Images De-identification - Base](https://aws.amazon.com/marketplace/pp/prodview-y6of2kcxqt7ta): this pipeline enables automated PHI redaction in DICOM images, ensuring compliance with HIPAA and other healthcare privacy regulations. The model performs the least intrusive form of DICOM de-identification removing only the most critical PHI from images and most essential metadata fields while preserving all non-sensitive details for research and analysis. 
+</br>
+
+
 ## Other Resources
 
 | Resource | Description |
