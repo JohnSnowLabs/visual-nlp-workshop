@@ -1,7 +1,7 @@
 # How to install OCR in 1 line of code in Goole Colab and AWS Sagemaker 
 
 ## 1. Upload secrets  
-Upload your `spark_ocr.json` and `spark_nlp_for_healthcare.json` to the default Google Colab or Sagemaker directory.
+Upload your `spark_ocr.json` to the default Google Colab or Sagemaker directory.
 
 ## 2. Run the 1-line install script
 For `AWS Sagemaker`

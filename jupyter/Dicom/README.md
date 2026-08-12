@@ -84,6 +84,9 @@ We encourage the reader the review our [dicom benchmarks](https://nlp.johnsnowla
 | [DICOM Blogpost](https://medium.com/john-snow-labs/de-identifying-dicom-files-a-step-by-step-guide-with-john-snow-labs-visual-nlp-2c21b60f92a8) | Step-by-step guide for de-identifying DICOM files with John Snow Labs Visual NLP. |
 | [DICOM Repo](https://github.com/JohnSnowLabs/dicom-deid-dataset) | Public dataset, benchmark results, and comparison materials. |
 | [DICOM Databricks Benchmarks](https://medium.com/john-snow-labs/de-identifying-dicom-files-a-step-by-step-guide-with-john-snow-labs-visual-nlp-2c21b60f92a8#:~:text=MIDI%2DB%20Subset.-,Databricks%20Speed%20Benchmarks,-To%20evaluate%20processing) | Databricks-specific speed benchmark results for DICOM pixel and metadata de-identification. |
-
 </br>
+
+## Webinars
+[De-Identification of Medical Images in DICOM Format](https://youtu.be/095_4jI9Y74?si=9P9AZn0miH6tXD_Y).
+
 [^1]: try, for instance AWS' c7a family. 
