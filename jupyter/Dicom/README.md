@@ -1,4 +1,4 @@
-# DICOM Notebooks Guide
+# 🩺 DICOM Notebooks Guide
 
 This folder contains Visual NLP / Spark OCR notebooks for working with DICOM data. The examples cover metadata inspection, metadata de-identification, pixel-level redaction, DICOM image rendering, encapsulated PDF workflows, VLM-based Dicom de-identification, streaming, pretrained pipelines, and a full solution for the [MIDI-B challenge dataset](https://www.cancerimagingarchive.net/collection/midi-b-test-midi-b-validation/).
 
