@@ -1,3 +1,9 @@
+# Usage Example
+
+[Metadata De-identification Notebook](https://github.com/JohnSnowLabs/visual-nlp-workshop/blob/master/jupyter/Dicom/SparkOcrMetadataDeIdentification.ipynb)
+
+---
+
 # Per-Tag Actions
 
 | Action | VR(s) | Description |
@@ -46,7 +52,7 @@ Tags,VR,Name,Status,Action,Option
 
 # Group-Level Actions
 
-These actions are defined separately in `groupStrategyFileContent`.
+These actions are defined separately in `groupStrategyFileContent` or `.setGroupStrategyFile(group_strategy_file_path)`.
 
 For group-level actions:
 
