@@ -21,6 +21,27 @@
 | **`capAgeAt99IfOver90`** | `AS` | If the value is valid DICOM `AS` format and represents an age in years greater than 90, caps it at `099Y`. Otherwise, the value is left unchanged. If the value is not valid `AS` format, falls back to `shiftAgeByRandom`. |
 | **`replaceWithMapping`** | `ALL` | Replaces the value using an externally supplied per-tag mapping (`externalMapping` column/parameter), with type conversion according to `Option.value_type` (`int`/`float`/`str`). The nested `Option` allows the mapping to be applied inside sequence items as well; otherwise, only top-level occurrences are modified. |
 
+# Minimal Strategy File
+
+```text
+Tags,VR,Name,Status,Action,Option
+"(0010, 0010)",PN,Patient Name,,replaceWithLiteral,<REMOVED>
+"(0010, 0020)",LO,Patient ID,,patientHashId,
+"(0010, 0030)",DA,Patient Birth Date,,remove,
+"(0010, 0040)",CS,Patient Sex,,remove,
+"(0010, 1010)",AS,Patient Age,,capAgeAt99IfOver90,
+"(0008, 0020)",DA,Study Date,,shiftDateByFixedNbOfDays,3
+"(0008, 0030)",TM,Study Time,,shiftTimeByRandom,
+"(0008, 0050)",SH,Accession Number,,hashId,
+"(0008, 0080)",LO,Institution Name,,delete,
+"(0008, 0090)",PN,Referring Physician Name,,replaceWithRandomName,
+"(0008, 1030)",LO,Study Description,,cleanTag,deid
+"(0018, 1030)",LO,Protocol Name,,cleanTag,deid
+"(0020, 000D)",UI,Study Instance UID,,hashId,
+"(0020, 000E)",UI,Series Instance UID,,hashId,
+"(0008, 0018)",UI,SOP Instance UID,,hashId,
+```
+
 ---
 
 # Group-Level Actions
@@ -37,11 +58,11 @@ For group-level actions:
 | **`delete`** | Deletes every tag whose group number matches the specified group prefix. |
 | **`remove`** | Clears the value (sets it to `""`) of every tag whose group number matches the specified group prefix. |
 
-### Example
-
-A group-level rule such as:
+# Minimal Group Strategy File
 
 ```text
-Action: delete
-VR: GROUP
-Tag: (0020,)
+Tags,VR,Name,Status,Action,Option
+"(0011,)",GROUP,None,,delete,
+"(0031,)",GROUP,None,,delete,
+"(0040,)",GROUP,None,,remove,
+```
