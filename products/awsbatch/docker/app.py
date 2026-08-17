@@ -137,7 +137,10 @@ def process_file(img_p, nlp_p, input_file, filename, output_folder):
       coords_df = nlp_p.transform(regions_df)
       deid_info = coords_df.select("path", "coordinates").distinct()
 
-      redact_phi_in_tiles(fully_qualified_filename, deid_info, tiles_output_tmp, output_svs_path=output_folder, create_new_svs_file = False)
+      create_new_svs_file = os.environ.get("CREATE_NEW_SVS_FILE", "false").lower() == "true"
+      output_svs_path = os.path.join(output_folder, filename) if create_new_svs_file else output_folder
+
+      redact_phi_in_tiles(fully_qualified_filename, deid_info, tiles_output_tmp, output_svs_path=output_svs_path, create_new_svs_file=create_new_svs_file)
 
     return fully_qualified_filename
 
@@ -170,7 +173,7 @@ def process_folder(s3, input_s3, output_s3):
     in_bucket, in_prefix = parse_s3_uri(input_s3)
     out_bucket, out_prefix = parse_s3_uri(output_s3)
 
-    img_p, nlp_p = None, None # load_pipeline()
+    img_p, nlp_p = load_pipeline()
 
     with tempfile.TemporaryDirectory() as tmp_input_folder, tempfile.TemporaryDirectory() as tmp_output_folder:
         keys = list(list_s3_files(s3, in_bucket, in_prefix))
