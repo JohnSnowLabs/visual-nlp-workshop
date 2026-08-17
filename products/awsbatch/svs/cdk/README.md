@@ -134,16 +134,21 @@ Notes:
 - If `cdk destroy` fails because the ECR repository still has images, delete
   them first: `aws ecr batch-delete-image --repository-name <name> --image-ids imageTag=latest`.
 
-## Open items in the container code
+## Container code
 
 `docker/app.py` wires up the Batch I/O contract (env vars, S3 download/
 upload, `_FAILURE` marker) and starts the session via `nlp.start(visual=True)`,
 which reads `SPARK_OCR_LICENSE` directly from the environment. `AWS_ACCESS_
 KEY_ID`/`AWS_SECRET_ACCESS_KEY` from the license file are only used at image
 build time by `docker/installer.py` (a Docker build secret) — not needed at
-runtime, so they're never passed to the container. `load_pipeline()` and
-`process_file()` are left as `NotImplementedError` stubs — plug in the
-actual pipeline there.
+runtime, so they're never passed to the container. `load_pipeline()` loads
+the de-id pipeline baked into the image at build time (`/opt/ml/model` and
+`/opt/ml/image_text_detector_mem_opt`, produced by `installer.py` via
+`MODEL_TO_LOAD` in the `Dockerfile`), and `process_file()` runs it per file
+(header cleanup, tiling, OCR + de-id, redaction). Redaction writes tiles
+back in place by default; set `CREATE_NEW_SVS_FILE=true` to have it write a
+new de-identified `.svs` file instead (slower, but leaves the original
+untouched).
 
 
 ## Permissions
