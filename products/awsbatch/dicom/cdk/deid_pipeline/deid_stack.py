@@ -22,18 +22,12 @@ from constructs import Construct
 
 
 class DeidPipelineStack(Stack):
-    # c7a.4xlarge: 16 vCPU / 32 GiB. Leave headroom below the instance's full
-    # capacity for the OS and ECS agent.
-    #
-    # These sizing values are carried over as-is from the svs/ stack, which
-    # was benchmarked against gigapixel whole-slide-image tiling workloads.
-    # DICOM files are single images several orders of magnitude smaller, so
-    # this is very likely oversized for the dicom_deid_full_anonymization
-    # pipeline -- it just hasn't been benchmarked yet. Safe to size down
-    # once there's a real workload to measure against.
-    INSTANCE_TYPES = ["c7a.4xlarge"]
-    JOB_VCPUS = 15
-    JOB_MEMORY_MIB = 28000
+    # c7a.2xlarge: 8 vCPU / 16 GiB, sized for the pipeline's actual
+    # footprint (~11 vCPU / ~7 GiB peak across the Spark/JVM tree). Leave
+    # headroom below the instance's full capacity for the OS and ECS agent.
+    INSTANCE_TYPES = ["c7a.2xlarge"]
+    JOB_VCPUS = 7
+    JOB_MEMORY_MIB = 13000
     MAX_VCPUS = 64
 
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:

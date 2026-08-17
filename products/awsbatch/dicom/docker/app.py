@@ -45,10 +45,7 @@ spark = None
 
 
 def load_pipeline():
-    """Load the baked DICOM de-id pipeline: JSL's pretrained
-    dicom_deid_full_anonymization (OCR text detection + blanket redaction of
-    every detected text region in the image, plus DICOM metadata deid).
-    Baked in at image build time by installer.py."""
+    """Load the DICOM de-id pipeline baked into the image by installer.py."""
     return PipelineModel.load(os.path.join(CACHE_PRETRAINED_PATH, "dicom_pipeline"))
 
 

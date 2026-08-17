@@ -5,7 +5,7 @@
 ## Introduction
 In a nutshell, this architecture works as follows,
 
-S3 → EventBridge → Lambda → AWS Batch (EC2, `c7a.4xlarge`) → container → S3.
+S3 → EventBridge → Lambda → AWS Batch (EC2, `c7a.2xlarge`) → container → S3.
 
 * S3: stores the data.
 * EventBridge: notices that something happened.
@@ -16,38 +16,13 @@ S3 → EventBridge → Lambda → AWS Batch (EC2, `c7a.4xlarge`) → container �
 Same infrastructure pattern as `../svs/`, targeting DICOM files instead of
 `.svs` whole-slide images.
 
-## Which pipeline, and why
+## Which pipeline
 
 The container runs JSL's pretrained `dicom_deid_full_anonymization`
-pipeline (loaded via `sparkocr.pretrained.PretrainedPipeline`, baked into
-the image at build time by `docker/installer.py`). This is a deliberate
-choice, not the only option — see the reference notebooks at
-[`jupyter/Dicom/`](https://github.com/JohnSnowLabs/visual-nlp-workshop/tree/master/jupyter/Dicom)
-for alternatives (`SparkOcrDicomDeIdentificationV2.ipynb`,
-`...V3.ipynb`, `SparkOcrDicomPretrainedPipelines.ipynb`, etc.).
-
-During end-to-end validation against real DICOM samples containing visible,
-burned-in PHI (`jupyter/data/dicom/*.dcm`), the hand-assembled pipelines from
-the V2 and V3 notebooks (OCR → clinical NER → `PositionFinder` →
-`DicomDrawRegions`) both left PHI visible on the image whenever a detected
-NER chunk's text spanned more than one OCR-detected text line/region (e.g. a
-name merged with adjacent unrelated text during sentence segmentation) —
-`PositionFinder` can't resolve a single bounding box for a chunk that
-straddles two disconnected OCR regions, and silently drops it instead of
-failing loudly. This reproduced even on the same sample images used in the
-notebooks' own published output, with the currently pinned library versions.
-
-`dicom_deid_full_anonymization` sidesteps this by blanket-redacting every
-detected text region in the image outright, instead of selectively drawing
-boxes only around chunks an NER model classified as PHI. It was verified to
-correctly redact PHI across 5 different real samples (`John_Stiles.dcm`,
-`David_Douglas.dcm`, `Martin_Chad.dcm`, `Good_Guy.dcm`,
-`dicoms_phi/sarah_evans.dcm`) covering different modalities and text
-layouts, including the exact case (`Martin_Chad.dcm`) where the hand-built
-pipelines failed. The trade-off: it doesn't distinguish PHI from non-PHI
-text, so it also redacts things like laterality markers or a "Chest" label —
-acceptable for a de-identification product, since over-redaction is the
-safe failure mode.
+pipeline, baked into the image at build time by `docker/installer.py`.
+It blanket-redacts every detected text region in the image rather than
+drawing boxes only around NER-classified chunks, which also makes it more
+robust to PHI that spans multiple text regions.
 
 ## The details
 Files land under `s3://<bucket>/<folder>/`. Nothing happens until an empty

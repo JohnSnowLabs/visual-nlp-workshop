@@ -8,9 +8,7 @@ docker build --secret id=license,src=spark_nlp_for_healthcare_spark_ocr_license.
 ```
 
 `installer.py` downloads JSL's pretrained `dicom_deid_full_anonymization`
-pipeline at build time and bakes it into the image at `/opt/ml/dicom_pipeline`
-(see `../README.md` for why this specific pretrained pipeline was chosen over
-hand-assembling the OCR/NER/redaction stages).
+pipeline at build time and bakes it into the image at `/opt/ml/dicom_pipeline`.
 
 #### Run
 `AWS_*` credentials are for boto3's own S3 access, and are optional if the

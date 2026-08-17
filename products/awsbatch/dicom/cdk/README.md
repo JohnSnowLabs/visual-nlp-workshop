@@ -1,6 +1,6 @@
 # De-id pipeline infrastructure
 
-S3 → EventBridge → Lambda → AWS Batch (EC2, `c7a.4xlarge`) → container (`../docker`).
+S3 → EventBridge → Lambda → AWS Batch (EC2, `c7a.2xlarge`) → container (`../docker`).
 
 Flow: files land under `s3://<bucket>/<folder>/`. Nothing happens until a
 `_READY` object is created under that same prefix. That triggers an
@@ -133,10 +133,6 @@ Notes:
   if you want it gone immediately.)
 - If `cdk destroy` fails because the ECR repository still has images, delete
   them first: `aws ecr batch-delete-image --repository-name <name> --image-ids imageTag=latest`.
-- `INSTANCE_TYPES`/`JOB_VCPUS`/`JOB_MEMORY_MIB` in `deid_pipeline/deid_stack.py`
-  are inherited from the `svs/` stack (benchmarked for gigapixel whole-slide
-  tiling) and have not been benchmarked for DICOM workloads, which are almost
-  certainly much lighter. Safe to size down once measured.
 
 ## Container code
 
