@@ -60,6 +60,24 @@ These are the latest notebooks to use for the main DICOM workflows in this folde
 | Encapsulated PDF de-identification | [`SparkOcrDeidentificationDicomWithEncapsulatedPDF.ipynb`](SparkOcrDeidentificationDicomWithEncapsulatedPDF.ipynb) | Latest notebook for DICOM files that contain encapsulated PDFs. |
 | MIDI-B solution | [`SparkOcrMIDIBSolution.ipynb`](SparkOcrMIDIBSolution.ipynb) | Use this when you want to run the JSL solution on the MIDI-B dataset. |
 
+## De-Identification Example
+
+### Free text Metadata PHI De-Identification
+
+![Free Text Example](../data/readme/dicom/Free_text_deid.png)
+
+### Blanket Pixel De-Identification
+
+![Blanket Pixel](../data/readme/dicom/blanket_pixel_deid.png)
+
+### Pixel PHI De-Identification
+
+![Pixel PHI](../data/readme/dicom/pixel_phi_deid.png)
+
+### Encapsulated PDF PHI De-Identification
+
+![Encapsulated PDF Pixel PHI](../data/readme/dicom/encapsulated_pdf_deid.png)
+
 ## AWS Marketplace listings
 Some predefined pipelines are made accessible through AWS Marketplace as Sagemaker products,
 

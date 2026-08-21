@@ -57,7 +57,7 @@ These actions are defined separately in `groupStrategyFileContent` or `.setGroup
 For group-level actions:
 
 - **VR column:** literal `GROUP`
-- **Tag column:** a group prefix, e.g. `(0020,)`
+- **Tag column:** a group prefix, e.g. `(60,)`
 
 | Action | Description |
 |---|---|
@@ -68,7 +68,7 @@ For group-level actions:
 
 ```text
 Tags,VR,Name,Status,Action,Option
-"(0011,)",GROUP,None,,delete,
-"(0031,)",GROUP,None,,delete,
-"(0040,)",GROUP,None,,remove,
+"(60,)",GROUP,None,,delete,
+"(501,)",GROUP,None,,delete,
+"(20,)",GROUP,None,,remove,
 ```
