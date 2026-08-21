@@ -40,7 +40,11 @@ Visual NLP supports two distinct PHI removal strategies that can be used separat
 
 **De-identification (Redaction)** blanks out detected PHI by drawing filled rectangles over the sensitive region in the image. The original text is visually removed and the structural integrity of the document is preserved.
 
-**Obfuscation (Replacement)** substitutes detected PHI with realistic but entirely synthetic values. A name is replaced with a different fake name, a date is shifted to a plausible alternative, a location is swapped for a fictional one. This mode is preferred for datasets that need to retain statistical or linguistic realism for downstream ML tasks.
+![DeIdentification Example](../data/readme/deid-and-obfuscation/DeIdentification_Example.png)
+
+**Obfuscation (Replacement)** substitutes detected PHI with realistic but entirely synthetic values. A name is replaced with a different synthetic name, a date is shifted to a plausible alternative, a location is swapped for a fictional one. This mode is preferred for datasets that need to retain statistical or linguistic realism for downstream ML tasks.
+
+![Obfuscation Example](../data/readme/deid-and-obfuscation/Obfuscation_Example.png)
 
 ## Supported Document Types
 
