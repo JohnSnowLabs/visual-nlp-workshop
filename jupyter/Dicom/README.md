@@ -18,7 +18,7 @@ For Colab, SageMaker, and local setup instructions, see:
 
 DICOM skill that you can download, zip, and provide to Claude, Codex, or Gemini. The skill includes the information from these notebooks along with recommended best practices, so you can ask questions or get help with DICOM-related tasks.
 
-- [DICOM Skill](./skill/README.md)
+- [DICOM Skill](../skill/README.md)
 
 ## Quick Notebook Picker
 
