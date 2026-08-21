@@ -8,7 +8,6 @@ Just start talking about a Visual NLP task, or use one of the slash commands bel
 
 | Command | Shows |
 |---|---|
-| *(no command — just describe what you want)* | Action categories |
 | `/all_actions` | Action categories |
 | `/all_tasks` | All 14 tasks |
 | `/dicom_tasks` | DICOM-only tasks (1–10) |
