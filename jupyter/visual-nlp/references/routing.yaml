@@ -1,0 +1,145 @@
+version: 1
+
+defaults:
+  pretrained: true
+  hardware: gpu
+  visible_text_policy: phi_only
+  input_type_question: "Are you working with DICOM, image files, or PDF files?"
+
+routes:
+  dicom.metadata_inspection:
+    input_type: dicom
+    task: metadata_inspection
+    description: "Extract DICOM metadata into metadata_original; no de-identification."
+    template_file: dicom/template-metadata.md
+    template_section: metadata_inspection
+    read: [common/formatting.md, common/imports.md, common/utilities.md, dicom/stages.md, dicom/template-metadata.md]
+    models: []
+    checkpoints: [dicom_dataframe_loaded, python_code_style, metadata_column_exists]
+
+  dicom.metadata_deid:
+    input_type: dicom
+    task: metadata_deid
+    description: "De-identify structured metadata using deterministic tag and optional group strategies."
+    template_file: dicom/template-metadata.md
+    template_section: metadata_deid
+    read: [common/formatting.md, common/imports.md, common/utilities.md, dicom/stages.md, dicom/strategy-files.md, dicom/metadata-creation.md, dicom/template-metadata.md]
+    models: []
+    checkpoints: [dicom_dataframe_loaded, python_code_style, strategy_csv_written, metadata_action_vr_valid, metadata_strategy_boundaries, metadata_compare, final_dicom_column_exists, dicom_display, dicom_save_suggested]
+
+  dicom.metadata_strategy_file:
+    input_type: dicom
+    task: metadata_strategy_file
+    description: "Create copy-ready metadata strategy CSV files without building a full DICOM pipeline."
+    template_file: dicom/template-strategy-file.md
+    read: [common/formatting.md, common/imports.md, dicom/template-strategy-file.md]
+    models: []
+    checkpoints: [python_code_style, strategy_csv_written, metadata_action_vr_valid, metadata_strategy_boundaries]
+
+  dicom.metadata_clean_tag_ner:
+    input_type: dicom
+    task: metadata_clean_tag_ner
+    description: "De-identify free-text metadata fields using cleanTag plus stackable PretrainedZeroShotNER stages, allows stacking of NER models."
+    template_file: dicom/template-zero-shot.md
+    template_sections: ["Shared Config Rule", metadata_clean_tag_ner]
+    read: [common/formatting.md, common/imports.md, common/utilities.md, common/stages-ner.md, common/zero-shot-models.md, dicom/stages.md, dicom/strategy-files.md, dicom/metadata-creation.md, dicom/template-zero-shot.md]
+    models: [zero_shot_ner_models]
+    checkpoints: [dicom_dataframe_loaded, python_code_style, strategy_csv_written, metadata_action_vr_valid, metadata_strategy_boundaries, metadata_clean_tag_columns, metadata_compare, final_dicom_column_exists, dicom_display, dicom_save_suggested]
+
+  dicom.pixel_phi_builder:
+    input_type: dicom
+    task: pixel_phi_builder
+    description: "Default common pixel builder path for DICOM burned-in PHI."
+    template_file: dicom/template-pixel-builder.md
+    template_section: dicom_pixel_builder
+    read: [common/formatting.md, common/imports.md, common/utilities.md, common/template-pixel-builder-common.md, dicom/template-pixel-builder.md, common/stages-ocr.md, common/stages-text-detection.md, common/stages-ner.md, common/visual_stage.md, common/stages-redaction.md, dicom/stages.md]
+    models: [clinical_pipeline, ocr_engine]
+    checkpoints: [dicom_dataframe_loaded, python_code_style, builder_code_displayed, builder_loads_clinical_pipeline, image_extraction_vlm_compress_policy, medical_vlm_full_parameter_block, text_regions_exist, intermediate_pixel_columns, final_dicom_column_exists, dicom_display, dicom_save_suggested]
+
+  dicom.pixel_phi_zero_shot:
+    input_type: dicom
+    task: phi_redaction_zero_shot
+    description: "De-identify burned-in pixel PHI using OCR plus stackable PretrainedZeroShotNER stages, allows stacking of NER models."
+    template_file: dicom/template-zero-shot.md
+    template_section: pixel_phi_zero_shot
+    read: [common/formatting.md, common/imports.md, common/utilities.md, common/template-zero-shot-builder.md, common/stages-ocr.md, common/stages-text-detection.md, common/stages-ner.md, common/visual_stage.md, common/stages-redaction.md, common/zero-shot-models.md, dicom/stages.md, dicom/template-zero-shot.md]
+    models: [ocr_engine, zero_shot_ner_models]
+    checkpoints: [dicom_dataframe_loaded, python_code_style, image_extraction_vlm_compress_policy, medical_vlm_full_parameter_block, intermediate_pixel_columns, final_dicom_column_exists, dicom_display, dicom_save_suggested]
+
+  dicom.pixel_remove_all_text:
+    input_type: dicom
+    task: remove_all_text
+    description: "Remove all detected visible text from DICOM pixels without OCR or NER."
+    template_file: dicom/template-pixel-blanket.md
+    read: [common/formatting.md, common/imports.md, common/utilities.md, common/stages-ocr.md, common/stages-text-detection.md, common/stages-redaction.md, dicom/stages.md, dicom/template-pixel-blanket.md]
+    models: [text_detector]
+    checkpoints: [dicom_dataframe_loaded, python_code_style, image_extraction_vlm_compress_policy, text_regions_exist, intermediate_pixel_columns, final_dicom_column_exists, dicom_display, dicom_save_suggested]
+
+  dicom.encapsulated_pdf_phi_vlm:
+    input_type: dicom
+    task: encapsulated_pdf_phi_redaction
+    description: "De-identify visible PHI inside PDFs stored in DICOM using zero-shot NER, allows stacking of NER models."
+    template_file: dicom/template-encapsulated-pdf.md
+    template_section: encapsulated_pdf_phi_vlm
+    read: [common/formatting.md, common/imports.md, common/utilities.md, common/template-zero-shot-builder.md, common/stages-ocr.md, common/stages-text-detection.md, common/stages-ner.md, common/visual_stage.md, common/stages-redaction.md, common/zero-shot-models.md, dicom/stages.md, dicom/template-encapsulated-pdf.md]
+    models: [zero_shot_ner_models, ocr_engine]
+    checkpoints: [dicom_dataframe_loaded, python_code_style, image_extraction_vlm_compress_policy, medical_vlm_full_parameter_block, pdf_coordinates_exist, pdf_intermediate_pass, final_dicom_column_exists, dicom_display, dicom_save_suggested]
+
+  dicom.encapsulated_pdf_phi_builder:
+    input_type: dicom
+    task: encapsulated_pdf_phi_builder
+    description: "De-identify visible PHI inside PDFs stored in DICOM using the common pixel builder."
+    template_file: dicom/template-encapsulated-pdf.md
+    template_section: encapsulated_pdf_phi_builder
+    read: [common/formatting.md, common/imports.md, common/utilities.md, common/template-pixel-builder-common.md, common/stages-ocr.md, common/stages-text-detection.md, common/visual_stage.md, common/stages-redaction.md, dicom/stages.md, dicom/template-encapsulated-pdf.md]
+    models: [clinical_pipeline, ocr_engine]
+    checkpoints: [dicom_dataframe_loaded, python_code_style, builder_code_displayed, builder_loads_clinical_pipeline, image_extraction_vlm_compress_policy, medical_vlm_full_parameter_block, pdf_coordinates_exist, pdf_intermediate_pass, final_dicom_column_exists, dicom_display, dicom_save_suggested]
+
+  dicom.pretrained_baseline:
+    input_type: dicom
+    task: pretrained_baseline
+    description: "Fast Spark OCR pretrained DICOM baseline."
+    template_file: dicom/template-pretrained.md
+    read: [common/formatting.md, common/imports.md, common/utilities.md, dicom/stages.md, dicom/template-pretrained.md]
+    models: [spark_ocr_pretrained_pipeline]
+    checkpoints: [dicom_dataframe_loaded, python_code_style, final_dicom_column_exists, dicom_display, dicom_save_suggested]
+
+  image.pixel_phi_builder:
+    input_type: image
+    task: pixel_phi_builder
+    description: "Redact PHI from image files with the common pixel builder."
+    template_file: common/template-pixel-builder-image-pdf.md
+    template_section: image_pdf_pixel_builder
+    read: [common/formatting.md, common/imports.md, common/utilities.md, common/template-pixel-builder-common.md, common/template-pixel-builder-image-pdf.md, common/stages-ocr.md, common/stages-text-detection.md, common/stages-ner.md, common/visual_stage.md, common/stages-redaction.md, image/stages.md]
+    models: [clinical_pipeline, ocr_engine]
+    checkpoints: [python_code_style, image_extraction_vlm_compress_policy, image_to_text_v1_positions, medical_vlm_full_parameter_block, image_output_exists]
+
+  image.pixel_phi_zero_shot:
+    input_type: image
+    task: phi_redaction_zero_shot
+    description: "De-identify image pixel PHI using OCR plus the common stackable zero-shot NER builder, allows stacking of NER models."
+    template_file: image/template-phi-zero-shot.md
+    template_section: image_pixel_phi_zero_shot
+    read: [common/formatting.md, common/imports.md, common/utilities.md, common/template-zero-shot-builder.md, common/template-zero-shot-image-pdf.md, common/stages-ocr.md, common/stages-text-detection.md, common/stages-ner.md, common/visual_stage.md, common/stages-redaction.md, common/zero-shot-models.md, image/stages.md, image/template-phi-zero-shot.md]
+    models: [ocr_engine, zero_shot_ner_models]
+    checkpoints: [python_code_style, image_extraction_vlm_compress_policy, medical_vlm_full_parameter_block, image_output_exists]
+
+  pdf.pixel_phi_builder:
+    input_type: pdf
+    task: pixel_phi_builder
+    description: "Redact PHI from PDF pages with the common pixel builder."
+    template_file: common/template-pixel-builder-image-pdf.md
+    template_section: image_pdf_pixel_builder
+    read: [common/formatting.md, common/imports.md, common/utilities.md, common/template-pixel-builder-common.md, common/template-pixel-builder-image-pdf.md, common/stages-ocr.md, common/stages-text-detection.md, common/stages-ner.md, common/visual_stage.md, common/stages-redaction.md, pdf/stages.md]
+    models: [clinical_pipeline, ocr_engine]
+    checkpoints: [python_code_style, image_extraction_vlm_compress_policy, image_to_text_v1_positions, medical_vlm_full_parameter_block, pdf_intermediate_pass, pdf_output_exists]
+
+  pdf.pixel_phi_zero_shot:
+    input_type: pdf
+    task: phi_redaction_zero_shot
+    description: "De-identify PDF page PHI using OCR plus the common stackable zero-shot NER builder, allows stacking of NER models."
+    template_file: pdf/template-phi-zero-shot.md
+    template_section: pdf_text_phi_zero_shot
+    read: [common/formatting.md, common/imports.md, common/utilities.md, common/template-zero-shot-builder.md, common/template-zero-shot-image-pdf.md, common/stages-ocr.md, common/stages-text-detection.md, common/stages-ner.md, common/visual_stage.md, common/stages-redaction.md, common/zero-shot-models.md, pdf/stages.md, pdf/template-phi-zero-shot.md]
+    models: [ocr_engine, zero_shot_ner_models]
+    checkpoints: [python_code_style, image_extraction_vlm_compress_policy, medical_vlm_full_parameter_block, pdf_intermediate_pass, pdf_output_exists]
