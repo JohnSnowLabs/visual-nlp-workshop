@@ -1,0 +1,68 @@
+version: 1
+
+checkpoints:
+  dicom_dataframe_loaded:
+    check: 'Generated code defines dicom_path and loads dicom_df with spark.read.format("binaryFile").load(dicom_path) before transform.'
+
+  python_code_style:
+    check: "Generated Python code parses successfully, uses readable Python spacing, keeps every .pretrained(...), PretrainedPipeline(...), and JSL stage .set...(...) parameter call on one line, keeps every Visual NLP display/comparison utility call (display_dicom(...), build_metadata_df(...), build_metadata_comparison_df(...), save_dicom_to_disk(...)) on one line, keeps Spark API/DataFrame commands on one line or backslash-chained when long, keeps Spark display calls such as .select(...), .selectExpr(...), and .show(...) on one line, keeps file I/O calls such as with open(...) on one line, keeps simple exception statements such as raise ValueError(...) on one line, keeps each config key-value entry on one line, presents executable pipeline construction as one contiguous Pipeline code block, places strategy CSV writing, group strategy CSV writing, and replaceWithMapping external mapping DataFrame creation before the pipeline block, places runtime data loading, prompt-column creation, transform calls, display, and save after the pipeline block unless mapping data must be prepared earlier, appends .cache() to every pipeline.transform(...) call, and precedes every Pipeline(...)/PipelineModel(...) block with a numbered plain-text list describing each stage."
+
+  strategy_csv_written:
+    check: 'Generated code writes strategy_file_path, group_strategy_file_path, cleanTag, or replaceWithMapping CSV content to disk with textwrap.dedent before defining any pipeline or pipeline builder call that consumes it.'
+
+  metadata_action_vr_valid:
+    check: "Every generated strategy CSV row's Action is valid for that row's VR per the route's Action -> Valid VR Compatibility table (dicom/template-strategy-file.md for metadata_strategy_file; dicom/strategy-files.md for metadata_deid and metadata_clean_tag_ner) (e.g. shiftUnixTimeStampRandom only on SL/FD, shiftTimeByRandom only on TM, hashId only on UI/LO/SH, replaceWithRandomName only on PN/LO, capAgeAt99IfOver90/shiftAgeByRandom only on AS, cleanTag only on its listed VRs). Rows using replaceWithLiteral, delete, remove, ensureTagExists, or replaceWithMapping are valid for any VR. Group-level rows use the GROUP sentinel and only remove/delete apply."
+
+  metadata_strategy_boundaries:
+    check: "When inferring Action/Option for user-provided tags, the answer never invents an Action or Option beyond what is documented in the route's action catalog and mapping policy. When a tag's action is not obvious from name/VR alone, the answer says a web search was used to confirm the tag's meaning before deciding. Ambiguous or unmapped tags are never guessed: they are grouped into labeled Sure / Web-based double check / Unknown buckets, unresolved (Unknown) rows are excluded from the final CSV, and the answer explicitly states that a tag with no strategy-file row is not de-identified and passes through with its original value unchanged. The answer closes by asking the user to confirm every bucket, including Sure, before treating the strategy file as final."
+
+  metadata_column_exists:
+    check: "Result has metadata_original and uses build_metadata_df(result, metadata_col=\"metadata_original\") for single-column metadata inspection."
+
+  metadata_compare:
+    check: "Use build_metadata_comparison_df(result) to compare metadata_original and metadata_cleaned before saving outputs."
+
+  metadata_clean_tag_columns:
+    check: "Result includes tag_mapping, tag_text, deid_documents, and dicom_metadata_cleaned."
+
+  builder_loads_clinical_pipeline:
+    check: "Builder can find LightDeIdentification or DeIdentification and ChunkMergeModel inside the selected clinical PretrainedPipeline."
+
+  builder_code_displayed:
+    check: "For pixel_phi_builder, the answer includes common_pixel_builder_helpers plus the selected implementation section. DICOM routes include DICOM OCR helpers, dicom_config_checker, dicom_pipeline_builder, config, PretrainedPipeline loading, and transform call. Image/PDF routes include the shared image_pdf_pixel_builder implementation. Include inspection passes only when the user explicitly asks for intermediate results."
+
+  intermediate_pixel_columns:
+    check: "Only when the user asks for intermediate results, use an inspection pipeline that stops before DicomDrawRegions; output includes text and coordinates only before DicomDrawRegions aggregation."
+
+  image_extraction_vlm_compress_policy:
+    check: 'When VLM is used for OCR, image extraction/handling uses setCompressImage(True) plus frame_dims: BinaryToImage/PdfToImage use setImageDimsCol("frame_dims") and DicomToImageV3 uses setFrameDimsCol("frame_dims"). When VLM is not used, image extraction uses setCompressImage(False).'
+
+  medical_vlm_full_parameter_block:
+    check: "Every MedicalVisionLLM stage uses the full canonical block: setNGpuLayers(99), setNCtx(32768), setNParallel(1), setNBatch(2048), setNUbatch(1024), setNPredict(...), setTemperature(0.01), setTopK(1), setTopP(1.0), setRepeatPenalty(1.03), setRepeatLastN(256), setMinKeep(0), setNProbs(0), setBatchSize(1), and setDisableLog(False)."
+
+  text_regions_exist:
+    check: "Detector output includes text_regions before DicomDrawRegions."
+
+  pdf_intermediate_pass:
+    check: "Only when the user asks for intermediate results, run an intermediate pass before final PDF reconstruction to inspect pages, OCR text, or regions."
+
+  pdf_coordinates_exist:
+    check: "PDF workflow produces coordinates before ImageDrawRegions."
+
+  image_to_text_v1_positions:
+    check: 'When ImageToText V1 feeds PositionFinder, the ImageToText stage sets setPositionsCol("positions") and PositionFinder sets setPageMatrixCol("positions").'
+
+  final_dicom_column_exists:
+    check: "Result includes a final DICOM bytes column: dicom_metadata_cleaned, dicom_pixel_cleaned, or dicom. If DicomDrawRegions is the final stage, validate with display_dicom instead of selecting upstream intermediate columns."
+
+  dicom_display:
+    check: 'Use display_dicom(df=result, fields="<final_dicom_col>", limit=1, width=300).'
+
+  dicom_save_suggested:
+    check: 'For every final DICOM-producing workflow except metadata_inspection, include the save_dicom_to_disk utility from common/utilities.md common_save before calling save_dicom_to_disk(result, dicom_col="<final_dicom_col>", output_dir="/tmp/dicom_deid"). The utility should only create the save directory if needed, extract DICOM bytes, keep the same base filename from path, save to disk, and return saved paths.'
+
+  image_output_exists:
+    check: "Image workflows must identify the final image output column or saved image path, and must not use DICOM output/display helpers."
+
+  pdf_output_exists:
+    check: "PDF workflows must identify the final PDF output column or saved PDF path, and must not use DICOM output/display helpers unless the route is DICOM encapsulated PDF."

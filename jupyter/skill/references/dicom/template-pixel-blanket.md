@@ -2,12 +2,9 @@
 
 ## pixel_remove_all_text
 
-`DicomDrawRegions` is an aggregation stage. Use a separate inspection pipeline that stops before `DicomDrawRegions` if the user wants `text_regions`; after this final stage, validate with `display_dicom` on `dicom_pixel_cleaned`.
+`DicomDrawRegions` is an aggregation stage. Use a separate inspection pipeline that stops before `DicomDrawRegions` if the user wants `text_regions`; after this final stage, validate with `display_dicom(...)` on `dicom_pixel_cleaned`.
 
 ```python
-dicom_path = "/path/to/dicom/files"
-dicom_df = spark.read.format("binaryFile").load(dicom_path)
-
 config = {
     "text_detector": "ImageTextDetector",
     "use_gpu": True,
@@ -39,6 +36,7 @@ dicom_to_image = DicomToImageV3() \
     .setMemoryOptimized(config["memory_optimized"])
 
 if config["text_detector"] == "ImageTextDetector":
+    
     text_detector = ImageTextDetector.pretrained("image_text_detector_mem_opt", "en", "clinical/ocr") \
         .setInputCol("image") \
         .setOutputCol(config["text_regions_col"]) \
@@ -48,6 +46,7 @@ if config["text_detector"] == "ImageTextDetector":
         .setSizeThreshold(config["size_threshold"]) \
         .setWithRefiner(config["with_refiner"]) \
         .setUseGPU(config["use_gpu"])
+
 elif config["text_detector"] == "ImageTextDetectorV2":
     text_detector = ImageTextDetectorV2.pretrained("image_text_detector_v2", "en", "clinical/ocr") \
         .setInputCol("image") \
@@ -57,6 +56,7 @@ elif config["text_detector"] == "ImageTextDetectorV2":
         .setSizeThreshold(config["size_threshold"]) \
         .setWithRefiner(config["with_refiner"]) \
         .setUseGPU(config["use_gpu"])
+
 else:
     raise ValueError(f"Unsupported text_detector: {config['text_detector']!r}")
 
@@ -70,27 +70,10 @@ draw_regions = DicomDrawRegions() \
 
 pipeline = PipelineModel(stages=[dicom_to_image, text_detector, draw_regions])
 
-result = pipeline.transform(dicom_df)
+dicom_path = "/path/to/dicom/files"
+dicom_df = spark.read.format("binaryFile").load(dicom_path)
+result = pipeline.transform(dicom_df).cache()
 display_dicom(df=result, fields=config["final_dicom_col"], limit=1, width=300)
-
-def save_dicom_to_disk(dataframe, dicom_col="dicom_pixel_cleaned", output_dir="/tmp/dicom_deid"):
-    from pathlib import Path
-
-    output_path = Path(output_dir)
-    output_path.mkdir(parents=True, exist_ok=True)
-    saved_paths = []
-
-    for row in dataframe.select("path", dicom_col).toLocalIterator():
-        base_file_name = Path(row["path"]).name
-        target_path = output_path / base_file_name
-        dicom_bytes = row[dicom_col]
-        if isinstance(dicom_bytes, bytearray):
-            dicom_bytes = bytes(dicom_bytes)
-        with open(target_path, "wb") as f:
-            f.write(dicom_bytes)
-        saved_paths.append(str(target_path))
-
-    return saved_paths
 
 saved_paths = save_dicom_to_disk(result, dicom_col=config["final_dicom_col"], output_dir="/tmp/dicom_deid")
 saved_paths[:5]

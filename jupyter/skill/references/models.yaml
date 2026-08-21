@@ -2,15 +2,23 @@ version: 1
 
 model_policy:
   default_for_dicom_deidentification: "Use GPU and pretrained/model-backed stages unless the user explicitly asks otherwise."
-  first_example: "For pixel PHI workflows, show the configurable DICOM pipeline builder before custom manual stages."
+  first_example: "For pixel PHI workflows, show the configurable common pixel builder before custom manual stages."
   pretrained_format: "Keep every pretrained call on one line."
   registry_style: "Prefer structured fields such as family, size, mode, entities, model_card, code, and concise summary. Long use_case text may exist for user-provided descriptions, but summarize it when presenting options."
+  selection_guidance: "When the user has not picked a config, or asks which one to use, show the relevant group's selection_guide before defaulting. State only what is documented here (runtime/hardware, entity coverage, naming convention). Never state a specific benchmark number, latency, or accuracy percentage this skill does not have; if the user needs a precise number, tell them to benchmark on their own data instead of inventing one."
 
 clinical_pipeline:
   import: "from sparknlp.pretrained import PretrainedPipeline"
   default: clinical_deidentification_docwise_benchmark_medium
-  purpose: "Healthcare NLP PretrainedPipeline inventory used by the DICOM pipeline builder."
-  builder_only_note: "Use these with PretrainedPipeline(...). Some names contain zeroshot, but they are not stackable PretrainedZeroShotNER stages."
+  purpose: "Healthcare NLP PretrainedPipeline inventory used by common pixel builder routes."
+  builder_only_note: "Use these with PretrainedPipeline(...) in common pixel builder routes. Some names contain zeroshot, but they are not stackable PretrainedZeroShotNER stages."
+  selection_guide:
+    size_axis: "optimized < medium < large is a speed/accuracy tradeoff by general model-size convention (smaller = faster/cheaper, larger = slower/heavier). This skill has no benchmarked latency or accuracy numbers for these pipelines; treat this as a general expectation and suggest the user benchmark on their own data if the choice is cost-sensitive."
+    mode_axis: "benchmark vs zeroshot vs SingleStage_zeroshot vary mainly in entity coverage, not size — compare each option's use_case entity list below before choosing. SingleStage_zeroshot variants cover the smallest, fixed entity set and run as a single stage."
+    when_to_prefer:
+      default: "clinical_deidentification_docwise_benchmark_medium (the default) is a balanced starting point for most users."
+      broadest_coverage: "Use a benchmark variant (optimized/medium/large) for the widest entity coverage, e.g. LOCATION-OTHER, BIOID, FAX, DEVICE-adjacent fields."
+      fewer_entities_ok: "Use a SingleStage_zeroshot variant only when the user is fine with a smaller, fixed entity set and wants the simplest single-stage pipeline."
   options:
     clinical_deidentification_docwise_benchmark_optimized:
       code: 'PretrainedPipeline("clinical_deidentification_docwise_benchmark_optimized", "en", "clinical/models")'
@@ -53,10 +61,17 @@ zero_shot_ner_models:
   import: "from sparknlp_jsl.annotator import PretrainedZeroShotNER"
   reference: "zero-shot-models.md"
   purpose: "Stackable zero-shot NER models for configurable PHI detection in pixel OCR text and metadata free-text cleanTag workflows."
-  not_for_builder: "Do not pass these names as clinical_pipeline_name to dicom_pipeline_builder(...). Use them as stage-level PretrainedZeroShotNER models inside a fitted NER PipelineModel."
+  not_for_builder: "Do not pass these names into common pixel builder routes as clinical pipeline names. Use them as stage-level PretrainedZeroShotNER models inside a fitted NER PipelineModel."
   default_for_stacking:
     - zeroshot_ner_deid_subentity_merged_medium
   usage: "Use PretrainedZeroShotNER().pretrained(...) as a one-line pretrained call, keep labels in a separate variable, convert each model output to chunks, and merge chunks with ChunkMergeApproach."
+  selection_guide:
+    size_axis: "medium vs large is a speed/accuracy tradeoff by general model-size convention; no benchmarked latency or accuracy numbers are documented here, so suggest the user test on their own data if the choice is cost-sensitive."
+    family_axis: "subentity_* models tag specific entity types (DOCTOR, PATIENT, CITY, etc.); generic_* models tag broader categories (NAME, LOCATION, CONTACT, ID). merged vs docwise differ in how spans are merged across the document. nonMedical variants add non-clinical PII entities (ACCOUNTNUM, DEVICE, GENDER, IP, PLATE, VIN, etc.) beyond clinical text."
+    when_to_prefer:
+      default: "zeroshot_ner_deid_subentity_merged_medium (the default) is a balanced starting point for clinical free text."
+      broadest_pii_coverage: "Use a subentity_nonMedical variant when the input may contain non-clinical PII such as device IDs, IP addresses, or license plates."
+      simple_categories_ok: "Use a generic_* variant when the user only needs broad entity categories, not fine-grained subtypes."
   options:
     zeroshot_ner_deid_subentity_merged_medium:
       code: 'PretrainedZeroShotNER().pretrained("zeroshot_ner_deid_subentity_merged_medium", "en", "clinical/models")'
@@ -101,6 +116,25 @@ zero_shot_ner_models:
 
 ocr_engine:
   default: VLM
+  selection_guide:
+    cost_accuracy_axis: "VLM > V2 > V3 ≈ V1 in accuracy, per each option's documented runtime. VLM is a full vision-language model (GPU recommended, heaviest); V2 is a lighter two-stage detector+recognizer path (CPU/GPU); V3 swaps in a CPU-only recognizer; V1 is a single non-detection recognizer with no separate detector stage."
+    default_by_hardware:
+      gpu:
+        default: "VLM"
+        alternative_if_requested: "V2 — use only when the user explicitly asks for a cheaper GPU path."
+      cpu:
+        image_pdf_and_dicom_encapsulated_pdf_routes:
+          default: "V1"
+          alternative_if_requested: "V3 or V2 — use only when the user explicitly asks for a different CPU engine."
+        dicom_pixel_routes:
+          default: "V3"
+          alternative_if_requested: "V2 — use only when the user explicitly asks for a different CPU engine."
+          note: "V1 is never valid here (pixel_phi_builder, pixel_phi_zero_shot, pixel_remove_all_text); V3 is the CPU default instead of V1."
+    when_to_prefer:
+      VLM: "Default on GPU. Use when accuracy matters most and GPU is available."
+      V2: "GPU alternative to VLM, or CPU alternative to V1/V3 — only when the user explicitly requests it over the hardware default."
+      V3: "CPU default for normal DICOM pixel routes. CPU alternative to V1 for image/PDF/DICOM-encapsulated-PDF routes when requested."
+      V1: "CPU default for image, PDF, and DICOM encapsulated PDF routes. Never suggest for normal DICOM pixel routes (pixel_phi_builder, pixel_phi_zero_shot, pixel_remove_all_text) — use V3 there instead."
   options:
     VLM:
       code: 'MedicalVisionLLM.pretrained("jsl-ocr-gguf-vlm1", "en", "clinical/ocr")'
@@ -118,6 +152,10 @@ ocr_engine:
       recognizer: "ImageToTextV3()"
       runtime: "CPU only recognizer; detector can run CPU/GPU"
       use_case: "Cheaper CPU-only OCR recognizer path."
+    V1:
+      recognizer: "ImageToText()"
+      runtime: "CPU/GPU"
+      use_case: "Lightweight non-detection OCR; generates its own positions page matrix directly (setPositionsCol), with no separate text-detection stage. Restricted: never suggest for normal DICOM pixel routes (pixel_phi_builder, pixel_phi_zero_shot, pixel_remove_all_text); allowed for image, PDF, and DICOM encapsulated PDF routes only, and only when the user explicitly asks for it."
 
 text_detector:
   default: image_text_detector_mem_opt
@@ -134,6 +172,8 @@ text_detector:
     text_threshold: 0.2
     size_threshold: 10
     with_refiner: true
+  selection_guide:
+    note: "No documented cost or accuracy difference between the two detectors; both run on CPU/GPU and detect text only, not recognize it. As the detector_engine sub-choice inside ocr_engine V2 or V3 (V1/ImageToText has no separate detector stage), default to detector_engine 'V1' (ImageTextDetector, Scala-based); use detector_engine 'V2' (ImageTextDetectorV2, Python-based) only when the user explicitly asks for it."
   options:
     image_text_detector_mem_opt:
       code: 'ImageTextDetector.pretrained("image_text_detector_mem_opt", "en", "clinical/ocr")'
@@ -148,6 +188,12 @@ spark_ocr_pretrained_pipeline:
   import: "from sparkocr.pretrained import PretrainedPipeline"
   default: dicom_deid_generic_augmented_minimal
   purpose: "Fast DICOM/PDF/image pretrained baselines from Spark OCR."
+  selection_guide:
+    aggressiveness_axis: "minimal < pseudonym < full_anonymization in how much metadata/imagery is altered or removed, not in runtime cost — all three run as a single PretrainedPipeline call."
+    when_to_prefer:
+      dicom_deid_generic_augmented_minimal: "Default. Use when most metadata should be preserved for research/analysis and only critical identifiers must be removed."
+      dicom_deid_generic_augmented_pseudonym: "Use when the user needs to preserve record linkage/structure across a longitudinal dataset (pseudonyms instead of removal)."
+      dicom_deid_full_anonymization: "Use when preparing data for public release or when no traceable information may remain."
   options:
     dicom_deid_generic_augmented_minimal:
       code: 'PretrainedPipeline("dicom_deid_generic_augmented_minimal", "en", "clinical/ocr")'
