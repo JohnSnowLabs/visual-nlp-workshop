@@ -35,10 +35,12 @@ Once you pick a task — by number ("5") or by name ("DICOM pixel PHI redaction 
 10. Pretrained baseline — single-call Spark OCR pipeline (minimal / pseudonym / full anonymization).
 
 **Image**
+
 11. PHI redaction, common pixel builder — configurable OCR (VLM/V1/V2/V3) + clinical pipeline.
 12. PHI redaction, zero-shot NER — configurable OCR + stackable zero-shot NER.
 
 **PDF**
+
 13. PHI redaction, common pixel builder — configurable OCR (VLM/V1/V2/V3) + clinical pipeline.
 14. PHI redaction, zero-shot NER — configurable OCR + stackable zero-shot NER.
 
