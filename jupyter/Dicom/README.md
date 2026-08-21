@@ -1,5 +1,7 @@
 # 🩺 DICOM Notebooks Guide
 
+![Introduction](../data/readme/dicom/Introduction_Image.png)
+
 This folder contains Visual NLP / Spark OCR notebooks for working with DICOM data. The examples cover metadata inspection, metadata de-identification, pixel-level redaction, DICOM image rendering, encapsulated PDF workflows, VLM-based Dicom de-identification, streaming, pretrained pipelines, and a full solution for the [MIDI-B challenge dataset](https://www.cancerimagingarchive.net/collection/midi-b-test-midi-b-validation/).
 
 Use this README as a routing guide: start with the notebook that matches your use case, then move to the more specialized notebooks when you need a particular implementation pattern.
@@ -59,6 +61,24 @@ These are the latest notebooks to use for the main DICOM workflows in this folde
 | PHI identification in DICOM images | [`SparkOcrDicomToImageV3.ipynb`](SparkOcrDicomToImageV3.ipynb), [`SparkOcrDicomVLM.ipynb`](SparkOcrDicomVLM.ipynb), [`SparkOcrDicomDrawRegions.ipynb`](SparkOcrDicomDrawRegions.ipynb) | Use `DicomToImageV3` to extract pixels into images, the VLM notebook for VLM-based OCR/PHI identification, and Draw Regions to render detected regions back onto the DICOM. |
 | Encapsulated PDF de-identification | [`SparkOcrDeidentificationDicomWithEncapsulatedPDF.ipynb`](SparkOcrDeidentificationDicomWithEncapsulatedPDF.ipynb) | Latest notebook for DICOM files that contain encapsulated PDFs. |
 | MIDI-B solution | [`SparkOcrMIDIBSolution.ipynb`](SparkOcrMIDIBSolution.ipynb) | Use this when you want to run the JSL solution on the MIDI-B dataset. |
+
+## De-Identification Example
+
+### Free text Metadata PHI De-Identification
+
+![Free Text Example](../data/readme/dicom/Free_text_deid.png)
+
+### Blanket Pixel De-Identification
+
+![Blanket Pixel](../data/readme/dicom/blanket_pixel_deid.png)
+
+### Pixel PHI De-Identification
+
+![Pixel PHI](../data/readme/dicom/pixel_phi_deid.png)
+
+### Encapsulated PDF PHI De-Identification
+
+![Encapsulated PDF Pixel PHI](../data/readme/dicom/encapsulated_pdf_deid.png)
 
 ## AWS Marketplace listings
 Some predefined pipelines are made accessible through AWS Marketplace as Sagemaker products,
