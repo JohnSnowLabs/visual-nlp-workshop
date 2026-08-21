@@ -17,8 +17,6 @@ Just start talking about a Visual NLP task, or use one of the slash commands bel
 
 Once you pick a task — by number ("5") or by name ("DICOM pixel PHI redaction with the common pixel builder") — the skill reads only the reference files that task needs and generates the workflow.
 
-**Combining tasks:** if a request genuinely needs two non-conflicting tasks (most commonly a pixel-redaction task followed by metadata de-identification), the skill will combine them into one pipeline instead of forcing a single choice — see [Combining Routes](SKILL.md#combining-routes) in `SKILL.md`.
-
 ## Available tasks
 
 **DICOM**
