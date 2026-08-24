@@ -30,6 +30,13 @@ checkpoint_policy:
     skip_routes: [metadata_inspection]
     skip_reason: "metadata_inspection only extracts metadata_original, so there is no cleaned metadata column to compare."
 
+multi_frame_optimization_policy:
+  applies_to: "Any route whose stages include both DicomToImageV3 and DicomDrawRegions: pixel_phi_builder, pixel_phi_zero_shot, pixel_remove_all_text."
+  trigger: "The user states or implies their DICOM files have many/lots of frames, are multi-frame, or reports memory exhaustion/OOM while extracting frames with DicomToImageV3."
+  action: "Wrap the assembled PipelineModel with DicomPretrainedPipeline(pipeline) from sparkocr.pretrained and call .transform(dicom_df) on that wrapper in place of pipeline.transform(dicom_df). Keep the rest of the route template unchanged."
+  requires: "The pipeline must also contain PositionFinder or a stage named ImageTextDetector so DicomPretrainedPipeline can detect the region column to aggregate."
+  reference: "references/stages.md DicomPretrainedPipeline section for the mechanism, the keep_all_cols option, and the caveat that a stage reading a column other than DicomDrawRegions's direct output is silently dropped from the wrapped pipeline."
+
 pipelines:
   metadata_inspection:
     use_when:
@@ -137,7 +144,7 @@ pipelines:
     builder_output_rule: "Always output the complete builder code from template-pixel-builder.md, including helper builders, nlp_builder, dicom_pipeline_builder, config, model loading, transform call, and optional inspection pass when relevant. Do not output only the dicom_pipeline_builder(...) call-site."
     dicom_draw_regions_rule: "DicomDrawRegions is an aggregation stage. Use a separate inspection pipeline that stops before DicomDrawRegions for text/coordinates; after DicomDrawRegions, use display_dicom unless selecting outputs from later stages such as DicomMetadataDeidentifier or DicomToMetadata."
     strategies: [tag_strategy_optional]
-    checkpoints: [dicom_dataframe_loaded, input_cols_single_line, strategy_csv_written, builder_code_displayed, builder_loads_clinical_pipeline, image_extraction_vlm_compress_policy, medical_vlm_full_parameter_block, intermediate_pixel_columns, metadata_compare, final_dicom_column_exists, dicom_display, dicom_save_suggested]
+    checkpoints: [dicom_dataframe_loaded, input_cols_single_line, strategy_csv_written, builder_code_displayed, builder_loads_clinical_pipeline, image_extraction_vlm_compress_policy, medical_vlm_full_parameter_block, intermediate_pixel_columns, metadata_compare, final_dicom_column_exists, dicom_display, dicom_save_suggested, multi_frame_memory_optimization]
 
   pixel_phi_zero_shot:
     use_when:
@@ -157,7 +164,7 @@ pipelines:
       do_not_mix_by_default: true
     dicom_draw_regions_rule: "DicomDrawRegions is an aggregation stage. Use a separate inspection pipeline that stops before DicomDrawRegions for text/coordinates; after DicomDrawRegions, use display_dicom unless selecting outputs from later stages."
     strategies: []
-    checkpoints: [dicom_dataframe_loaded, input_cols_single_line, image_extraction_vlm_compress_policy, medical_vlm_full_parameter_block, final_dicom_column_exists, dicom_display, dicom_save_suggested]
+    checkpoints: [dicom_dataframe_loaded, input_cols_single_line, image_extraction_vlm_compress_policy, medical_vlm_full_parameter_block, final_dicom_column_exists, dicom_display, dicom_save_suggested, multi_frame_memory_optimization]
 
   pixel_remove_all_text:
     use_when:
@@ -191,7 +198,7 @@ pipelines:
       final_dicom_col: dicom_pixel_cleaned
     dicom_draw_regions_rule: "DicomDrawRegions is an aggregation stage. Use a separate inspection pipeline that stops before DicomDrawRegions for text_regions; after DicomDrawRegions, use display_dicom on dicom_pixel_cleaned."
     strategies: []
-    checkpoints: [dicom_dataframe_loaded, input_cols_single_line, image_extraction_vlm_compress_policy, final_dicom_column_exists, dicom_display, dicom_save_suggested]
+    checkpoints: [dicom_dataframe_loaded, input_cols_single_line, image_extraction_vlm_compress_policy, final_dicom_column_exists, dicom_display, dicom_save_suggested, multi_frame_memory_optimization]
 
   encapsulated_pdf_phi_vlm:
     use_when:

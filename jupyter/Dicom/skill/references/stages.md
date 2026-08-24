@@ -134,6 +134,37 @@ Inspection rule:
 - If downstream stages run after `DicomDrawRegions`, such as `DicomMetadataDeidentifier` or `DicomToMetadata`, their output columns may be selected because they are produced after the aggregation.
 - When the user wants OCR text, regions, or coordinates, create a separate inspection pipeline that stops before `DicomDrawRegions`.
 
+## DicomPretrainedPipeline (Multi-Frame Memory Optimization)
+
+Role: Wrap an already-assembled pixel pipeline to avoid replicating heavy per-file columns (such as `content`) across exploded per-frame rows when a DICOM has many frames.
+
+When to use:
+- The user states or implies their DICOM files have many/lots of frames, are multi-frame, or reports memory exhaustion/OOM while extracting frames.
+- The assembled pipeline contains both `DicomToImageV3` and `DicomDrawRegions`. This covers `pixel_phi_builder`, `pixel_phi_zero_shot`, and `pixel_remove_all_text`. It does not apply to metadata-only or encapsulated PDF routes, which never use `DicomToImageV3`/`DicomDrawRegions`.
+- The pipeline also contains `PositionFinder` or a stage whose `name` contains `ImageTextDetector`. `DicomPretrainedPipeline` reads the redaction region column from one of these two stages; without one of them present it cannot detect which column to aggregate and construction fails.
+
+Why it helps (grounded in the installed `sparkocr/pretrained/dicom_pretrained_pipeline.py` source, not the module name alone): `DicomToImageV3` explodes one row per frame. If `content` rides along through every exploded row until `DicomDrawRegions` finally aggregates back to one row per `path`, a file with hundreds of frames replicates `content` hundreds of times before the aggregation collapses it. `DicomPretrainedPipeline.transform(data)` avoids this by:
+1. Splitting the passed-in `PipelineModel` into two sub-pipelines at `DicomDrawRegions`: everything before it (image extraction, OCR, NER, region detection), and `DicomDrawRegions` plus any stage that directly consumes its output column.
+2. Forcing `setMemoryOptimized(True)` on `DicomToImageV3` and `DicomDrawRegions`, and `setKeepInput(False)` on `DicomToImageV3`, for the duration of the transform (reset afterward, including on exception).
+3. Running the first sub-pipeline on the full input, then collapsing the exploded per-frame result down to one row per `path` with `collect_list` on the region column (and `exception`), not on heavy columns.
+4. Broadcast-joining that compact per-path region list back onto a minimal `content` + `path` projection of the original data.
+5. Running the `DicomDrawRegions` sub-pipeline on this rejoined, minimal-size DataFrame to produce the final redacted DICOM bytes.
+
+Usage:
+
+```python
+from sparkocr.pretrained import DicomPretrainedPipeline
+
+optimized_pipeline = DicomPretrainedPipeline(pipeline)
+result = optimized_pipeline.transform(dicom_df)
+```
+
+- `pipeline` is the already-assembled `PipelineModel(stages=[...])` from the route's template. Do not rebuild the stage list manually for `DicomPretrainedPipeline`; pass the same `PipelineModel` object that would otherwise be used for `pipeline.transform(dicom_df)`.
+- Replace `pipeline.transform(dicom_df)` with `optimized_pipeline.transform(dicom_df)`; keep the rest of the route's template unchanged, including `display_dicom(...)` and `save_dicom_to_disk(...)` on the same final DICOM bytes column.
+- `optimized_pipeline.transform(data, keep_all_cols=False)`: `data` must contain both `content` and `path`, or it raises. Set `keep_all_cols=True` only when the user explicitly wants intermediate per-frame columns (besides the region column and `exception`) preserved after the aggregation.
+- Caveat: a stage chained after `DicomDrawRegions` is only kept in the wrapped pipeline if its input directly includes `DicomDrawRegions`'s output column. A further stage reading a column produced even later (for example `DicomToMetadata` reading `dicom_metadata_cleaned` after a `DicomMetadataDeidentifier` that reads `dicom_pixel_cleaned`) is silently dropped from both sub-pipelines. Run that stage as a separate step against `optimized_pipeline.transform(...)`'s result instead of leaving it in the wrapped pipeline.
+- This wrapper is orthogonal to `DicomToImageV3` tuning (`scale`, `frameLimit`/`frameSamplingStrategy`, `compressionMode`/`compressionQuality`): keep using those to bound per-frame decode size; use `DicomPretrainedPipeline` to bound the row-replication cost across frames.
+
 ## MedicalVisionLLM
 
 Role: Highest-accuracy OCR/VLM text detection and recognition.

@@ -51,3 +51,6 @@ checkpoints:
 
   dicom_save_suggested:
     check: 'For every final DICOM-producing workflow except metadata_inspection, include the simple save_dicom_to_disk utility function body before calling save_dicom_to_disk(result, dicom_col="<final_dicom_col>", output_dir="/tmp/dicom_deid"). The utility should only create the save directory if needed, extract DICOM bytes, keep the same base filename from path, save to disk, and return saved paths.'
+
+  multi_frame_memory_optimization:
+    check: "When the user states or implies many-frame DICOMs or memory exhaustion during frame extraction, and the pipeline contains both DicomToImageV3 and DicomDrawRegions, wrap the assembled PipelineModel with DicomPretrainedPipeline(pipeline) from sparkocr.pretrained and transform via optimized_pipeline.transform(dicom_df) instead of pipeline.transform(dicom_df) directly. Confirm the pipeline also has PositionFinder or an ImageTextDetector-named stage, and confirm no stage after DicomDrawRegions reads a column other than its direct output column, since such trailing stages would be silently dropped by the wrapper and must run as a separate step instead."
