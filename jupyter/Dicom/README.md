@@ -101,7 +101,8 @@ We encourage the reader the review our [dicom benchmarks](https://nlp.johnsnowla
 | Resource | Description |
 |---|---|
 | [DICOM Paper](https://link.springer.com/chapter/10.1007/978-3-032-26211-0_12) | Research paper covering DICOM de-identification methodology and results. |
-| [DICOM Blogpost](https://medium.com/john-snow-labs/de-identifying-dicom-files-a-step-by-step-guide-with-john-snow-labs-visual-nlp-2c21b60f92a8) | Step-by-step guide for de-identifying DICOM files with John Snow Labs Visual NLP. |
+| [DICOM Blogpost](https://medium.com/john-snow-labs/generate-dicom-de-identification-pipelines-with-the-visual-nlp-dicom-skill-1c781741ca4a) | Step-by-step guide for de-identifying DICOM files with John Snow Labs Visual NLP. |
+| [DICOM LLM Skill Blogpost](https://medium.com/john-snow-labs/de-identifying-dicom-files-a-step-by-step-guide-with-john-snow-labs-visual-nlp-2c21b60f92a8) | Grounding LLM response using Visual NLP Skill for de-identification tasks. |
 | [DICOM Repo](https://github.com/JohnSnowLabs/dicom-deid-dataset) | Public dataset, benchmark results, and comparison materials. |
 | [DICOM Databricks Benchmarks](https://medium.com/john-snow-labs/de-identifying-dicom-files-a-step-by-step-guide-with-john-snow-labs-visual-nlp-2c21b60f92a8#:~:text=MIDI%2DB%20Subset.-,Databricks%20Speed%20Benchmarks,-To%20evaluate%20processing) | Databricks-specific speed benchmark results for DICOM pixel and metadata de-identification. |
 </br>
