@@ -140,8 +140,8 @@ and for notes on the S3 bucket/secret removal policies.
 
 ## Monitor
 ```
-FN=$(aws --profile himss cloudformation describe-stacks --stack-name DeidPipelineStack --query  "Stacks[0].Outputs[?OutputKey=='TriggerFunctionName'].OutputValue" --output text)
+FN=$(aws cloudformation describe-stacks --stack-name DeidPipelineStack --query  "Stacks[0].Outputs[?OutputKey=='TriggerFunctionName'].OutputValue" --output text)
   echo $FN
-aws --profile himss logs tail /aws/lambda/$FN --follow
+aws logs tail /aws/lambda/$FN --follow
 ```
 
