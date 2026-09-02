@@ -2,7 +2,7 @@
 
 ## Supported Databricks Runtime
 
-- Databricks Runtime: `15.4 LTS, 16.4 LTS`
+- Databricks Runtime: `15.4 LTS, 16.4 LTS ( Scala 2.12 )`
 
 ![Cluster Config](../jupyter/data/readme/databricks/Cluster_Config.png)
 
