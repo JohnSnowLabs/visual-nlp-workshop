@@ -2,8 +2,7 @@
 
 ## Supported Databricks Runtime
 
-- Databricks Runtime: `15.4 LTS`
-- GPU Runtime: `15.4 LTS GPU`
+- Databricks Runtime: `15.4 LTS, 16.4 LTS`
 
 ![Cluster Config](../jupyter/data/readme/databricks/Cluster_Config.png)
 
@@ -66,7 +65,8 @@ Additional Maven coordinate:
 
 ![ONNX Runtime GPU Maven Coordinate](../jupyter/data/readme/databricks/Onnx_Runtime_GPU_Maven.png)
 
-For CPU runtimes, this override is usually not required.
+> [!IMPORTANT]
+> For CPU runtimes and Databricks 16.4, this override is not required.
 
 ### Install Visual NLP
 
@@ -107,7 +107,22 @@ For Databricks Runtime `15.4 LTS`, override the following default packages:
 - `PyArrow==23.0.0`
 - `matplotlib==3.10.8`
 
-![All Resources Ready](../jupyter/data/readme/databricks/Installation_Complete.png)
+![All Resources Ready](../jupyter/data/readme/databricks/Installation_Complete_15_4.png)
+
+For Databricks Runtime `16.4 LTS`, override the following default packages:
+
+- `numpy==2.0.0`
+- `scipy==1.13.0`
+- `pandas==2.2.3`
+- `PyArrow==23.0.0`
+- `matplotlib==3.10.8`
+- `scikit-image>=0.25.2`
+- `pillow>=10.1`
+- `opencv-python==4.12.0.88`
+- `pyspark==3.5.2`
+- `python-gdcm==3.0.26`  
+
+![All Resources Ready](../jupyter/data/readme/databricks/Installation_Complete_16_4.png)
 
 ### Spark Configuration and Environment Variables
 
