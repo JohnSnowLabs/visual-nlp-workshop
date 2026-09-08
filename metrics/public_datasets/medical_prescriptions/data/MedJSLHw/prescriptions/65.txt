@@ -1,0 +1,15 @@
+```json
+{
+  "medications": [
+    {
+      "startDate": "1-24",
+      "medicineName": "Tab Tramadol + Paracetamol",
+      "route": "PO",
+      "dose": "1",
+      "frequency": "Q6h",
+      "timeOfDay": []
+    }
+  ]
+}
+```
+------------------------------

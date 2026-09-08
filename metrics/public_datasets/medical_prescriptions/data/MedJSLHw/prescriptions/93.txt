@@ -1,0 +1,55 @@
+```json
+{
+  "medications": [
+    {
+      "startDate": null,
+      "medicineName": "Apomorphine Hydrochloride Crystals",
+      "route": null,
+      "dose": "0.04",
+      "frequency": null,
+      "timeOfDay": []
+    },
+    {
+      "startDate": null,
+      "medicineName": "Morf. mur.",
+      "route": null,
+      "dose": "0.02",
+      "frequency": null,
+      "timeOfDay": []
+    },
+    {
+      "startDate": null,
+      "medicineName": "Aqua Amygd. Amar.",
+      "route": null,
+      "dose": "5.0",
+      "frequency": null,
+      "timeOfDay": []
+    },
+    {
+      "startDate": null,
+      "medicineName": "Elix. Pector.",
+      "route": null,
+      "dose": "20.0",
+      "frequency": null,
+      "timeOfDay": []
+    },
+    {
+      "startDate": null,
+      "medicineName": "Aqua Destill.",
+      "route": null,
+      "dose": "20.0",
+      "frequency": null,
+      "timeOfDay": []
+    },
+    {
+      "startDate": null,
+      "medicineName": "Syr. Simpl.",
+      "route": null,
+      "dose": "15",
+      "frequency": null,
+      "timeOfDay": []
+    }
+  ]
+}
+```
+------------------------------

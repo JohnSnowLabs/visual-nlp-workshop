@@ -1,0 +1,23 @@
+```json
+{
+  "medications": [
+    {
+      "startDate": "2-5",
+      "medicineName": "FeSO4 tab",
+      "route": "PO",
+      "dose": null,
+      "frequency": "A.D.",
+      "timeOfDay": []
+    },
+    {
+      "startDate": "2-5",
+      "medicineName": "Ascorbic Acid",
+      "route": "PO",
+      "dose": "500mg tab",
+      "frequency": "Once a day",
+      "timeOfDay": []
+    }
+  ]
+}
+```
+------------------------------

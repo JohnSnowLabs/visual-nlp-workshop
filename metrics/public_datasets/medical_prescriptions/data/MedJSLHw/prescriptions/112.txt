@@ -1,0 +1,15 @@
+```json
+{
+  "medications": [
+    {
+      "startDate": "5-4",
+      "medicineName": "Amoxil Susp.",
+      "route": "PO",
+      "dose": "125mg",
+      "frequency": "TID",
+      "timeOfDay": []
+    }
+  ]
+}
+```
+------------------------------

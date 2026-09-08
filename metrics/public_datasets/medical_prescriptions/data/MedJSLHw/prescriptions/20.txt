@@ -1,0 +1,15 @@
+```json
+{
+  "medications": [
+    {
+      "startDate": "17-07",
+      "medicineName": "Stimethot 25mg (milestral)",
+      "route": "PO",
+      "dose": "25 mg",
+      "frequency": "for 8 days",
+      "timeOfDay": []
+    }
+  ]
+}
+```
+------------------------------

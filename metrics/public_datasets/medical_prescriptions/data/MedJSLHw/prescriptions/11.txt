@@ -1,0 +1,31 @@
+```json
+{
+  "medications": [
+    {
+      "startDate": "04-11",
+      "medicineName": "Syp. Sumol DS",
+      "route": "PO",
+      "dose": "4 ml",
+      "frequency": "prn X 5 d",
+      "timeOfDay": null
+    },
+    {
+      "startDate": "04-11",
+      "medicineName": "Syp. Mucolite LS",
+      "route": "PO",
+      "dose": "2.5 ml",
+      "frequency": "tds X 5 d",
+      "timeOfDay": null
+    },
+    {
+      "startDate": "04-11",
+      "medicineName": "Tab. Meftal-P",
+      "route": "PO",
+      "dose": "1 tab",
+      "frequency": "prn X 5 d",
+      "timeOfDay": null
+    }
+  ]
+}
+```
+------------------------------

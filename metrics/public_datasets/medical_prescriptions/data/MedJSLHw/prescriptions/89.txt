@@ -1,0 +1,31 @@
+```json
+{
+  "medications": [
+    {
+      "startDate": "23-06",
+      "medicineName": "Isordil",
+      "route": "P.O.",
+      "dose": "20mg",
+      "frequency": "Q6hours",
+      "timeOfDay": []
+    },
+    {
+      "startDate": "23-06",
+      "medicineName": "Ferrous sulfate 300mg",
+      "route": "P.O.",
+      "dose": "300mg",
+      "frequency": "TID",
+      "timeOfDay": ["with meals"]
+    },
+    {
+      "startDate": "23-06",
+      "medicineName": "Humulin N",
+      "route": "SQ",
+      "dose": "30 units",
+      "frequency": "QAM",
+      "timeOfDay": []
+    }
+  ]
+}
+```
+------------------------------
