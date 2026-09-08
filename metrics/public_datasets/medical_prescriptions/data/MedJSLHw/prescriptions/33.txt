@@ -1,0 +1,39 @@
+```json
+{
+  "medications": [
+    {
+      "startDate": null,
+      "medicineName": "T. Azee",
+      "route": "PO",
+      "dose": "500mg",
+      "frequency": "OD x 7 days",
+      "timeOfDay": []
+    },
+    {
+      "startDate": null,
+      "medicineName": "Syp Tusq",
+      "route": "PO",
+      "dose": "1 tsp",
+      "frequency": "TID",
+      "timeOfDay": []
+    },
+    {
+      "startDate": null,
+      "medicineName": "T. Pan",
+      "route": "PO",
+      "dose": "40mg",
+      "frequency": "OD x 7 days",
+      "timeOfDay": []
+    },
+    {
+      "startDate": null,
+      "medicineName": "T. Dolo",
+      "route": "PO",
+      "dose": "650",
+      "frequency": "prn for fever/pain",
+      "timeOfDay": []
+    }
+  ]
+}
+```
+------------------------------

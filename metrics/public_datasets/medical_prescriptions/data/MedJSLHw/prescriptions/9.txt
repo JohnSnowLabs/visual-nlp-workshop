@@ -1,0 +1,15 @@
+```json
+{
+  "medications": [
+    {
+      "startDate": "10-03",
+      "medicineName": "Azithromycin 200 mg/5mL",
+      "route": "IV",
+      "dose": "200 mg/5mL", "15 mL", "7.5 mL",
+      "frequency": "Daily",
+      "timeOfDay": [null]
+    }
+  ]
+}
+```
+------------------------------

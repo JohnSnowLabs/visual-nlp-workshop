@@ -1,0 +1,31 @@
+```json
+{
+  "medications": [
+    {
+      "startDate": "8-9",
+      "medicineName": "T. Diclo",
+      "route": null,
+      "dose": null,
+      "frequency": "for 3 days",
+      "timeOfDay": []
+    },
+    {
+      "startDate": "8-9",
+      "medicineName": "T. Ranizem",
+      "route": null,
+      "dose": null,
+      "frequency": "for 3 days",
+      "timeOfDay": []
+    },
+    {
+      "startDate": "8-9",
+      "medicineName": "T. BL",
+      "route": null,
+      "dose": null,
+      "frequency": null,
+      "timeOfDay": []
+    }
+  ]
+}
+```
+------------------------------

@@ -1,0 +1,15 @@
+```json
+{
+  "medications": [
+    {
+      "startDate": "3-8",
+      "medicineName": "Hypnodorm 2mg",
+      "route": null,
+      "dose": null,
+      "frequency": null,
+      "timeOfDay": []
+    }
+  ]
+}
+```
+------------------------------

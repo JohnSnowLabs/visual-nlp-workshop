@@ -1,0 +1,15 @@
+```json
+{
+  "medications": [
+    {
+      "startDate": "11-05",
+      "medicineName": "Inj Liposomal Amphotericin B",
+      "route": "IV",
+      "dose": "350 mg, 7 vials",
+      "frequency": "OD for 4 weeks",
+      "timeOfDay": []
+    }
+  ]
+}
+```
+------------------------------
