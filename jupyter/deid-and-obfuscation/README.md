@@ -20,7 +20,15 @@ De-identification & Obfuscation skill that you can download, zip, and provide to
 
 - [Image & PDF De-Identification Skill](../skill/README.md)
 
-> **Note:** SVS and Image/PDF Obfuscation are not currently covered by this skill and will be added in a future release.
+> [!IMPORTANT]
+> SVS and Image/PDF Obfuscation are not currently covered by this skill and will be added in a future release.
+
+## Hardware & Models
+
+Choose a model based on your input type and available hardware using the [Model Selector Guide](../Dicom/model_selector.md). 
+
+> [!IMPORTANT]
+> The Encapsulated PDF DICOM section shares the same model availability as Image/PDF de-identification.
 
 ## Quick Notebook Picker
 
