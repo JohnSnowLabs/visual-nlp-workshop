@@ -43,6 +43,10 @@ DICOM skill that you can download, zip, and provide to Claude, Codex, or Gemini.
 [Dicom Tags](https://www.dicomlibrary.com/dicom/dicom-tags/), encoded in the header of Dicom files, are a key/value data structure that may contain PHI. To handle PHI removal in Dicom Tags, Visual NLP relies on the Strategy Files.
 Strategy Files enumerate a list of `actions` targeted for a specific tag or group of tags. These actions will do things like replacing a name with a pseudonym, or randomizing a date. For an exhaustive list check this [list of actions in strategy files](strategy_actions.md).
 
+## Hardware & Models
+
+Choose a model based on your DICOM input type, available hardware, and de-identification task using the [Model Selector Guide](model_selector.md)
+  
 ## Pixel PHI OCR options
 Here we list notebooks according to how they extract text from the image.
 
@@ -79,6 +83,7 @@ These are the latest notebooks to use for the main DICOM workflows in this folde
 ### Encapsulated PDF PHI De-Identification
 
 ![Encapsulated PDF Pixel PHI](../data/readme/dicom/encapsulated_pdf_deid.png)
+
 
 ## AWS Marketplace listings
 Some predefined pipelines are made accessible through AWS Marketplace as Sagemaker products,
