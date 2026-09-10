@@ -28,7 +28,7 @@ De-identification & Obfuscation skill that you can download, zip, and provide to
 Choose a model based on your input type and available hardware using the [Model Selector Guide](../Dicom/model_selector.md). 
 
 > [!IMPORTANT]
-> The Encapsulated PDF DICOM section shares the same model availability as Image/PDF de-identification.
+> The Encapsulated PDF DICOM section shares the same model availability as Image/PDF.
 
 ## Quick Notebook Picker
 
