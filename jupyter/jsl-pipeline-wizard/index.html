@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>DICOM De-identification Workflow</title>
+    <meta
+      name="description"
+      content="A lightweight guided UI for understanding DICOM de-identification stages and generating copy-ready Spark OCR workflow code."
+    >
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <main class="app-shell">
+
+      <!-- ── Topbar ──────────────────────────────────────────── -->
+      <header class="topbar">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">⬡</div>
+          <div>
+            <p class="eyebrow">Visual NLP workflow guide</p>
+            <h1>DICOM De-identification</h1>
+          </div>
+        </div>
+
+        <div class="topbar-center">
+          <span class="select-label">Workflow</span>
+          <div class="select-wrap">
+            <select id="workflowProfile">
+              <option value="blanket">DICOM Blanket Pixel De-id</option>
+              <option value="pixelPhi">DICOM PHI-Only Pixel De-id</option>
+              <option value="encapsulatedPdf">DICOM PHI-Only PDF De-id</option>
+              <option value="strategyFile">DICOM Strategy File Builder</option>
+              <option value="metadata">DICOM Metadata-Only De-id</option>
+            </select>
+            <span class="select-chevron" aria-hidden="true">▾</span>
+          </div>
+        </div>
+
+        <button id="resetAll" class="reset-btn" type="button">Reset</button>
+        <span id="godModeBadge" class="god-mode-badge" hidden title="God mode on — stages auto-confirm (Ctrl+Shift+G to toggle)">⚡ God mode</span>
+      </header>
+
+      <!-- ── Completion banner ──────────────────────────────── -->
+      <div id="completionBanner" class="completion-banner" hidden>
+        <div class="banner-check" aria-hidden="true">✓</div>
+        <span><strong id="bannerWorkflow"></strong> workflow complete — your pipeline code is ready below.</span>
+      </div>
+
+
+      <!-- ── Workflow description ───────────────────────────── -->
+      <div id="workflowDescription" class="workflow-desc-bar">
+        <span id="workflowDescText"></span>
+      </div>
+      <!-- ── Page body ──────────────────────────────────────── -->
+      <div class="page-body">
+
+        <section class="workspace" aria-label="Workflow walkthrough">
+
+          <!-- ── Left: Steps panel ──────────────────────────── -->
+          <nav class="steps-panel" aria-label="Workflow stages">
+            <div class="panel-head">
+              <span class="panel-title">Stages</span>
+              <strong id="requiredCount" class="stage-count">0 required</strong>
+            </div>
+            <div class="progress-row">
+              <div class="progress-track" role="progressbar" aria-label="Workflow progress">
+                <div id="progressBar" class="progress-fill"></div>
+              </div>
+              <span id="progressLabel" class="progress-pct">0%</span>
+            </div>
+            <ol id="stepList" class="step-list"></ol>
+          </nav>
+
+          <!-- ── Right: Detail panel ────────────────────────── -->
+          <section class="detail-panel" aria-live="polite">
+
+            <!-- Stage header -->
+            <div class="stage-head">
+              <span id="stepBadge" class="status-badge required">Required</span>
+              <h2 id="stepTitle">Load DICOM</h2>
+              <p id="stepDescription" class="stage-desc"></p>
+              <p id="stepOutput" class="stage-output"></p>
+            </div>
+
+            <!-- Config body -->
+            <div class="config-body">
+              <div class="config-head">
+                <div>
+                  <div class="config-title">Configuration Decisions</div>
+                  <p class="config-sub">Choose each setting — the effect is shown inline.</p>
+                </div>
+                <span id="decisionCount" class="decisions-badge">0 decisions</span>
+              </div>
+
+              <div id="understandingGate" class="understanding-gate"></div>
+              <div id="stageOptions" class="decision-list"></div>
+
+              <div class="summary-block">
+                <div class="config-title">Current Choice Summary</div>
+                <div id="decisionGuide" class="decision-guide"></div>
+              </div>
+            </div>
+
+            <!-- Nav bar -->
+            <div class="nav-bar">
+              <div class="nav-left">
+                <p id="decisionStatus" class="nav-status"></p>
+              </div>
+              <div class="nav-right">
+                <button id="prevStep"    class="btn-secondary" type="button">Back</button>
+                <button id="reopenStep"  class="btn-reopen"    type="button" style="display:none">Re-open</button>
+                <button id="confirmStep" class="btn-confirm"   type="button">Confirm Stage</button>
+                <button id="nextStep"    class="btn-primary"   type="button">Next</button>
+              </div>
+            </div>
+
+          </section>
+        </section>
+
+        <!-- ── Code drawer ────────────────────────────────────── -->
+        <section class="code-drawer collapsed" aria-label="Generated pipeline code">
+          <button id="toggleCode" class="code-toggle" type="button">
+            <div class="toggle-left">
+              <span class="code-icon" aria-hidden="true">{ }</span>
+              <span class="toggle-title">Generated Code</span>
+            </div>
+            <strong id="codeGateStatus" class="code-gate-label">Locked until workflow is complete</strong>
+            <span class="toggle-chevron" aria-hidden="true">▾</span>
+          </button>
+          <div class="code-drawer-body">
+            <div class="code-toolbar">
+              <div class="code-modes">
+                <button id="stepCodeButton" class="mode-button active" type="button">Current Step</button>
+                <button id="fullCodeButton" class="mode-button"        type="button">Full Script</button>
+              </div>
+              <button id="copyCode" class="copy-button" type="button">Copy Code</button>
+            </div>
+            <pre><code id="codeOutput"></code></pre>
+            <p id="copyStatus" class="copy-status" role="status"></p>
+          </div>
+        </section>
+
+      </div><!-- /.page-body -->
+    </main>
+
+    <script src="./utils.js"></script>
+    <script src="./workflows/common.js"></script>
+    <script src="./workflows/blanket.js"></script>
+    <script src="./workflows/pixel-phi.js"></script>
+    <script src="./workflows/encapsulated-pdf.js"></script>
+    <script src="./workflows/metadata.js"></script>
+    <script src="./workflows/strategy-file.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>
