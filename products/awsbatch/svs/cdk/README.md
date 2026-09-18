@@ -146,9 +146,9 @@ the de-id pipeline baked into the image at build time (`/opt/ml/model` and
 `/opt/ml/image_text_detector_mem_opt`, produced by `installer.py` via
 `MODEL_TO_LOAD` in the `Dockerfile`), and `process_file()` runs it per file
 (header cleanup, tiling, OCR + de-id, redaction). Redaction writes tiles
-back in place by default; set `CREATE_NEW_SVS_FILE=true` to have it write a
-new de-identified `.svs` file instead (slower, but leaves the original
-untouched).
+back in place by default; deploy with `-c create_new_svs_file=true` to have
+it write a new de-identified `.svs` file instead (slower, but leaves the
+original untouched).
 
 
 ## Permissions

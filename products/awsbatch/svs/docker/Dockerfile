@@ -5,6 +5,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV HARDWARE_TARGET="cpu"
 ENV TF_CPP_MIN_LOG_LEVEL='3'
 ENV MODEL_TO_LOAD="image_deid_multi_model_context_pipeline_cpu"
+ENV CREATE_NEW_SVS_FILE="false"
 ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64/
 RUN echo "export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64/" >> ~/.bashrc
 ENV LC_ALL=C.UTF-8 LANG=C.UTF-8
