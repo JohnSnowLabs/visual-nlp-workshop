@@ -8,7 +8,7 @@
       "dose": null,
       "frequency": "3 times a day",
       "timeOfDay": []
-    },,
+    },
     {
       "startDate": "29-07",
       "medicineName": "Unguentum Resorcinolis Compositum",

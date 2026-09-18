@@ -80,7 +80,7 @@
       "dose": null,
       "frequency": null,
       "timeOfDay": []
-    },,
+    },
     {
       "startDate": null,
       "medicineName": "Duolin",

@@ -21,7 +21,7 @@
       "startDate": "13-7",
       "medicineName": "ORS",
       "route": "PO",
-      "dose": "null,
+      "dose": null,
       "frequency": null,
       "timeOfDay": []
     },

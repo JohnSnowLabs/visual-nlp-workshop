@@ -13,7 +13,7 @@
       "startDate": "22-04",
       "medicineName": "T. Normaxin-RT",
       "route": "PO",
-      "dose": null
+      "dose": null,
       "frequency": "OD X 1 month",
       "timeOfDay": ["Night", "Before meals"]
     }

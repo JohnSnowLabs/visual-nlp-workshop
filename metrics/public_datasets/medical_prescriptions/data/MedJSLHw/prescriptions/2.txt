@@ -21,7 +21,7 @@
       "startDate": "15-03",
       "medicineName": "TAB ANDIAL",
       "route": "PO",
-      "dose": "2", "1", "1",
+      "dose": "2, 1, 1",
       "frequency": "tds",
       "timeOfDay": ["08:00", "14:00", "20:00"]
     },

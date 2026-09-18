@@ -7,7 +7,7 @@
       "route": "tab.",
       "dose": "500 mg",
       "frequency": "da no. 20",
-      "timeOfDay": [20 min. after the Metoclopramide]
+      "timeOfDay": ["20 min. after the Metoclopramide"]
     },
     {
       "startDate": "01-11",

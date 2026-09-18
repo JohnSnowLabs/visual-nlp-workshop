@@ -6,7 +6,7 @@
       "medicineName": "Digitalis",
       "route": "tropical",
       "dose": null,
-      "frequency": "bd", "morning and Evening",
+      "frequency": "bd, morning and Evening",
       "timeOfDay": []
     },
     {
@@ -14,7 +14,7 @@
       "medicineName": "Opium",
       "route": "tropical",
       "dose": null,
-      "frequency": "bd", "morning and Evening",
+      "frequency": "bd, morning and Evening",
       "timeOfDay": []
     },
     {
@@ -22,7 +22,7 @@
       "medicineName": "Belladonna",
       "route": "tropical",
       "dose": null,
-      "frequency": "bd", "morning and Evening",
+      "frequency": "bd, morning and Evening",
       "timeOfDay": []
     },
     {
@@ -30,7 +30,7 @@
       "medicineName": "Aconite",
       "route": "tropical",
       "dose": null,
-      "frequency": "bd", "morning and Evening",
+      "frequency": "bd, morning and Evening",
       "timeOfDay": []
     }
   ]

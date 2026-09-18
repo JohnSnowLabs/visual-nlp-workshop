@@ -5,8 +5,8 @@
       "startDate": "24-04",
       "medicineName": "Remdec",
       "route": "Inj",
-      "dose": "200 mg", "100 mg",
-      "frequency": "stat", "OD x 4 days",
+      "dose": "200 mg, 100 mg",
+      "frequency": "stat, OD x 4 days",
       "timeOfDay": []
     },
     {
