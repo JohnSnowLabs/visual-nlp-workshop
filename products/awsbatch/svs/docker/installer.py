@@ -6,6 +6,8 @@ from johnsnowlabs import nlp
 HARDWARE_TARGET = os.environ.get("HARDWARE_TARGET", "cpu")
 model_ref = os.environ.get("MODEL_TO_LOAD", None)
 
+nlp.settings.enforce_versions = False
+
 nlp.install(
     json_license_path="/run/secrets/license",
     browser_login=False,
