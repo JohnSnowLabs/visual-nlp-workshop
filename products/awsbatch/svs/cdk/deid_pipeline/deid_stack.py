@@ -35,6 +35,13 @@ class DeidPipelineStack(Stack):
         image_tag = self.node.try_get_context("image_tag") or "latest"
         repository_name = self.node.try_get_context("ecr_repository_name")
 
+        # -c create_new_svs_file=true writes a new de-identified .svs file
+        # instead of redacting PHI back into the original tiles in place
+        # (see docker/app.py's CREATE_NEW_SVS_FILE, default "false")
+        create_new_svs_file = str(
+            self.node.try_get_context("create_new_svs_file") or "false"
+        ).lower()
+
         # `cdk destroy` (and `diff`/`synth` run without deploying) still
         # instantiate this stack to synthesize the template, even though
         # they never need the secret's real value -- and there's no clean
@@ -302,6 +309,11 @@ class DeidPipelineStack(Stack):
                     ),
                     batch.CfnJobDefinition.ResourceRequirementProperty(
                         type="MEMORY", value=str(self.JOB_MEMORY_MIB)
+                    ),
+                ],
+                environment=[
+                    batch.CfnJobDefinition.EnvironmentProperty(
+                        name="CREATE_NEW_SVS_FILE", value=create_new_svs_file
                     ),
                 ],
                 secrets=[
