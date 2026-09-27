@@ -185,6 +185,7 @@ def process_folder(s3, input_s3, output_s3):
         for key in keys:
             filename = os.path.basename(key)
             per_file_folder = tempfile.mkdtemp(dir=tmp_input_folder, prefix='tmp_input')
+            per_file_output = tempfile.mkdtemp(dir=tmp_output_folder, prefix='tmp_output')
             local_path = os.path.join(per_file_folder, filename)
 
             try:
@@ -192,7 +193,7 @@ def process_folder(s3, input_s3, output_s3):
                 s3.download_file(in_bucket, key, local_path)
 
                 logger.info("Processing %s...", filename)
-                output_local = process_file(img_p, nlp_p, per_file_folder, filename, tmp_output_folder)
+                output_local = process_file(img_p, nlp_p, per_file_folder, filename, per_file_output)
                 out_key = os.path.join(out_prefix, filename)
 
                 logger.info("Uploading to %s...", out_key)
@@ -206,11 +207,9 @@ def process_folder(s3, input_s3, output_s3):
                 except Exception:
                     logger.exception("Failed to write failure marker for %s", filename)
             finally:
-                # remove the tiles, the copies, and the final result for this file
-                shutil.rmtree(tmp_output_folder, ignore_errors=True)
-                # remove the local .svs file, whether or not processing got that far
-                if os.path.exists(local_path):
-                    os.remove(local_path)
+                # clean up this file only, keep parent dirs for the next one
+                shutil.rmtree(per_file_output, ignore_errors=True)
+                shutil.rmtree(per_file_folder, ignore_errors=True)
 
         if failed_files:
             logger.error(
