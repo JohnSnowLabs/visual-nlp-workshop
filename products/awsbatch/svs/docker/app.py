@@ -94,7 +94,9 @@ def load_pipeline():
     .setTextThreshold(0.4) \
     .setSizeThreshold(-1) \
     .setUseGPU(False) \
-    .setWidth(640)
+    .setWidth(0) \
+    .setHeight(0) \
+    .setMaxSideLength(2048)
     
     img_pipeline = PipelineModel(stages=[bin_to_image, text_detector])
 
