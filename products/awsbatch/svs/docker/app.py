@@ -95,8 +95,7 @@ def load_pipeline():
     .setSizeThreshold(-1) \
     .setUseGPU(False) \
     .setWidth(0) \
-    .setHeight(0) \
-    .setMaxSideLength(2048)
+    .setHeight(0)
     
     img_pipeline = PipelineModel(stages=[bin_to_image, text_detector])
 
@@ -110,12 +109,12 @@ def process_file(img_p, nlp_p, input_file, filename, output_folder):
     from sparkocr.utils.svs.phi_cleaning import remove_phi
     from sparkocr.utils.svs.tile_extraction import svs_to_tiles
     from sparkocr.utils.svs.phi_redaction import redact_phi_in_tiles
-    import os
-    
+
     cleaned_header_tmp = tempfile.mkdtemp(dir=output_folder, prefix="cleaned_header_")
     remove_phi(input_file, cleaned_header_tmp, verbose=True, rename=False)
     tiles_output_tmp = tempfile.mkdtemp(dir=output_folder, prefix="tiles_output_")
-    svs_to_tiles(input_file, tiles_output_tmp, level="auto", thumbnail = True)
+    fully_qualified_filename = os.path.join(cleaned_header_tmp, filename)
+    svs_to_tiles(fully_qualified_filename, tiles_output_tmp, level="auto", thumbnail = True)
 
     selected_level_paths = []
     # Iterate over each folder inside tiles_output
@@ -129,20 +128,28 @@ def process_file(img_p, nlp_p, input_file, filename, output_folder):
     print(f"selected_level_paths:{selected_level_paths}")
     
     image_df = spark.read.format("binaryFile").load(selected_level_paths)
-    print(f"number of images:{image_df.count()}")
     regions_df = img_p.transform(image_df)
     regions_df = regions_df.filter(size(regions_df["text_regions"]) > 0).cache()
-    print(f"number of tiles w/text {regions_df.count()}")
+    try:
+      num_regions = regions_df.count()
+      print(f"number of tiles w/text {num_regions}")
 
-    fully_qualified_filename = os.path.join(cleaned_header_tmp, filename)
-    if regions_df.count() > 0:
-      coords_df = nlp_p.transform(regions_df)
-      deid_info = coords_df.select("path", "coordinates").distinct()
+      if num_regions > 0:
+        # binaryFile gives one row per tile, so no distinct() is needed
+        deid_info = nlp_p.transform(regions_df).select("path", "coordinates")
 
-      create_new_svs_file = os.environ.get("CREATE_NEW_SVS_FILE", "false").lower() == "true"
-      output_svs_path = os.path.join(output_folder, filename) if create_new_svs_file else output_folder
+        create_new_svs_file = os.environ.get("CREATE_NEW_SVS_FILE", "false").lower() == "true"
+        output_svs_path = os.path.join(output_folder, filename) if create_new_svs_file else output_folder
 
-      redact_phi_in_tiles(fully_qualified_filename, deid_info, tiles_output_tmp, output_svs_path=output_svs_path, create_new_svs_file=create_new_svs_file)
+        redact_phi_in_tiles(fully_qualified_filename, deid_info, tiles_output_tmp, output_svs_path=output_svs_path, create_new_svs_file=create_new_svs_file)
+        if create_new_svs_file:
+          fully_qualified_filename = output_svs_path
+    finally:
+      try:
+        regions_df.unpersist()
+      except Exception:
+        # don't hide the original error if Spark itself went down
+        logger.warning("Could not unpersist cached regions", exc_info=True)
 
     return fully_qualified_filename
 
