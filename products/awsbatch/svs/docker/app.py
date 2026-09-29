@@ -61,7 +61,7 @@ def get_logger(logger_name):
 
 logger = get_logger("deid-batch-job")
 CACHE_PRETRAINED_PATH = "/opt/ml"
-DEID_MODE = os.environ.get("DEID_MODE", "blanket").lower()
+DEID_MODE = os.environ.get("DEID_MODE", "pipeline").lower()
 if DEID_MODE not in ("blanket", "pipeline"):
     raise ValueError(f"DEID_MODE must be 'blanket' or 'pipeline', got {DEID_MODE!r}")
 
