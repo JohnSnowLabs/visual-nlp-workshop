@@ -21,14 +21,15 @@ spark = nlp.start(model_cache_folder="/app/model_cache", visual=True)
 from sparkocr.transformers import *
 spark.sparkContext.setLogLevel("ERROR")
 
+detector = ImageTextDetectorCraft.pretrained("image_text_detector_mem_opt",  "en", "clinical/ocr")
+detector.save("/opt/ml/image_text_detector_mem_opt")
+
+# the de-identification pipeline is only needed for DEID_MODE=pipeline
 if model_ref:
 
     from sparkocr.pretrained import PretrainedPipeline
 
     pipe = PretrainedPipeline(model_ref, "en", "clinical/ocr")
     pipe.model.save("/opt/ml/model")
-    
-    detector = ImageTextDetectorCraft.pretrained("image_text_detector_mem_opt",  "en", "clinical/ocr")
-    detector.save("/opt/ml/image_text_detector_mem_opt")
-    
-    shutil.rmtree("/app/model_cache")
+
+shutil.rmtree("/app/model_cache")

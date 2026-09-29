@@ -61,6 +61,9 @@ def get_logger(logger_name):
 
 logger = get_logger("deid-batch-job")
 CACHE_PRETRAINED_PATH = "/opt/ml"
+DEID_MODE = os.environ.get("DEID_MODE", "blanket").lower()
+if DEID_MODE not in ("blanket", "pipeline"):
+    raise ValueError(f"DEID_MODE must be 'blanket' or 'pipeline', got {DEID_MODE!r}")
 
 def start_spark():
     # SPARK_OCR_LICENSE is read directly by nlp.start() from the process
@@ -99,7 +102,13 @@ def load_pipeline():
     
     img_pipeline = PipelineModel(stages=[bin_to_image, text_detector])
 
-    nlp_pipeline = PipelineModel.load(os.path.join(CACHE_PRETRAINED_PATH, "model"))
+    # blanket: every detected text region is redacted; pipeline: only what its NER finds as PHI
+    if DEID_MODE == "blanket":
+        return img_pipeline, None
+    model_path = os.path.join(CACHE_PRETRAINED_PATH, "model")
+    if not os.path.isdir(model_path):
+        raise RuntimeError("DEID_MODE=pipeline needs the image built with MODEL_TO_LOAD set")
+    nlp_pipeline = PipelineModel.load(model_path)
     nlp_pipeline.stages = nlp_pipeline.stages[1:]
     return img_pipeline, nlp_pipeline
 
@@ -136,7 +145,10 @@ def process_file(img_p, nlp_p, input_file, filename, output_folder):
 
       if num_regions > 0:
         # binaryFile gives one row per tile, so no distinct() is needed
-        deid_info = nlp_p.transform(regions_df).select("path", "coordinates")
+        if nlp_p is None:
+            deid_info = regions_df.select("path", regions_df["text_regions"].alias("coordinates"))
+        else:
+            deid_info = nlp_p.transform(regions_df).select("path", "coordinates")
 
         create_new_svs_file = os.environ.get("CREATE_NEW_SVS_FILE", "false").lower() == "true"
         output_svs_path = os.path.join(output_folder, filename) if create_new_svs_file else output_folder
