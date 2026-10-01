@@ -3,9 +3,11 @@ import logging
 import sys
 import traceback
 import boto3
+from botocore.exceptions import ClientError
 import tempfile
 import shutil
 import argparse
+import json
 from urllib.parse import urlparse
 from johnsnowlabs import nlp
 from pyspark.ml import PipelineModel
@@ -133,34 +135,66 @@ def list_s3_files(s3, bucket, prefix):
     for page in paginator.paginate(Bucket=bucket, Prefix=prefix):
         for obj in page.get("Contents", []):
             key = obj["Key"]
-            if not key.endswith("/") and not key.endswith("_READY"):
+            if not key.endswith("/") and not os.path.basename(key).startswith("_"):
                 yield key
 
 
-def write_failure_marker(s3, output_s3, error_message, filename=None):
+def marker_key(output_s3, name):
     out_bucket, out_prefix = parse_s3_uri(output_s3)
-    marker_name = f"_FAILURE_{filename}" if filename else "_FAILURE"
-    key = os.path.join(out_prefix, marker_name) if out_prefix else marker_name
-    s3.put_object(Bucket=out_bucket, Key=key, Body=error_message.encode("utf-8"))
-    logger.info("Wrote failure marker to s3://%s/%s", out_bucket, key)
+    return out_bucket, os.path.join(out_prefix, name) if out_prefix else name
+
+
+def write_marker(s3, output_s3, name, body=""):
+    bucket, key = marker_key(output_s3, name)
+    s3.put_object(Bucket=bucket, Key=key, Body=body.encode("utf-8"))
+    logger.info("Wrote marker s3://%s/%s", bucket, key)
+
+
+def has_marker(s3, output_s3, name):
+    bucket, key = marker_key(output_s3, name)
+    try:
+        s3.head_object(Bucket=bucket, Key=key)
+        return True
+    except ClientError:
+        return False
+
+
+def write_failure_marker(s3, output_s3, error_message, filename=None):
+    write_marker(s3, output_s3, f"_FAILURE_{filename}" if filename else "_FAILURE", error_message)
+
+
+def input_keys(s3):
+    """(bucket, keys) to process: this job's manifest (MANIFEST_S3_URI, one per array child),
+    or every file under INPUT_S3_URI."""
+    manifest_s3 = os.environ.get("MANIFEST_S3_URI")
+    if manifest_s3:
+        bucket, prefix = parse_s3_uri(manifest_s3)
+        index = os.environ.get("AWS_BATCH_JOB_ARRAY_INDEX", "0")
+        body = s3.get_object(Bucket=bucket, Key=os.path.join(prefix, f"{index}.json"))["Body"].read()
+        manifest = json.loads(body)
+        return manifest["bucket"], manifest["keys"]
+    in_bucket, in_prefix = parse_s3_uri(os.environ["INPUT_S3_URI"])
+    return in_bucket, list(list_s3_files(s3, in_bucket, in_prefix))
 
 
 # ---- main ----
-def process_folder(s3, input_s3, output_s3):
-    in_bucket, in_prefix = parse_s3_uri(input_s3)
+def process_files(s3, in_bucket, keys, output_s3):
+    """De-identify `keys` into output_s3. Each file ends with a _SUCCESS_ or _FAILURE_ marker
+    next to its output; files that already have a _SUCCESS_ one are skipped."""
     out_bucket, out_prefix = parse_s3_uri(output_s3)
+    if not keys:
+        raise ValueError(f"No input files found in s3://{in_bucket}")
 
     text_detector, deid_pipeline = load_pipeline()
 
     with tempfile.TemporaryDirectory() as tmp_input_folder, tempfile.TemporaryDirectory() as tmp_output_folder:
-        keys = list(list_s3_files(s3, in_bucket, in_prefix))
-        if not keys:
-            raise ValueError(f"No input files found under s3://{in_bucket}/{in_prefix}")
-
         failed_files = []
 
         for key in keys:
             filename = os.path.basename(key)
+            if has_marker(s3, output_s3, f"_SUCCESS_{filename}"):
+                logger.info("Skipping %s, already de-identified", filename)
+                continue
             per_file_folder = tempfile.mkdtemp(dir=tmp_input_folder, prefix='tmp_input')
             per_file_output = tempfile.mkdtemp(dir=tmp_output_folder, prefix='tmp_output')
             local_path = os.path.join(per_file_folder, filename)
@@ -175,6 +209,9 @@ def process_folder(s3, input_s3, output_s3):
 
                 logger.info("Uploading to %s...", out_key)
                 s3.upload_file(output_local, out_bucket, out_key)
+                write_marker(s3, output_s3, f"_SUCCESS_{filename}")
+                failure_bucket, failure_key = marker_key(output_s3, f"_FAILURE_{filename}")
+                s3.delete_object(Bucket=failure_bucket, Key=failure_key)
             except Exception:
                 error_message = traceback.format_exc()
                 logger.error("Failed to process %s:\n%s", filename, error_message)
@@ -204,26 +241,28 @@ def get_config():
     parser.add_argument("--output", required=False, help="s3://bucket/prefix/")
     args, _ = parser.parse_known_args()
 
-    input_s3 = args.input or os.environ.get("INPUT_S3_URI")
+    if args.input:
+        os.environ["INPUT_S3_URI"] = args.input
     output_s3 = args.output or os.environ.get("OUTPUT_S3_URI")
 
-    if not input_s3 or not output_s3:
+    if not (os.environ.get("INPUT_S3_URI") or os.environ.get("MANIFEST_S3_URI")) or not output_s3:
         raise ValueError(
             "Input/output S3 locations must be provided via --input/--output "
-            "or the INPUT_S3_URI/OUTPUT_S3_URI environment variables."
+            "or the INPUT_S3_URI (or MANIFEST_S3_URI)/OUTPUT_S3_URI environment variables."
         )
-    return input_s3, output_s3
+    return output_s3
 
 
 if __name__ == "__main__":
-    input_s3, output_s3 = get_config()
+    output_s3 = get_config()
     s3_client = boto3.client("s3")
     show_boto3_credentials(mask=True)
     spark = start_spark()
     spark.sparkContext.setLogLevel("ERROR")
 
     try:
-        failed_files = process_folder(s3_client, input_s3, output_s3)
+        in_bucket, keys = input_keys(s3_client)
+        failed_files = process_files(s3_client, in_bucket, keys, output_s3)
     except Exception:
         error_message = traceback.format_exc()
         logger.error(error_message)

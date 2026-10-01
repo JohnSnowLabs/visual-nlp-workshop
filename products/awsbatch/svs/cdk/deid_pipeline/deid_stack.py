@@ -27,12 +27,16 @@ class DeidPipelineStack(Stack):
     INSTANCE_TYPES = ["c7a.4xlarge"]
     JOB_VCPUS = 15
     JOB_MEMORY_MIB = 28000
-    MAX_VCPUS = 64
+    INSTANCE_VCPUS = 16
 
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
         image_tag = self.node.try_get_context("image_tag") or "latest"
+        # -c max_jobs=<n>: how many jobs (one instance each) a folder is split into and run at once
+        max_jobs = int(self.node.try_get_context("max_jobs") or 4)
+        # -c volume_gb=<n>: instance disk, for the image, the models and the files being processed
+        volume_gb = int(self.node.try_get_context("volume_gb") or 100)
         repository_name = self.node.try_get_context("ecr_repository_name")
 
         # -c create_new_svs_file=true writes a new de-identified .svs file
@@ -256,6 +260,19 @@ class DeidPipelineStack(Stack):
         # ---------------------------------------------------------------
         # Batch: managed EC2 compute environment, job queue, job definition.
         # ---------------------------------------------------------------
+        launch_template = ec2.CfnLaunchTemplate(
+            self,
+            "BatchLaunchTemplate",
+            launch_template_data=ec2.CfnLaunchTemplate.LaunchTemplateDataProperty(
+                block_device_mappings=[
+                    ec2.CfnLaunchTemplate.BlockDeviceMappingProperty(
+                        device_name="/dev/xvda",
+                        ebs=ec2.CfnLaunchTemplate.EbsProperty(volume_size=volume_gb, volume_type="gp3"),
+                    )
+                ]
+            ),
+        )
+
         compute_environment = batch.CfnComputeEnvironment(
             self,
             "ComputeEnvironment",
@@ -265,9 +282,12 @@ class DeidPipelineStack(Stack):
                 type="EC2",
                 allocation_strategy="BEST_FIT_PROGRESSIVE",
                 minv_cpus=0,
-                maxv_cpus=self.MAX_VCPUS,
+                maxv_cpus=max_jobs * self.INSTANCE_VCPUS,
                 instance_types=self.INSTANCE_TYPES,
                 instance_role=instance_profile.attr_arn,
+                launch_template=batch.CfnComputeEnvironment.LaunchTemplateSpecificationProperty(
+                    launch_template_id=launch_template.ref, version="$Latest"
+                ),
                 security_group_ids=[batch_security_group.security_group_id],
                 subnets=vpc.select_subnets(
                     subnet_type=ec2.SubnetType.PUBLIC
@@ -331,14 +351,16 @@ class DeidPipelineStack(Stack):
                     },
                 ),
             ),
-            retry_strategy=batch.CfnJobDefinition.RetryStrategyProperty(attempts=1),
+            # a retried job skips the files it already finished (their _SUCCESS_ marker)
+            retry_strategy=batch.CfnJobDefinition.RetryStrategyProperty(attempts=2),
             timeout=batch.CfnJobDefinition.TimeoutProperty(attempt_duration_seconds=3600),
         )
 
         # ---------------------------------------------------------------
-        # Lambda: consumes the EventBridge "_READY" event and submits the
-        # Batch job. INPUT_S3_URI / OUTPUT_S3_URI are computed per-event and
-        # passed as container overrides, not baked into the job definition.
+        # Lambda: consumes the EventBridge "_READY" event, splits the folder's
+        # files into per-job manifests and submits them as one array job.
+        # MANIFEST_S3_URI / OUTPUT_S3_URI are computed per-event and passed as
+        # container overrides, not baked into the job definition.
         # ---------------------------------------------------------------
         trigger_fn = lambda_.Function(
             self,
@@ -348,12 +370,15 @@ class DeidPipelineStack(Stack):
             code=lambda_.Code.from_asset(
                 os.path.join(os.path.dirname(__file__), "..", "lambda")
             ),
-            timeout=Duration.seconds(30),
+            timeout=Duration.seconds(300),
             environment={
                 "JOB_QUEUE_ARN": job_queue.attr_job_queue_arn,
                 "JOB_DEFINITION_ARN": job_definition.attr_job_definition_arn,
+                "MAX_JOBS": str(max_jobs),
             },
         )
+        # lists the folder and its markers, writes the per-job manifests
+        bucket.grant_read_write(trigger_fn)
         trigger_fn.add_to_role_policy(
             iam.PolicyStatement(
                 actions=["batch:SubmitJob"],
