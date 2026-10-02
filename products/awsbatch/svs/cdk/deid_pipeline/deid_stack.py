@@ -335,6 +335,7 @@ class DeidPipelineStack(Stack):
                     batch.CfnJobDefinition.EnvironmentProperty(
                         name="CREATE_NEW_SVS_FILE", value=create_new_svs_file
                     ),
+                    batch.CfnJobDefinition.EnvironmentProperty(name="LOG_LEVEL", value="INFO"),
                 ],
                 secrets=[
                     batch.CfnJobDefinition.SecretProperty(
