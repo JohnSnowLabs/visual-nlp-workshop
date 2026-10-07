@@ -3,15 +3,16 @@ import logging
 import sys
 import traceback
 import boto3
+from botocore.exceptions import ClientError
 import tempfile
 import shutil
 import argparse
+import json
 from urllib.parse import urlparse
 from johnsnowlabs import nlp
 from pyspark.ml import PipelineModel
 from sparkocr.enums import *
 from sparkocr.transformers import *
-from pyspark.sql.functions import size
 
 def show_boto3_credentials(mask=True):
     session = boto3.Session()
@@ -61,6 +62,9 @@ def get_logger(logger_name):
 
 logger = get_logger("deid-batch-job")
 CACHE_PRETRAINED_PATH = "/opt/ml"
+DEID_MODE = os.environ.get("DEID_MODE", "pipeline").lower()
+if DEID_MODE not in ("blanket", "pipeline"):
+    raise ValueError(f"DEID_MODE must be 'blanket' or 'pipeline', got {DEID_MODE!r}")
 
 def start_spark():
     # SPARK_OCR_LICENSE is read directly by nlp.start() from the process
@@ -76,18 +80,9 @@ spark = None
 
 def load_pipeline():
     """
-    Load the Spark OCR de-id pipeline.
+    Load the text detector and, for DEID_MODE=pipeline, the de-identification pipeline.
     """
-
-    bin_to_image = BinaryToImage() \
-    .setInputCol("content") \
-    .setOutputCol("image_raw") \
-    .setImageType(ImageType.TYPE_BYTE_GRAY) \
-    .setKeepInput(False)
-
     text_detector = ImageTextDetectorCraft().load(os.path.join(CACHE_PRETRAINED_PATH, "image_text_detector_mem_opt")) \
-    .setInputCol("image_raw") \
-    .setOutputCol("text_regions") \
     .setScoreThreshold(0.7) \
     .setLinkThreshold(0.5) \
     .setWithRefiner(True) \
@@ -96,60 +91,35 @@ def load_pipeline():
     .setUseGPU(False) \
     .setWidth(0) \
     .setHeight(0)
-    
-    img_pipeline = PipelineModel(stages=[bin_to_image, text_detector])
 
-    nlp_pipeline = PipelineModel.load(os.path.join(CACHE_PRETRAINED_PATH, "model"))
-    nlp_pipeline.stages = nlp_pipeline.stages[1:]
-    return img_pipeline, nlp_pipeline
+    # blanket: every detected text region is redacted; pipeline: only what its NER finds as PHI
+    if DEID_MODE == "blanket":
+        return text_detector, None
+    model_path = os.path.join(CACHE_PRETRAINED_PATH, "model")
+    if not os.path.isdir(model_path):
+        raise RuntimeError("DEID_MODE=pipeline needs the image built with MODEL_TO_LOAD set")
+    return text_detector, PipelineModel.load(model_path)
 
-def process_file(img_p, nlp_p, input_file, filename, output_folder):
+def process_file(text_detector, deid_pipeline, input_file, filename, output_folder):
     """Run the de-id pipeline on a single local file and return the local
     path to its output file inside output_folder."""
     from sparkocr.utils.svs.phi_cleaning import remove_phi
-    from sparkocr.utils.svs.tile_extraction import svs_to_tiles
-    from sparkocr.utils.svs.phi_redaction import redact_phi_in_tiles
+    from sparkocr.utils.svs.deidentify import detect_phi_boxes, redact_boxes
 
     cleaned_header_tmp = tempfile.mkdtemp(dir=output_folder, prefix="cleaned_header_")
     remove_phi(input_file, cleaned_header_tmp, verbose=True, rename=False)
-    tiles_output_tmp = tempfile.mkdtemp(dir=output_folder, prefix="tiles_output_")
     fully_qualified_filename = os.path.join(cleaned_header_tmp, filename)
-    svs_to_tiles(fully_qualified_filename, tiles_output_tmp, level="auto", thumbnail = True)
 
-    selected_level_paths = []
-    # Iterate over each folder inside tiles_output
-    for svs_folder in os.listdir(tiles_output_tmp):
-        svs_folder_path = os.path.join(tiles_output_tmp, svs_folder)
-        if os.path.isdir(svs_folder_path):
-            # Look for selected_level_tiles inside each svs folder
-            selected_level_folder = os.path.join(svs_folder_path, "selected")
-            if os.path.isdir(selected_level_folder):
-                selected_level_paths.append(selected_level_folder)
-    print(f"selected_level_paths:{selected_level_paths}")
-    
-    image_df = spark.read.format("binaryFile").load(selected_level_paths)
-    regions_df = img_p.transform(image_df)
-    regions_df = regions_df.filter(size(regions_df["text_regions"]) > 0).cache()
-    try:
-      num_regions = regions_df.count()
-      print(f"number of tiles w/text {num_regions}")
-
-      if num_regions > 0:
-        # binaryFile gives one row per tile, so no distinct() is needed
-        deid_info = nlp_p.transform(regions_df).select("path", "coordinates")
-
+    boxes = detect_phi_boxes(fully_qualified_filename, DEID_MODE, text_detector, deid_pipeline)
+    print(f"number of regions to redact {len(boxes)}")
+    if boxes:
         create_new_svs_file = os.environ.get("CREATE_NEW_SVS_FILE", "false").lower() == "true"
-        output_svs_path = os.path.join(output_folder, filename) if create_new_svs_file else output_folder
-
-        redact_phi_in_tiles(fully_qualified_filename, deid_info, tiles_output_tmp, output_svs_path=output_svs_path, create_new_svs_file=create_new_svs_file)
         if create_new_svs_file:
-          fully_qualified_filename = output_svs_path
-    finally:
-      try:
-        regions_df.unpersist()
-      except Exception:
-        # don't hide the original error if Spark itself went down
-        logger.warning("Could not unpersist cached regions", exc_info=True)
+            output_svs_path = os.path.join(output_folder, filename)
+            redact_boxes(fully_qualified_filename, boxes, output_svs_path, create_new_svs_file=True)
+            fully_qualified_filename = output_svs_path
+        else:
+            redact_boxes(fully_qualified_filename, boxes)
 
     return fully_qualified_filename
 
@@ -165,34 +135,66 @@ def list_s3_files(s3, bucket, prefix):
     for page in paginator.paginate(Bucket=bucket, Prefix=prefix):
         for obj in page.get("Contents", []):
             key = obj["Key"]
-            if not key.endswith("/") and not key.endswith("_READY"):
+            if not key.endswith("/") and not os.path.basename(key).startswith("_"):
                 yield key
 
 
-def write_failure_marker(s3, output_s3, error_message, filename=None):
+def marker_key(output_s3, name):
     out_bucket, out_prefix = parse_s3_uri(output_s3)
-    marker_name = f"_FAILURE_{filename}" if filename else "_FAILURE"
-    key = os.path.join(out_prefix, marker_name) if out_prefix else marker_name
-    s3.put_object(Bucket=out_bucket, Key=key, Body=error_message.encode("utf-8"))
-    logger.info("Wrote failure marker to s3://%s/%s", out_bucket, key)
+    return out_bucket, os.path.join(out_prefix, name) if out_prefix else name
+
+
+def write_marker(s3, output_s3, name, body=""):
+    bucket, key = marker_key(output_s3, name)
+    s3.put_object(Bucket=bucket, Key=key, Body=body.encode("utf-8"))
+    logger.info("Wrote marker s3://%s/%s", bucket, key)
+
+
+def has_marker(s3, output_s3, name):
+    bucket, key = marker_key(output_s3, name)
+    try:
+        s3.head_object(Bucket=bucket, Key=key)
+        return True
+    except ClientError:
+        return False
+
+
+def write_failure_marker(s3, output_s3, error_message, filename=None):
+    write_marker(s3, output_s3, f"_FAILURE_{filename}" if filename else "_FAILURE", error_message)
+
+
+def input_keys(s3):
+    """(bucket, keys) to process: this job's manifest (MANIFEST_S3_URI, one per array child),
+    or every file under INPUT_S3_URI."""
+    manifest_s3 = os.environ.get("MANIFEST_S3_URI")
+    if manifest_s3:
+        bucket, prefix = parse_s3_uri(manifest_s3)
+        index = os.environ.get("AWS_BATCH_JOB_ARRAY_INDEX", "0")
+        body = s3.get_object(Bucket=bucket, Key=os.path.join(prefix, f"{index}.json"))["Body"].read()
+        manifest = json.loads(body)
+        return manifest["bucket"], manifest["keys"]
+    in_bucket, in_prefix = parse_s3_uri(os.environ["INPUT_S3_URI"])
+    return in_bucket, list(list_s3_files(s3, in_bucket, in_prefix))
 
 
 # ---- main ----
-def process_folder(s3, input_s3, output_s3):
-    in_bucket, in_prefix = parse_s3_uri(input_s3)
+def process_files(s3, in_bucket, keys, output_s3):
+    """De-identify `keys` into output_s3. Each file ends with a _SUCCESS_ or _FAILURE_ marker
+    next to its output; files that already have a _SUCCESS_ one are skipped."""
     out_bucket, out_prefix = parse_s3_uri(output_s3)
+    if not keys:
+        raise ValueError(f"No input files found in s3://{in_bucket}")
 
-    img_p, nlp_p = load_pipeline()
+    text_detector, deid_pipeline = load_pipeline()
 
     with tempfile.TemporaryDirectory() as tmp_input_folder, tempfile.TemporaryDirectory() as tmp_output_folder:
-        keys = list(list_s3_files(s3, in_bucket, in_prefix))
-        if not keys:
-            raise ValueError(f"No input files found under s3://{in_bucket}/{in_prefix}")
-
         failed_files = []
 
         for key in keys:
             filename = os.path.basename(key)
+            if has_marker(s3, output_s3, f"_SUCCESS_{filename}"):
+                logger.info("Skipping %s, already de-identified", filename)
+                continue
             per_file_folder = tempfile.mkdtemp(dir=tmp_input_folder, prefix='tmp_input')
             per_file_output = tempfile.mkdtemp(dir=tmp_output_folder, prefix='tmp_output')
             local_path = os.path.join(per_file_folder, filename)
@@ -202,11 +204,14 @@ def process_folder(s3, input_s3, output_s3):
                 s3.download_file(in_bucket, key, local_path)
 
                 logger.info("Processing %s...", filename)
-                output_local = process_file(img_p, nlp_p, per_file_folder, filename, per_file_output)
+                output_local = process_file(text_detector, deid_pipeline, per_file_folder, filename, per_file_output)
                 out_key = os.path.join(out_prefix, filename)
 
                 logger.info("Uploading to %s...", out_key)
                 s3.upload_file(output_local, out_bucket, out_key)
+                write_marker(s3, output_s3, f"_SUCCESS_{filename}")
+                failure_bucket, failure_key = marker_key(output_s3, f"_FAILURE_{filename}")
+                s3.delete_object(Bucket=failure_bucket, Key=failure_key)
             except Exception:
                 error_message = traceback.format_exc()
                 logger.error("Failed to process %s:\n%s", filename, error_message)
@@ -236,26 +241,28 @@ def get_config():
     parser.add_argument("--output", required=False, help="s3://bucket/prefix/")
     args, _ = parser.parse_known_args()
 
-    input_s3 = args.input or os.environ.get("INPUT_S3_URI")
+    if args.input:
+        os.environ["INPUT_S3_URI"] = args.input
     output_s3 = args.output or os.environ.get("OUTPUT_S3_URI")
 
-    if not input_s3 or not output_s3:
+    if not (os.environ.get("INPUT_S3_URI") or os.environ.get("MANIFEST_S3_URI")) or not output_s3:
         raise ValueError(
             "Input/output S3 locations must be provided via --input/--output "
-            "or the INPUT_S3_URI/OUTPUT_S3_URI environment variables."
+            "or the INPUT_S3_URI (or MANIFEST_S3_URI)/OUTPUT_S3_URI environment variables."
         )
-    return input_s3, output_s3
+    return output_s3
 
 
 if __name__ == "__main__":
-    input_s3, output_s3 = get_config()
+    output_s3 = get_config()
     s3_client = boto3.client("s3")
     show_boto3_credentials(mask=True)
     spark = start_spark()
     spark.sparkContext.setLogLevel("ERROR")
 
     try:
-        failed_files = process_folder(s3_client, input_s3, output_s3)
+        in_bucket, keys = input_keys(s3_client)
+        failed_files = process_files(s3_client, in_bucket, keys, output_s3)
     except Exception:
         error_message = traceback.format_exc()
         logger.error(error_message)

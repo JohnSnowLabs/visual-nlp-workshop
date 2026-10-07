@@ -15,10 +15,13 @@ S3 → EventBridge → Lambda → AWS Batch (EC2, `c7a.4xlarge`) → container �
 
 ## The details
 Files land under `s3://<bucket>/<folder>/`. Nothing happens until an empty
-`_READY` dummy file is created under that same prefix - that triggers a Batch
-job that reads `s3://<bucket>/<folder>/`, runs the Visual-NLP de-id pipeline,
-and writes results to `s3://<bucket>/<folder>_output/`. On failure, the
-container writes `_FAILURE_{filename}` (with the error) to the output prefix instead.
+`_READY` dummy file is created under that same prefix - that splits the folder's
+files into balanced groups (one manifest each, under `<folder>_output/_manifests/`)
+and submits them as Batch jobs that run in parallel. Each job runs the Visual-NLP
+de-id pipeline on its files and writes the results to `s3://<bucket>/<folder>_output/`,
+with a `_SUCCESS_{filename}` marker per file, or `_FAILURE_{filename}` (with the error)
+if it failed. Creating `_READY` again processes only the files without a
+`_SUCCESS_` marker, so failed files are retried and finished ones aren't redone.
 
 - `docker/` — the container source (Batch entrypoint, license bootstrap).
   See `docker/README.md` for the container build details.
