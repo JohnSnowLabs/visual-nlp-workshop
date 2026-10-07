@@ -32,6 +32,11 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
 # Install Johnsnowlabs libraries
 RUN pip config set global.no-cache-dir 1 && pip install packaging johnsnowlabs==6.4.1 fastapi torchvision==0.13.1 pillow_jpls pylibjpeg[all] pydicom pyjpegls pylibjpeg-openjpeg pylibjpeg highdicom boto3 imagecodecs
 
+# Spark NLP version required by Visual NLP 7.0.1
+ARG SPARK_NLP_VERSION=7.0.0
+RUN sed -i "s/^raw_version_nlp = .*/raw_version_nlp = \"${SPARK_NLP_VERSION}\"/" \
+    $(python3 -c "import importlib.util; print(importlib.util.find_spec('johnsnowlabs').submodule_search_locations[0])")/settings.py
+
 COPY app.py installer.py /app/
 RUN --mount=type=secret,id=license python3 /app/installer.py && rm -rf /root/.javacpp/* /tmp/*
 
