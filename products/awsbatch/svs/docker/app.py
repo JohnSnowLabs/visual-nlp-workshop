@@ -7,8 +7,11 @@ from botocore.exceptions import ClientError
 import tempfile
 import shutil
 import argparse
+import csv
 import json
+import time
 from urllib.parse import urlparse
+import tifffile
 from johnsnowlabs import nlp
 from pyspark.ml import PipelineModel
 from sparkocr.enums import *
@@ -100,9 +103,34 @@ def load_pipeline():
         raise RuntimeError("DEID_MODE=pipeline needs the image built with MODEL_TO_LOAD set")
     return text_detector, PipelineModel.load(model_path)
 
+def count_tiles(svs_path, boxes=None):
+    """Tiles of all pyramid levels, or only those the level-0 `boxes` lie on."""
+    from sparkocr.utils.svs.deidentify import ThumbnailBox, _pyramid
+
+    total = 0
+    with tifffile.TiffFile(svs_path) as tif:
+        levels = _pyramid(tif)
+        base = tif.pages[levels[0]]
+        for index in levels:
+            page = tif.pages[index]
+            height, width = page.shape[:2]
+            tw, th = page.tilewidth, page.tilelength
+            if boxes is None:
+                total += -(-width // tw) * -(-height // th)
+                continue
+            fx, fy = width / base.shape[1], height / base.shape[0]
+            touched = set()
+            for x1, y1, x2, y2 in (b for b in boxes if not isinstance(b, ThumbnailBox)):
+                for r in range(max(0, int(y1 * fy)) // th, min(height - 1, int(y2 * fy)) // th + 1):
+                    for c in range(max(0, int(x1 * fx)) // tw, min(width - 1, int(x2 * fx)) // tw + 1):
+                        touched.add((r, c))
+            total += len(touched)
+    return total
+
+
 def process_file(text_detector, deid_pipeline, input_file, filename, output_folder):
     """Run the de-id pipeline on a single local file and return the local
-    path to its output file inside output_folder."""
+    path to its output file inside output_folder, and its tile counts."""
     from sparkocr.utils.svs.phi_cleaning import remove_phi
     from sparkocr.utils.svs.deidentify import detect_phi_boxes, redact_boxes
 
@@ -111,6 +139,14 @@ def process_file(text_detector, deid_pipeline, input_file, filename, output_fold
     fully_qualified_filename = os.path.join(cleaned_header_tmp, filename)
 
     boxes = detect_phi_boxes(fully_qualified_filename, DEID_MODE, text_detector, deid_pipeline)
+    # text regions, for the counts (pipeline mode redacts only the PHI in them)
+    text_boxes = boxes if DEID_MODE == "blanket" else \
+        detect_phi_boxes(fully_qualified_filename, "blanket", text_detector)
+    tiles = {
+        "tiles": count_tiles(fully_qualified_filename),
+        "tiles_with_text": count_tiles(fully_qualified_filename, text_boxes),
+        "tiles_redacted": count_tiles(fully_qualified_filename, boxes),
+    }
     print(f"number of regions to redact {len(boxes)}")
     if boxes:
         create_new_svs_file = os.environ.get("CREATE_NEW_SVS_FILE", "false").lower() == "true"
@@ -121,7 +157,7 @@ def process_file(text_detector, deid_pipeline, input_file, filename, output_fold
         else:
             redact_boxes(fully_qualified_filename, boxes)
 
-    return fully_qualified_filename
+    return fully_qualified_filename, tiles
 
 
 # ---- S3 helpers ----
@@ -163,6 +199,23 @@ def write_failure_marker(s3, output_s3, error_message, filename=None):
     write_marker(s3, output_s3, f"_FAILURE_{filename}" if filename else "_FAILURE", error_message)
 
 
+METRICS = ["file_name", "file_size_bytes", "tiles", "tiles_with_text", "tiles_redacted",
+           "processing_seconds", "status"]
+
+
+def write_metrics(s3, output_s3, rows):
+    """One csv per job (and attempt) in the output folder, rewritten after every file."""
+    job = os.environ.get("AWS_BATCH_JOB_ID", "local").replace(":", "_")
+    name = f"metrics_{job}_{os.environ.get('AWS_BATCH_JOB_ATTEMPT', '1')}.csv"
+    with tempfile.NamedTemporaryFile("w", newline="", suffix=".csv") as f:
+        writer = csv.DictWriter(f, fieldnames=METRICS)
+        writer.writeheader()
+        writer.writerows(rows)
+        f.flush()
+        bucket, key = marker_key(output_s3, name)
+        s3.upload_file(f.name, bucket, key)
+
+
 def input_keys(s3):
     """(bucket, keys) to process: this job's manifest (MANIFEST_S3_URI, one per array child),
     or every file under INPUT_S3_URI."""
@@ -189,6 +242,7 @@ def process_files(s3, in_bucket, keys, output_s3):
 
     with tempfile.TemporaryDirectory() as tmp_input_folder, tempfile.TemporaryDirectory() as tmp_output_folder:
         failed_files = []
+        metrics = []
 
         for key in keys:
             filename = os.path.basename(key)
@@ -198,13 +252,17 @@ def process_files(s3, in_bucket, keys, output_s3):
             per_file_folder = tempfile.mkdtemp(dir=tmp_input_folder, prefix='tmp_input')
             per_file_output = tempfile.mkdtemp(dir=tmp_output_folder, prefix='tmp_output')
             local_path = os.path.join(per_file_folder, filename)
+            row = {"file_name": filename, "status": "failed"}
+            start = time.time()
 
             try:
                 logger.info("Downloading %s...", key)
                 s3.download_file(in_bucket, key, local_path)
+                row["file_size_bytes"] = os.path.getsize(local_path)
 
                 logger.info("Processing %s...", filename)
-                output_local = process_file(text_detector, deid_pipeline, per_file_folder, filename, per_file_output)
+                output_local, tiles = process_file(text_detector, deid_pipeline, per_file_folder, filename, per_file_output)
+                row.update(tiles)
                 out_key = os.path.join(out_prefix, filename)
 
                 logger.info("Uploading to %s...", out_key)
@@ -212,6 +270,7 @@ def process_files(s3, in_bucket, keys, output_s3):
                 write_marker(s3, output_s3, f"_SUCCESS_{filename}")
                 failure_bucket, failure_key = marker_key(output_s3, f"_FAILURE_{filename}")
                 s3.delete_object(Bucket=failure_bucket, Key=failure_key)
+                row["status"] = "success"
             except Exception:
                 error_message = traceback.format_exc()
                 logger.error("Failed to process %s:\n%s", filename, error_message)
@@ -225,9 +284,19 @@ def process_files(s3, in_bucket, keys, output_s3):
                 shutil.rmtree(per_file_output, ignore_errors=True)
                 shutil.rmtree(per_file_folder, ignore_errors=True)
 
+            row["processing_seconds"] = round(time.time() - start, 1)
+            logger.info("Metrics %s: size=%s bytes, tiles=%s, tiles with text=%s, tiles redacted=%s, time=%ss, %s",
+                        filename, row.get("file_size_bytes"), row.get("tiles"), row.get("tiles_with_text"),
+                        row.get("tiles_redacted"), row["processing_seconds"], row["status"])
+            metrics.append(row)
+            try:
+                write_metrics(s3, output_s3, metrics)
+            except Exception:
+                logger.exception("Failed to write the metrics csv")
+
         if failed_files:
             logger.error(
-                "Failed to process %d/%d file(s): %s",
+                "%d of %d file(s) failed: %s",
                 len(failed_files), len(keys), failed_files,
             )
 
@@ -272,5 +341,6 @@ if __name__ == "__main__":
             logger.exception("Failed to write _FAILURE marker to %s", output_s3)
         sys.exit(1)
 
-    if failed_files:
+    # failed files keep their _FAILURE_ marker; the job fails only if none was processed
+    if failed_files and len(failed_files) == len(keys):
         sys.exit(1)
