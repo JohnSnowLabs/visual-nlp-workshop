@@ -22,6 +22,8 @@ de-id pipeline on its files and writes the results to `s3://<bucket>/<folder>_ou
 with a `_SUCCESS_{filename}` marker per file, or `_FAILURE_{filename}` (with the error)
 if it failed. Creating `_READY` again processes only the files without a
 `_SUCCESS_` marker, so failed files are retried and finished ones aren't redone.
+Each job also writes a `metrics_*.csv` with the file name, file size, number of tiles,
+tiles with text, tiles redacted and processing time of every file.
 
 - `docker/` — the container source (Batch entrypoint, license bootstrap).
   See `docker/README.md` for the container build details.
