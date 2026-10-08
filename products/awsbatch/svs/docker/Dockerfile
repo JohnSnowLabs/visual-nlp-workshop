@@ -6,6 +6,8 @@ ENV HARDWARE_TARGET="cpu"
 ENV TF_CPP_MIN_LOG_LEVEL='3'
 ENV MODEL_TO_LOAD="image_deid_multi_model_context_pipeline_cpu"
 ENV CREATE_NEW_SVS_FILE="false"
+# blanket: redact all detected text; pipeline: only the PHI found by MODEL_TO_LOAD
+ENV DEID_MODE="pipeline"
 # fewer glibc malloc arenas: keeps the JVM's native memory from growing across files
 ENV MALLOC_ARENA_MAX=2
 ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64/
@@ -29,6 +31,11 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
 
 # Install Johnsnowlabs libraries
 RUN pip config set global.no-cache-dir 1 && pip install packaging johnsnowlabs==6.4.1 fastapi torchvision==0.13.1 pillow_jpls pylibjpeg[all] pydicom pyjpegls pylibjpeg-openjpeg pylibjpeg highdicom boto3 imagecodecs
+
+# Spark NLP version required by Visual NLP 7.0.1
+ARG SPARK_NLP_VERSION=7.0.0
+RUN sed -i "s/^raw_version_nlp = .*/raw_version_nlp = \"${SPARK_NLP_VERSION}\"/" \
+    $(python3 -c "import importlib.util; print(importlib.util.find_spec('johnsnowlabs').submodule_search_locations[0])")/settings.py
 
 COPY app.py installer.py /app/
 RUN --mount=type=secret,id=license python3 /app/installer.py && rm -rf /root/.javacpp/* /tmp/*
