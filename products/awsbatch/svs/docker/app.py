@@ -61,6 +61,8 @@ def get_logger(logger_name):
         logging.Formatter("%(name)s [%(asctime)s] [%(levelname)s] %(message)s")
     )
     logger.addHandler(handler)
+    # sparkocr adds its own root handler: without this every line is logged twice
+    logger.propagate = False
     return logger
 
 
