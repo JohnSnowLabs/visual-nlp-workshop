@@ -14,6 +14,7 @@ from urllib.parse import urlparse
 import tifffile
 from johnsnowlabs import nlp
 from pyspark.ml import PipelineModel
+from pyspark.sql.functions import col
 from sparkocr.enums import *
 from sparkocr.transformers import *
 
@@ -83,9 +84,20 @@ spark = None
 
 def load_pipeline():
     """
-    Load the text detector and, for DEID_MODE=pipeline, the de-identification pipeline.
+    Load the pipeline of DEID_MODE: blanket, a text detector; pipeline, the de-identification pipeline.
     """
+    if DEID_MODE == "pipeline":
+        model_path = os.path.join(CACHE_PRETRAINED_PATH, "model")
+        if not os.path.isdir(model_path):
+            raise RuntimeError("DEID_MODE=pipeline needs the image built with MODEL_TO_LOAD set")
+        pipeline = PipelineModel.load(model_path)
+        # each OCR line is a sentence: entities don't run from one line into the next
+        [s for s in pipeline.stages if type(s).__name__ == "SentenceDetectorDLModel"][0].setCustomBounds(["\n"])
+        return pipeline
+
     text_detector = ImageTextDetectorCraft().load(os.path.join(CACHE_PRETRAINED_PATH, "image_text_detector_mem_opt")) \
+    .setInputCol("image_raw") \
+    .setOutputCol("coordinates") \
     .setScoreThreshold(0.7) \
     .setLinkThreshold(0.5) \
     .setWithRefiner(True) \
@@ -95,24 +107,18 @@ def load_pipeline():
     .setWidth(0) \
     .setHeight(0)
 
-    # blanket: every detected text region is redacted; pipeline: only what its NER finds as PHI
-    if DEID_MODE == "blanket":
-        return text_detector, None
-    model_path = os.path.join(CACHE_PRETRAINED_PATH, "model")
-    if not os.path.isdir(model_path):
-        raise RuntimeError("DEID_MODE=pipeline needs the image built with MODEL_TO_LOAD set")
-    return text_detector, PipelineModel.load(model_path)
+    return PipelineModel(stages=[text_detector])
 
 def count_tiles(svs_path, boxes=None):
     """Tiles of all pyramid levels, or only those the level-0 `boxes` lie on."""
-    from sparkocr.utils.svs.deidentify import ThumbnailBox, _pyramid
-
     total = 0
     with tifffile.TiffFile(svs_path) as tif:
-        levels = _pyramid(tif)
-        base = tif.pages[levels[0]]
-        for index in levels:
-            page = tif.pages[index]
+        # pyramid levels: the tiled pages with the base image's shape
+        tiled = [p for p in tif.pages if p.is_tiled and len(p.shape) >= 2]
+        base = max(tiled, key=lambda p: p.shape[0] * p.shape[1])
+        ratio = base.shape[1] / base.shape[0]
+        levels = [p for p in tiled if abs(p.shape[1] / p.shape[0] - ratio) < 0.03 * ratio]
+        for page in levels:
             height, width = page.shape[:2]
             tw, th = page.tilewidth, page.tilelength
             if boxes is None:
@@ -120,7 +126,7 @@ def count_tiles(svs_path, boxes=None):
                 continue
             fx, fy = width / base.shape[1], height / base.shape[0]
             touched = set()
-            for x1, y1, x2, y2 in (b for b in boxes if not isinstance(b, ThumbnailBox)):
+            for x1, y1, x2, y2 in boxes:
                 for r in range(max(0, int(y1 * fy)) // th, min(height - 1, int(y2 * fy)) // th + 1):
                     for c in range(max(0, int(x1 * fx)) // tw, min(width - 1, int(x2 * fx)) // tw + 1):
                         touched.add((r, c))
@@ -128,34 +134,39 @@ def count_tiles(svs_path, boxes=None):
     return total
 
 
-def process_file(text_detector, deid_pipeline, input_file, filename, output_folder):
+def process_file(pipeline, input_file, filename, output_folder):
     """Run the de-id pipeline on a single local file and return the local
     path to its output file inside output_folder, and its tile counts."""
     from sparkocr.utils.svs.phi_cleaning import remove_phi
-    from sparkocr.utils.svs.deidentify import detect_phi_boxes, redact_boxes
+    from sparkocr.utils.svs.deidentify import svs_to_text_images, redact_phi_in_text_images
 
     cleaned_header_tmp = tempfile.mkdtemp(dir=output_folder, prefix="cleaned_header_")
     remove_phi(input_file, cleaned_header_tmp, verbose=True, rename=False)
     fully_qualified_filename = os.path.join(cleaned_header_tmp, filename)
 
-    boxes = detect_phi_boxes(fully_qualified_filename, DEID_MODE, text_detector, deid_pipeline)
-    # text regions, for the counts (pipeline mode redacts only the PHI in them)
-    text_boxes = boxes if DEID_MODE == "blanket" else \
-        detect_phi_boxes(fully_qualified_filename, "blanket", text_detector)
+    text_images_tmp = tempfile.mkdtemp(dir=output_folder, prefix="text_images_")
+    images = svs_to_text_images(fully_qualified_filename, text_images_tmp)
+    to_image = BinaryToImage().setInputCol("content").setOutputCol("image_raw").setImageType(ImageType.TYPE_BYTE_GRAY)
+    result = pipeline.transform(to_image.transform(spark.read.format("binaryFile").load(images).repartition(4))).cache()
+    try:
+        # all the text the pipeline found, for the counts: pipeline mode redacts only the PHI in it
+        text = result if DEID_MODE == "blanket" else result.select("path", col("text_regions").alias("coordinates"))
+        text_boxes = redact_phi_in_text_images(fully_qualified_filename, text, text_images_tmp, dry_run=True)[filename]
+
+        create_new_svs_file = os.environ.get("CREATE_NEW_SVS_FILE", "false").lower() == "true"
+        output_svs_path = os.path.join(output_folder, filename) if create_new_svs_file else None
+        boxes = redact_phi_in_text_images(fully_qualified_filename, result, text_images_tmp, output_svs_path,
+                                          create_new_svs_file)[filename]
+    finally:
+        result.unpersist()
+
     tiles = {
         "tiles": count_tiles(fully_qualified_filename),
         "tiles_with_text": count_tiles(fully_qualified_filename, text_boxes),
         "tiles_redacted": count_tiles(fully_qualified_filename, boxes),
     }
-    print(f"number of regions to redact {len(boxes)}")
-    if boxes:
-        create_new_svs_file = os.environ.get("CREATE_NEW_SVS_FILE", "false").lower() == "true"
-        if create_new_svs_file:
-            output_svs_path = os.path.join(output_folder, filename)
-            redact_boxes(fully_qualified_filename, boxes, output_svs_path, create_new_svs_file=True)
-            fully_qualified_filename = output_svs_path
-        else:
-            redact_boxes(fully_qualified_filename, boxes)
+    if create_new_svs_file:
+        fully_qualified_filename = output_svs_path
 
     return fully_qualified_filename, tiles
 
@@ -238,7 +249,7 @@ def process_files(s3, in_bucket, keys, output_s3):
     if not keys:
         raise ValueError(f"No input files found in s3://{in_bucket}")
 
-    text_detector, deid_pipeline = load_pipeline()
+    pipeline = load_pipeline()
 
     with tempfile.TemporaryDirectory() as tmp_input_folder, tempfile.TemporaryDirectory() as tmp_output_folder:
         failed_files = []
@@ -261,7 +272,7 @@ def process_files(s3, in_bucket, keys, output_s3):
                 row["file_size_bytes"] = os.path.getsize(local_path)
 
                 logger.info("Processing %s...", filename)
-                output_local, tiles = process_file(text_detector, deid_pipeline, per_file_folder, filename, per_file_output)
+                output_local, tiles = process_file(pipeline, per_file_folder, filename, per_file_output)
                 row.update(tiles)
                 out_key = os.path.join(out_prefix, filename)
 
