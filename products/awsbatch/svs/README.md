@@ -73,6 +73,8 @@ docker tag deid-container:latest "${REPO_URI}:latest"
 docker push "${REPO_URI}:latest"
 ```
 
+For GPU, build with `--build-arg HARDWARE_TARGET=gpu` and deploy in step 3 with `-c hardware=gpu`.
+
 ## 3. Bootstrap and deploy the CDK stack
 
 ```bash
