@@ -71,6 +71,8 @@ CACHE_PRETRAINED_PATH = "/opt/ml"
 DEID_MODE = os.environ.get("DEID_MODE", "pipeline").lower()
 if DEID_MODE not in ("blanket", "pipeline"):
     raise ValueError(f"DEID_MODE must be 'blanket' or 'pipeline', got {DEID_MODE!r}")
+# cpu or gpu, the one the image was built for (see the Dockerfile)
+HARDWARE_TARGET = os.environ.get("HARDWARE_TARGET", "cpu").lower()
 
 def start_spark():
     # SPARK_OCR_LICENSE is read directly by nlp.start() from the process
@@ -80,7 +82,7 @@ def start_spark():
     # nlp.start() at container runtime doesn't need them. So they're never
     # passed to the running container at all, and boto3 is free to use the
     # Batch job's IAM task role for S3 access without any collision.
-    return nlp.start(visual=True)
+    return nlp.start(visual=True, hardware_target=HARDWARE_TARGET)
 
 spark = None
 
@@ -92,10 +94,7 @@ def load_pipeline():
         model_path = os.path.join(CACHE_PRETRAINED_PATH, "model")
         if not os.path.isdir(model_path):
             raise RuntimeError("DEID_MODE=pipeline needs the image built with MODEL_TO_LOAD set")
-        pipeline = PipelineModel.load(model_path)
-        # each OCR line is a sentence: entities don't run from one line into the next
-        [s for s in pipeline.stages if type(s).__name__ == "SentenceDetectorDLModel"][0].setCustomBounds(["\n"])
-        return pipeline
+        return PipelineModel.load(model_path)
 
     text_detector = ImageTextDetectorCraft().load(os.path.join(CACHE_PRETRAINED_PATH, "image_text_detector_mem_opt")) \
     .setInputCol("image_raw") \
@@ -105,7 +104,7 @@ def load_pipeline():
     .setWithRefiner(True) \
     .setTextThreshold(0.4) \
     .setSizeThreshold(-1) \
-    .setUseGPU(False) \
+    .setUseGPU(HARDWARE_TARGET == "gpu") \
     .setWidth(0) \
     .setHeight(0)
 

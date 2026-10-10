@@ -22,16 +22,24 @@ from constructs import Construct
 
 
 class DeidPipelineStack(Stack):
-    # c7a.4xlarge: 16 vCPU / 32 GiB. Leave headroom below the instance's full
-    # capacity for the OS and ECS agent.
-    INSTANCE_TYPES = ["c7a.4xlarge"]
-    JOB_VCPUS = 15
+    # Per hardware (-c hardware=cpu|gpu, the image's HARDWARE_TARGET). Leave headroom below
+    # the instance's full capacity for the OS and ECS agent.
+    # cpu: c7a.4xlarge, 16 vCPU / 32 GiB. gpu: g4dn.2xlarge, 8 vCPU / 32 GiB / one T4.
+    HARDWARE = {
+        "cpu": dict(instance_types=["c7a.4xlarge"], instance_vcpus=16, job_vcpus=15, job_gpus=0,
+                    image_type=None),
+        "gpu": dict(instance_types=["g4dn.2xlarge"], instance_vcpus=8, job_vcpus=7, job_gpus=1,
+                    image_type="ECS_AL2023_NVIDIA"),
+    }
     JOB_MEMORY_MIB = 28000
-    INSTANCE_VCPUS = 16
 
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
+        hardware_target = str(self.node.try_get_context("hardware") or "cpu").lower()
+        if hardware_target not in self.HARDWARE:
+            raise ValueError(f"-c hardware must be cpu or gpu, got {hardware_target!r}")
+        hardware = self.HARDWARE[hardware_target]
         image_tag = self.node.try_get_context("image_tag") or "latest"
         # -c max_jobs=<n>: how many jobs (one instance each) a folder is split into and run at once
         max_jobs = int(self.node.try_get_context("max_jobs") or 4)
@@ -282,8 +290,12 @@ class DeidPipelineStack(Stack):
                 type="EC2",
                 allocation_strategy="BEST_FIT_PROGRESSIVE",
                 minv_cpus=0,
-                maxv_cpus=max_jobs * self.INSTANCE_VCPUS,
-                instance_types=self.INSTANCE_TYPES,
+                maxv_cpus=max_jobs * hardware["instance_vcpus"],
+                instance_types=hardware["instance_types"],
+                # GPU instances need the ECS AMI with the NVIDIA driver
+                ec2_configuration=[
+                    batch.CfnComputeEnvironment.Ec2ConfigurationObjectProperty(image_type=hardware["image_type"])
+                ] if hardware["image_type"] else None,
                 instance_role=instance_profile.attr_arn,
                 launch_template=batch.CfnComputeEnvironment.LaunchTemplateSpecificationProperty(
                     launch_template_id=launch_template.ref, version="$Latest"
@@ -325,12 +337,16 @@ class DeidPipelineStack(Stack):
                 execution_role_arn=execution_role.role_arn,
                 resource_requirements=[
                     batch.CfnJobDefinition.ResourceRequirementProperty(
-                        type="VCPU", value=str(self.JOB_VCPUS)
+                        type="VCPU", value=str(hardware["job_vcpus"])
                     ),
                     batch.CfnJobDefinition.ResourceRequirementProperty(
                         type="MEMORY", value=str(self.JOB_MEMORY_MIB)
                     ),
-                ],
+                ] + ([
+                    batch.CfnJobDefinition.ResourceRequirementProperty(
+                        type="GPU", value=str(hardware["job_gpus"])
+                    )
+                ] if hardware["job_gpus"] else []),
                 environment=[
                     batch.CfnJobDefinition.EnvironmentProperty(
                         name="CREATE_NEW_SVS_FILE", value=create_new_svs_file

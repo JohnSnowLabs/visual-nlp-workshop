@@ -7,6 +7,8 @@ install the licensed jars/model, not baked into an image layer:
 docker build --secret id=license,src=spark_nlp_for_healthcare_spark_ocr_license.json -t deid-container .
 ```
 
+For GPU, add `--build-arg HARDWARE_TARGET=gpu`.
+
 #### Run 
 `AWS_*` credentials are for boto3's own S3 access, and are optional if the
 container already has them via an IAM role, e.g. a Batch job role):
