@@ -119,8 +119,8 @@ you'll need `BucketName` and `JobQueueArn`.
 
 ```bash
 BUCKET=<BucketName from step 3 output>
-aws s3 cp file1.dcm s3://$BUCKET/testfolder/
-aws s3 cp file2.dcm s3://$BUCKET/testfolder/
+aws s3 cp file1.svs s3://$BUCKET/testfolder/
+aws s3 cp file2.svs s3://$BUCKET/testfolder/
 aws s3api put-object --bucket $BUCKET --key testfolder/_READY --body /dev/null   # triggers the job
 
 aws batch list-jobs --job-queue <JobQueueArn from step 3 output>

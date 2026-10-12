@@ -7,10 +7,10 @@ For GPU, deploy with `-c hardware=gpu`.
 Flow: files land under `s3://<bucket>/<folder>/`. Nothing happens until a
 `_READY` object is created under that same prefix. That triggers an
 EventBridge rule (S3 → EventBridge notifications, filtered on the `_READY`
-key suffix) which invokes a Lambda that submits a Batch job with
-`INPUT_S3_URI=s3://<bucket>/<folder>/` and
-`OUTPUT_S3_URI=s3://<bucket>/<folder>_output/`. On failure the container
-writes `_FAILURE` (containing the error) to the output prefix.
+key suffix) which invokes a Lambda that splits the folder's files into manifests and
+submits an array job with `MANIFEST_S3_URI` and
+`OUTPUT_S3_URI=s3://<bucket>/<folder>_output/`. Each file gets a
+`_SUCCESS_<file>` or `_FAILURE_<file>` marker (with the error) in the output prefix.
 
 ## Prerequisites
 
@@ -100,8 +100,8 @@ tag instead of `latest`.
 
 ```bash
 BUCKET=<BucketName from stack output>
-aws s3 cp file1.dcm s3://$BUCKET/testfolder/
-aws s3 cp file2.dcm s3://$BUCKET/testfolder/
+aws s3 cp file1.svs s3://$BUCKET/testfolder/
+aws s3 cp file2.svs s3://$BUCKET/testfolder/
 # Nothing runs yet. This triggers the job:
 aws s3api put-object --bucket $BUCKET --key testfolder/_READY --body /dev/null
 
@@ -139,16 +139,17 @@ Notes:
 ## Container code
 
 `docker/app.py` wires up the Batch I/O contract (env vars, S3 download/
-upload, `_FAILURE` marker) and starts the session via `nlp.start(visual=True)`,
+upload, `_SUCCESS_`/`_FAILURE_` markers) and starts the session via `nlp.start(visual=True)`,
 which reads `SPARK_OCR_LICENSE` directly from the environment. `AWS_ACCESS_
 KEY_ID`/`AWS_SECRET_ACCESS_KEY` from the license file are only used at image
 build time by `docker/installer.py` (a Docker build secret) — not needed at
 runtime, so they're never passed to the container. `load_pipeline()` loads
-the de-id pipeline baked into the image at build time (`/opt/ml/model` and
-`/opt/ml/image_text_detector_mem_opt`, produced by `installer.py` via
-`MODEL_TO_LOAD` in the `Dockerfile`), and `process_file()` runs it per file
-(header cleanup, tiling, OCR + de-id, redaction). Redaction writes tiles
-back in place by default; deploy with `-c create_new_svs_file=true` to have
+the pipeline baked into the image at build time by `installer.py`: the de-id
+pipeline (`/opt/ml/model`, `MODEL_TO_LOAD` in the `Dockerfile`) for
+`DEID_MODE=pipeline`, or the text detector (`/opt/ml/image_text_detector_mem_opt`)
+for `DEID_MODE=blanket`. `process_file()` runs it per file (header cleanup,
+low-resolution slide image and thumbnail, de-id, redaction on every level).
+Redaction modifies the SVS in place by default; deploy with `-c create_new_svs_file=true` to have
 it write a new de-identified `.svs` file instead (slower, but leaves the
 original untouched).
 
