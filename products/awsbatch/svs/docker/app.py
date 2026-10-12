@@ -10,6 +10,9 @@ import argparse
 import csv
 import json
 import time
+import pwd
+import socket
+import threading
 from urllib.parse import urlparse
 import tifffile
 from johnsnowlabs import nlp
@@ -88,7 +91,7 @@ spark = None
 
 def load_pipeline():
     """
-    Load the pipeline of DEID_MODE: blanket, a text detector; pipeline, the de-identification pipeline.
+    Load the pipeline for DEID_MODE: the text detector alone for blanket, the de-identification pipeline for pipeline.
     """
     if DEID_MODE == "pipeline":
         model_path = os.path.join(CACHE_PRETRAINED_PATH, "model")
@@ -114,7 +117,7 @@ def count_tiles(svs_path, boxes=None):
     """Tiles of all pyramid levels, or only those the level-0 `boxes` lie on."""
     total = 0
     with tifffile.TiffFile(svs_path) as tif:
-        # pyramid levels: the tiled pages with the base image's shape
+        # pyramid levels: the tiled pages with the base image's aspect ratio
         tiled = [p for p in tif.pages if p.is_tiled and len(p.shape) >= 2]
         base = max(tiled, key=lambda p: p.shape[0] * p.shape[1])
         ratio = base.shape[1] / base.shape[0]
@@ -135,14 +138,14 @@ def count_tiles(svs_path, boxes=None):
     return total
 
 
-def process_file(pipeline, input_file, filename, output_folder):
-    """Run the de-id pipeline on a single local file and return the local
+def process_file(pipeline, input_folder, filename, output_folder):
+    """Run the de-id pipeline on the local file `filename` in input_folder and return the local
     path to its output file inside output_folder, and its tile counts."""
     from sparkocr.utils.svs.phi_cleaning import remove_phi
     from sparkocr.utils.svs.deidentify import svs_to_text_images, redact_phi_in_text_images
 
     cleaned_header_tmp = tempfile.mkdtemp(dir=output_folder, prefix="cleaned_header_")
-    remove_phi(input_file, cleaned_header_tmp, verbose=True, rename=False)
+    remove_phi(input_folder, cleaned_header_tmp, verbose=True, rename=False)
     fully_qualified_filename = os.path.join(cleaned_header_tmp, filename)
 
     text_images_tmp = tempfile.mkdtemp(dir=output_folder, prefix="text_images_")
@@ -172,187 +175,334 @@ def process_file(pipeline, input_file, filename, output_folder):
     return fully_qualified_filename, tiles
 
 
-# ---- S3 helpers ----
+# ---- storage helpers: s3://bucket/prefix/ or a local folder (e.g. a mounted network drive) ----
+_s3 = None
+
+
+def s3_client():
+    global _s3
+    if _s3 is None:
+        _s3 = boto3.client("s3")
+    return _s3
+
+
+def is_s3(uri):
+    return uri.startswith("s3://")
+
+
 def parse_s3_uri(uri):
     parsed = urlparse(uri)
     return parsed.netloc, parsed.path.lstrip("/")
 
 
-def list_s3_files(s3, bucket, prefix):
-    paginator = s3.get_paginator("list_objects_v2")
-    for page in paginator.paginate(Bucket=bucket, Prefix=prefix):
-        for obj in page.get("Contents", []):
-            key = obj["Key"]
-            if not key.endswith("/") and not os.path.basename(key).startswith("_"):
-                yield key
+def join(folder, name):
+    return folder.rstrip("/") + "/" + name if is_s3(folder) else os.path.join(folder, name)
 
 
-def marker_key(output_s3, name):
-    out_bucket, out_prefix = parse_s3_uri(output_s3)
-    return out_bucket, os.path.join(out_prefix, name) if out_prefix else name
+def list_files(folder):
+    """(path, size) of every file in `folder`, skipping markers and other `_` files."""
+    if is_s3(folder):
+        bucket, prefix = parse_s3_uri(folder)
+        paginator = s3_client().get_paginator("list_objects_v2")
+        for page in paginator.paginate(Bucket=bucket, Prefix=prefix):
+            for obj in page.get("Contents", []):
+                key = obj["Key"]
+                if not key.endswith("/") and not os.path.basename(key).startswith("_"):
+                    yield f"s3://{bucket}/{key}", obj["Size"]
+        return
+    for name in sorted(os.listdir(folder)):
+        path = os.path.join(folder, name)
+        if os.path.isfile(path) and not name.startswith("_"):
+            yield path, os.path.getsize(path)
 
 
-def write_marker(s3, output_s3, name, body=""):
-    bucket, key = marker_key(output_s3, name)
-    s3.put_object(Bucket=bucket, Key=key, Body=body.encode("utf-8"))
-    logger.info("Wrote marker s3://%s/%s", bucket, key)
+def download(path, local_path):
+    if is_s3(path):
+        s3_client().download_file(*parse_s3_uri(path), local_path)
+    else:
+        shutil.copyfile(path, local_path)
 
 
-def has_marker(s3, output_s3, name):
-    bucket, key = marker_key(output_s3, name)
+def upload(local_path, path):
+    if is_s3(path):
+        s3_client().upload_file(local_path, *parse_s3_uri(path))
+    else:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        # copy then rename, so a file in the output is always complete
+        shutil.copyfile(local_path, path + ".part")
+        os.replace(path + ".part", path)
+
+
+def write_marker(output, name, body=""):
+    path = join(output, name)
+    if is_s3(path):
+        bucket, key = parse_s3_uri(path)
+        s3_client().put_object(Bucket=bucket, Key=key, Body=body.encode("utf-8"))
+    else:
+        os.makedirs(output, exist_ok=True)
+        with open(path, "w") as f:
+            f.write(body)
+    logger.info("Wrote marker %s", path)
+
+
+def has_marker(output, name):
+    path = join(output, name)
+    if not is_s3(path):
+        return os.path.exists(path)
+    bucket, key = parse_s3_uri(path)
     try:
-        s3.head_object(Bucket=bucket, Key=key)
+        s3_client().head_object(Bucket=bucket, Key=key)
         return True
     except ClientError:
         return False
 
 
-def write_failure_marker(s3, output_s3, error_message, filename=None):
-    write_marker(s3, output_s3, f"_FAILURE_{filename}" if filename else "_FAILURE", error_message)
+def remove_marker(output, name):
+    path = join(output, name)
+    if is_s3(path):
+        bucket, key = parse_s3_uri(path)
+        s3_client().delete_object(Bucket=bucket, Key=key)
+    elif os.path.exists(path):
+        os.remove(path)
+
+
+def write_failure_marker(output, error_message, filename=None):
+    write_marker(output, f"_FAILURE_{filename}" if filename else "_FAILURE", error_message)
 
 
 METRICS = ["file_name", "file_size_bytes", "tiles", "tiles_with_text", "tiles_redacted",
            "processing_seconds", "status"]
+RUN_ID = os.environ.get("AWS_BATCH_JOB_ID", f"local_{time.strftime('%Y%m%dT%H%M%S')}_{socket.gethostname()}")
 
 
-def write_metrics(s3, output_s3, rows):
-    """One csv per job (and attempt) in the output folder, rewritten after every file."""
-    job = os.environ.get("AWS_BATCH_JOB_ID", "local").replace(":", "_")
-    name = f"metrics_{job}_{os.environ.get('AWS_BATCH_JOB_ATTEMPT', '1')}.csv"
+def write_metrics(output, rows):
+    """One csv per job attempt (or per local run) in the output folder, rewritten after every file."""
+    name = f"metrics_{RUN_ID.replace(':', '_')}_{os.environ.get('AWS_BATCH_JOB_ATTEMPT', '1')}.csv"
     with tempfile.NamedTemporaryFile("w", newline="", suffix=".csv") as f:
         writer = csv.DictWriter(f, fieldnames=METRICS)
         writer.writeheader()
         writer.writerows(rows)
         f.flush()
-        bucket, key = marker_key(output_s3, name)
-        s3.upload_file(f.name, bucket, key)
+        upload(f.name, join(output, name))
 
 
-def input_keys(s3):
-    """(bucket, keys) to process: this job's manifest (MANIFEST_S3_URI, one per array child),
-    or every file under INPUT_S3_URI."""
+# ---- claims: several containers can share a local output folder, each file is processed by one of them ----
+# a claim not refreshed for this long is from a task that stopped, and the file is taken again
+CLAIM_TIMEOUT = float(os.environ.get("CLAIM_TIMEOUT_MINUTES", "30")) * 60
+
+
+def claim(output, filename):
+    """Claim `filename` for this task: mkdir is atomic, also on a network drive."""
+    path = join(output, f"_CLAIM_{filename}")
+    try:
+        os.mkdir(path)
+        return path
+    except FileExistsError:
+        pass
+    try:
+        if time.time() - os.path.getmtime(path) < CLAIM_TIMEOUT:
+            return None
+        # stale: only the task that renames it away takes the file
+        os.rename(path, f"{path}.{RUN_ID}.stale")
+        shutil.rmtree(f"{path}.{RUN_ID}.stale", ignore_errors=True)
+        os.mkdir(path)
+        return path
+    except OSError:
+        return None
+
+
+class Heartbeat:
+    """Keeps a claim fresh while its file is processed."""
+
+    def __init__(self, path):
+        self.path, self.stop = path, threading.Event()
+        self.thread = threading.Thread(target=self.run, daemon=True)
+
+    def run(self):
+        while not self.stop.wait(CLAIM_TIMEOUT / 6):
+            try:
+                os.utime(self.path)
+            except OSError:
+                pass
+
+    def __enter__(self):
+        self.thread.start()
+
+    def __exit__(self, *exc):
+        self.stop.set()
+        shutil.rmtree(self.path, ignore_errors=True)
+
+
+def input_files():
+    """Files to process: this job's manifest (MANIFEST_S3_URI, one per array child),
+    or the files under INPUT_URI, largest first."""
     manifest_s3 = os.environ.get("MANIFEST_S3_URI")
     if manifest_s3:
         bucket, prefix = parse_s3_uri(manifest_s3)
         index = os.environ.get("AWS_BATCH_JOB_ARRAY_INDEX", "0")
-        body = s3.get_object(Bucket=bucket, Key=os.path.join(prefix, f"{index}.json"))["Body"].read()
+        body = s3_client().get_object(Bucket=bucket, Key=os.path.join(prefix, f"{index}.json"))["Body"].read()
         manifest = json.loads(body)
-        return manifest["bucket"], manifest["keys"]
-    in_bucket, in_prefix = parse_s3_uri(os.environ["INPUT_S3_URI"])
-    return in_bucket, list(list_s3_files(s3, in_bucket, in_prefix))
+        return [f"s3://{manifest['bucket']}/{key}" for key in manifest["keys"]]
+    files = sorted(list_files(os.environ["INPUT_URI"]), key=lambda f: (-f[1], f[0]))
+    return [path for path, _ in files]
 
 
 # ---- main ----
-def process_files(s3, in_bucket, keys, output_s3):
-    """De-identify `keys` into output_s3. Each file ends with a _SUCCESS_ or _FAILURE_ marker
-    next to its output; files that already have a _SUCCESS_ one are skipped."""
-    out_bucket, out_prefix = parse_s3_uri(output_s3)
-    if not keys:
-        raise ValueError(f"No input files found in s3://{in_bucket}")
+def process_one(pipeline, path, output, tmp_input_folder, tmp_output_folder):
+    """De-identify one file into output, with its _SUCCESS_ or _FAILURE_ marker; returns its metrics."""
+    filename = os.path.basename(path)
+    per_file_folder = tempfile.mkdtemp(dir=tmp_input_folder, prefix='tmp_input')
+    per_file_output = tempfile.mkdtemp(dir=tmp_output_folder, prefix='tmp_output')
+    local_path = os.path.join(per_file_folder, filename)
+    row = {"file_name": filename, "status": "failed"}
+    start = time.time()
+
+    try:
+        logger.info("Downloading %s...", path)
+        download(path, local_path)
+        row["file_size_bytes"] = os.path.getsize(local_path)
+
+        logger.info("Processing %s...", filename)
+        output_local, tiles = process_file(pipeline, per_file_folder, filename, per_file_output)
+        row.update(tiles)
+        out_path = join(output, filename)
+
+        logger.info("Uploading to %s...", out_path)
+        upload(output_local, out_path)
+        write_marker(output, f"_SUCCESS_{filename}")
+        remove_marker(output, f"_FAILURE_{filename}")
+        row["status"] = "success"
+    except Exception:
+        error_message = traceback.format_exc()
+        logger.error("Failed to process %s:\n%s", filename, error_message)
+        try:
+            write_failure_marker(output, error_message, filename=filename)
+        except Exception:
+            logger.exception("Failed to write failure marker for %s", filename)
+    finally:
+        # clean up this file only, keep parent dirs for the next one
+        shutil.rmtree(per_file_output, ignore_errors=True)
+        shutil.rmtree(per_file_folder, ignore_errors=True)
+
+    row["processing_seconds"] = round(time.time() - start, 1)
+    logger.info("Metrics %s: size=%s bytes, tiles=%s, tiles with text=%s, tiles redacted=%s, time=%ss, %s",
+                filename, row.get("file_size_bytes"), row.get("tiles"), row.get("tiles_with_text"),
+                row.get("tiles_redacted"), row["processing_seconds"], row["status"])
+    return row
+
+
+def process_files(files, output):
+    """De-identify `files` into output, skipping those with a _SUCCESS_ marker. With a local output
+    each file is claimed first, so any number of containers can run on the same folder; the folder is
+    listed again until there is nothing left to claim. Returns the metrics of the files processed."""
+    if not files:
+        raise ValueError("No input files found")
+    shared = not is_s3(output) and not os.environ.get("MANIFEST_S3_URI")
+    retry_failed = os.environ.get("RETRY_FAILED", "false").lower() == "true"
+    tried = set()
 
     pipeline = load_pipeline()
+    metrics = []
 
     with tempfile.TemporaryDirectory() as tmp_input_folder, tempfile.TemporaryDirectory() as tmp_output_folder:
-        failed_files = []
-        metrics = []
-
-        for key in keys:
-            filename = os.path.basename(key)
-            if has_marker(s3, output_s3, f"_SUCCESS_{filename}"):
-                logger.info("Skipping %s, already de-identified", filename)
-                continue
-            per_file_folder = tempfile.mkdtemp(dir=tmp_input_folder, prefix='tmp_input')
-            per_file_output = tempfile.mkdtemp(dir=tmp_output_folder, prefix='tmp_output')
-            local_path = os.path.join(per_file_folder, filename)
-            row = {"file_name": filename, "status": "failed"}
-            start = time.time()
-
-            try:
-                logger.info("Downloading %s...", key)
-                s3.download_file(in_bucket, key, local_path)
-                row["file_size_bytes"] = os.path.getsize(local_path)
-
-                logger.info("Processing %s...", filename)
-                output_local, tiles = process_file(pipeline, per_file_folder, filename, per_file_output)
-                row.update(tiles)
-                out_key = os.path.join(out_prefix, filename)
-
-                logger.info("Uploading to %s...", out_key)
-                s3.upload_file(output_local, out_bucket, out_key)
-                write_marker(s3, output_s3, f"_SUCCESS_{filename}")
-                failure_bucket, failure_key = marker_key(output_s3, f"_FAILURE_{filename}")
-                s3.delete_object(Bucket=failure_bucket, Key=failure_key)
-                row["status"] = "success"
-            except Exception:
-                error_message = traceback.format_exc()
-                logger.error("Failed to process %s:\n%s", filename, error_message)
-                failed_files.append(filename)
+        while True:
+            processed = 0
+            for path in files:
+                filename = os.path.basename(path)
+                if has_marker(output, f"_SUCCESS_{filename}"):
+                    logger.info("Skipping %s, already de-identified", filename)
+                    continue
+                if not shared:
+                    metrics.append(process_one(pipeline, path, output, tmp_input_folder, tmp_output_folder))
+                else:
+                    if filename in tried:
+                        continue
+                    # a failed file is retried only when it was replaced, or with --retry-failed
+                    failure = join(output, f"_FAILURE_{filename}")
+                    if os.path.exists(failure) and not retry_failed \
+                            and (is_s3(path) or os.path.getmtime(path) <= os.path.getmtime(failure)):
+                        logger.info("Skipping %s, it failed before", filename)
+                        continue
+                    claimed = claim(output, filename)
+                    if not claimed:
+                        logger.info("Skipping %s, claimed by another task", filename)
+                        continue
+                    with Heartbeat(claimed):
+                        # it may have been finished between the check and the claim
+                        if has_marker(output, f"_SUCCESS_{filename}"):
+                            continue
+                        tried.add(filename)
+                        metrics.append(process_one(pipeline, path, output, tmp_input_folder, tmp_output_folder))
+                processed += 1
                 try:
-                    write_failure_marker(s3, output_s3, error_message, filename=filename)
+                    write_metrics(output, metrics)
                 except Exception:
-                    logger.exception("Failed to write failure marker for %s", filename)
-            finally:
-                # clean up this file only, keep parent dirs for the next one
-                shutil.rmtree(per_file_output, ignore_errors=True)
-                shutil.rmtree(per_file_folder, ignore_errors=True)
+                    logger.exception("Failed to write the metrics csv")
+            if not shared or not processed:
+                break
+            files = input_files()
 
-            row["processing_seconds"] = round(time.time() - start, 1)
-            logger.info("Metrics %s: size=%s bytes, tiles=%s, tiles with text=%s, tiles redacted=%s, time=%ss, %s",
-                        filename, row.get("file_size_bytes"), row.get("tiles"), row.get("tiles_with_text"),
-                        row.get("tiles_redacted"), row["processing_seconds"], row["status"])
-            metrics.append(row)
-            try:
-                write_metrics(s3, output_s3, metrics)
-            except Exception:
-                logger.exception("Failed to write the metrics csv")
-
-        if failed_files:
-            logger.error(
-                "%d of %d file(s) failed: %s",
-                len(failed_files), len(keys), failed_files,
-            )
-
+    failed_files = [row["file_name"] for row in metrics if row["status"] != "success"]
+    if failed_files:
+        logger.error("%d of %d file(s) failed: %s", len(failed_files), len(metrics), failed_files)
     logger.info("Done!")
-    return failed_files
+    return metrics
 
 
 def get_config():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--input", required=False, help="s3://bucket/prefix/")
-    parser.add_argument("--output", required=False, help="s3://bucket/prefix/")
+    parser.add_argument("--input", required=False, help="s3://bucket/prefix/ or a local folder")
+    parser.add_argument("--output", required=False, help="s3://bucket/prefix/ or a local folder")
+    parser.add_argument("--retry-failed", action="store_true",
+                        help="local folders: also retry the files with a _FAILURE_ marker")
     args, _ = parser.parse_known_args()
 
+    if args.retry_failed:
+        os.environ["RETRY_FAILED"] = "true"
     if args.input:
-        os.environ["INPUT_S3_URI"] = args.input
-    output_s3 = args.output or os.environ.get("OUTPUT_S3_URI")
+        os.environ["INPUT_URI"] = args.input
+    elif os.environ.get("INPUT_S3_URI"):
+        os.environ["INPUT_URI"] = os.environ["INPUT_S3_URI"]
+    output = args.output or os.environ.get("OUTPUT_URI") or os.environ.get("OUTPUT_S3_URI")
 
-    if not (os.environ.get("INPUT_S3_URI") or os.environ.get("MANIFEST_S3_URI")) or not output_s3:
+    if not (os.environ.get("INPUT_URI") or os.environ.get("MANIFEST_S3_URI")) or not output:
         raise ValueError(
-            "Input/output S3 locations must be provided via --input/--output "
-            "or the INPUT_S3_URI (or MANIFEST_S3_URI)/OUTPUT_S3_URI environment variables."
+            "Input/output locations must be provided via --input/--output "
+            "or the INPUT_URI (or MANIFEST_S3_URI)/OUTPUT_URI environment variables."
         )
-    return output_s3
+    return output
+
+
+def ensure_user():
+    """Any uid can run the container (e.g. --user to write to a root_squash NFS share), but Spark needs it in /etc/passwd."""
+    try:
+        pwd.getpwuid(os.getuid())
+    except KeyError:
+        with open("/etc/passwd", "a") as f:
+            f.write(f"deid:x:{os.getuid()}:{os.getgid()}::/tmp:/bin/sh\n")
 
 
 if __name__ == "__main__":
-    output_s3 = get_config()
-    s3_client = boto3.client("s3")
-    show_boto3_credentials(mask=True)
+    output = get_config()
+    ensure_user()
+    if is_s3(output):
+        show_boto3_credentials(mask=True)
+    else:
+        os.makedirs(output, exist_ok=True)
     spark = start_spark()
     spark.sparkContext.setLogLevel("ERROR")
 
     try:
-        in_bucket, keys = input_keys(s3_client)
-        failed_files = process_files(s3_client, in_bucket, keys, output_s3)
+        metrics = process_files(input_files(), output)
     except Exception:
         error_message = traceback.format_exc()
         logger.error(error_message)
         try:
-            write_failure_marker(s3_client, output_s3, error_message)
+            write_failure_marker(output, error_message)
         except Exception:
-            logger.exception("Failed to write _FAILURE marker to %s", output_s3)
+            logger.exception("Failed to write _FAILURE marker to %s", output)
         sys.exit(1)
 
-    # failed files keep their _FAILURE_ marker; the job fails only if none was processed
-    if failed_files and len(failed_files) == len(keys):
+    # failed files keep their _FAILURE_ marker; the job fails only if every file it processed failed
+    if metrics and all(row["status"] != "success" for row in metrics):
         sys.exit(1)

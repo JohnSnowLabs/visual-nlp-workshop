@@ -32,7 +32,7 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
 
 
 # Install Johnsnowlabs libraries
-RUN pip config set global.no-cache-dir 1 && pip install packaging johnsnowlabs==6.4.1 fastapi torchvision==0.13.1 pillow_jpls pylibjpeg[all] pydicom pyjpegls pylibjpeg-openjpeg pylibjpeg highdicom boto3 imagecodecs
+RUN pip config set global.no-cache-dir 1 && pip install packaging johnsnowlabs==6.4.1 fastapi torchvision==0.13.1 pillow_jpls pylibjpeg[all] pydicom pyjpegls pylibjpeg-openjpeg pylibjpeg highdicom boto3 imagecodecs tqdm psutil jpeglib
 
 # Spark NLP version required by Visual NLP 7.0.1
 ARG SPARK_NLP_VERSION=7.0.0
@@ -48,6 +48,10 @@ COPY app.py installer.py /app/
 RUN --mount=type=secret,id=license python3 /app/installer.py && rm -rf /root/.javacpp/* /tmp/*
 
 RUN pip install --upgrade pillow
+
+# any uid can run it (docker run --user), see ensure_user in app.py
+RUN chmod 755 /root && chmod -R a+w /root/.johnsnowlabs/licenses && chmod a+w /etc/passwd
+ENV HOME=/root
 
 WORKDIR /app
 ENV PATH=/opt/program:${PATH}
