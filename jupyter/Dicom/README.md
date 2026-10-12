@@ -26,7 +26,7 @@ DICOM skill that you can download, zip, and provide to Claude, Codex, or Gemini.
 
 | If you want to... | Start with | Why |
 |---|---|---|
-| Run Bulk De-Identification | [`SparkOCRBulkDeid.ipynb`](SparkOCRBulkDeid.ipynb) | Databricks notebook for bulk DICOM de-identification (burned-in text and metadata). Choose standard OCR (CPU or GPU) or VLM OCR (GPU). |
+| Run Bulk De-Identification | [`SparkOCRBulkDeid.ipynb`](SparkOCRBulkDeid.ipynb) | Databricks notebook for bulk DICOM de-identification. |
 | Extract and inspect DICOM metadata | [`SparkOcrDicomMetadata.ipynb`](SparkOcrDicomMetadata.ipynb) | Focused `DicomToMetadata` examples, including VR filtering and `cleanTag` extraction for NER based PHI cleaning for free text. |
 | De-identify metadata only | [`SparkOcrMetadataDeIdentification.ipynb`](SparkOcrMetadataDeIdentification.ipynb) | Primary metadata workflow with strategy files, private tag removal, mappings, group rules, NER cleaning, and UID/patient mapping extraction. |
 | De-identify PHI in image pixels | [`SparkOcrDicomToImageV3.ipynb`](SparkOcrDicomToImageV3.ipynb), an OCR option below, then [`SparkOcrDicomDrawRegions.ipynb`](SparkOcrDicomDrawRegions.ipynb) | Extract pixels into images, identify PHI, then render redactions back onto the DICOM. |
