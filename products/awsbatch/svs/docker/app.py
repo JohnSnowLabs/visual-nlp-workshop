@@ -46,9 +46,17 @@ HARDWARE_TARGET = os.environ.get("HARDWARE_TARGET", "cpu").lower()
 
 def start_spark():
     # nlp.start() reads the license from SPARK_OCR_LICENSE (the Batch job secret) or, without it,
-    # from the copy installer.py left in the image. The license's AWS keys are only used at build
-    # time, so boto3 uses the Batch job's IAM role for S3.
-    return nlp.start(visual=True, hardware_target=HARDWARE_TARGET)
+    # from the copy installer.py left in the image. nlp.start() also exports the license's AWS keys,
+    # which are only needed at build time: restore the environment so boto3 uses the Batch job's
+    # IAM role for S3.
+    aws_env = {k: os.environ.get(k) for k in ("AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TOKEN")}
+    session = nlp.start(visual=True, hardware_target=HARDWARE_TARGET)
+    for key, value in aws_env.items():
+        if value is None:
+            os.environ.pop(key, None)
+        else:
+            os.environ[key] = value
+    return session
 
 spark = None
 
