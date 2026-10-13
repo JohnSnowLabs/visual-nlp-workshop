@@ -148,7 +148,7 @@ the pipeline baked into the image at build time by `installer.py`: the de-id
 pipeline (`/opt/ml/model`, `MODEL_TO_LOAD` in the `Dockerfile`) for
 `DEID_MODE=pipeline`, or the text detector (`/opt/ml/image_text_detector_mem_opt`)
 for `DEID_MODE=blanket`. `process_file()` runs it per file (header cleanup,
-low-resolution slide image and thumbnail, de-id, redaction on every level).
+images to look for PHI in, de-id, redaction on every level).
 Redaction modifies the SVS in place by default; deploy with `-c create_new_svs_file=true` to have
 it write a new de-identified `.svs` file instead (slower, but leaves the
 original untouched).
