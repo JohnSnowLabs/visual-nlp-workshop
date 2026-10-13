@@ -78,13 +78,9 @@ if DEID_MODE not in ("blanket", "pipeline"):
 HARDWARE_TARGET = os.environ.get("HARDWARE_TARGET", "cpu").lower()
 
 def start_spark():
-    # SPARK_OCR_LICENSE is read directly by nlp.start() from the process
-    # environment. AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY are only ever
-    # used at image build time, by docker/installer.py (via a Docker build
-    # secret, see docker/README.md) to install the licensed jars/model --
-    # nlp.start() at container runtime doesn't need them. So they're never
-    # passed to the running container at all, and boto3 is free to use the
-    # Batch job's IAM task role for S3 access without any collision.
+    # nlp.start() reads the license from SPARK_OCR_LICENSE (the Batch job secret) or, without it,
+    # from the copy installer.py left in the image. The license's AWS keys are only used at build
+    # time, so boto3 uses the Batch job's IAM role for S3.
     return nlp.start(visual=True, hardware_target=HARDWARE_TARGET)
 
 spark = None
@@ -113,61 +109,47 @@ def load_pipeline():
 
     return PipelineModel(stages=[text_detector])
 
-def count_tiles(svs_path, boxes=None):
-    """Tiles of all pyramid levels, or only those the level-0 `boxes` lie on."""
-    total = 0
+def count_tiles(svs_path):
+    """Tiles of all pyramid levels."""
     with tifffile.TiffFile(svs_path) as tif:
         # pyramid levels: the tiled pages with the base image's aspect ratio
         tiled = [p for p in tif.pages if p.is_tiled and len(p.shape) >= 2]
         base = max(tiled, key=lambda p: p.shape[0] * p.shape[1])
         ratio = base.shape[1] / base.shape[0]
         levels = [p for p in tiled if abs(p.shape[1] / p.shape[0] - ratio) < 0.03 * ratio]
-        for page in levels:
-            height, width = page.shape[:2]
-            tw, th = page.tilewidth, page.tilelength
-            if boxes is None:
-                total += -(-width // tw) * -(-height // th)
-                continue
-            fx, fy = width / base.shape[1], height / base.shape[0]
-            touched = set()
-            for x1, y1, x2, y2 in boxes:
-                for r in range(max(0, int(y1 * fy)) // th, min(height - 1, int(y2 * fy)) // th + 1):
-                    for c in range(max(0, int(x1 * fx)) // tw, min(width - 1, int(x2 * fx)) // tw + 1):
-                        touched.add((r, c))
-            total += len(touched)
-    return total
+        return sum(-(-p.shape[1] // p.tilewidth) * -(-p.shape[0] // p.tilelength) for p in levels)
 
 
 def process_file(pipeline, input_folder, filename, output_folder):
     """Run the de-id pipeline on the local file `filename` in input_folder and return the local
     path to its output file inside output_folder, and its tile counts."""
     from sparkocr.utils.svs.phi_cleaning import remove_phi
-    from sparkocr.utils.svs.deidentify import svs_to_text_images, redact_phi_in_text_images
+    from sparkocr.utils.svs.deidentify import svs_to_images, get_overlapping_tiles, redact_phi_in_svs
 
     cleaned_header_tmp = tempfile.mkdtemp(dir=output_folder, prefix="cleaned_header_")
     remove_phi(input_folder, cleaned_header_tmp, verbose=True, rename=False)
     fully_qualified_filename = os.path.join(cleaned_header_tmp, filename)
 
-    text_images_tmp = tempfile.mkdtemp(dir=output_folder, prefix="text_images_")
-    images = svs_to_text_images(fully_qualified_filename, text_images_tmp)
+    images_tmp = tempfile.mkdtemp(dir=output_folder, prefix="images_")
+    images = svs_to_images(fully_qualified_filename, images_tmp)
     to_image = BinaryToImage().setInputCol("content").setOutputCol("image_raw").setImageType(ImageType.TYPE_BYTE_GRAY)
     result = pipeline.transform(to_image.transform(spark.read.format("binaryFile").load(images).repartition(4))).cache()
     try:
         # all the text the pipeline found, for the counts: pipeline mode redacts only the PHI in it
         text = result if DEID_MODE == "blanket" else result.select("path", col("text_regions").alias("coordinates"))
-        text_boxes = redact_phi_in_text_images(fully_qualified_filename, text, text_images_tmp, dry_run=True)[filename]
+        tiles_with_text = len(get_overlapping_tiles(fully_qualified_filename, text)[filename])
+        tiles_redacted = len(get_overlapping_tiles(fully_qualified_filename, result)[filename])
 
         create_new_svs_file = os.environ.get("CREATE_NEW_SVS_FILE", "false").lower() == "true"
         output_svs_path = os.path.join(output_folder, filename) if create_new_svs_file else None
-        boxes = redact_phi_in_text_images(fully_qualified_filename, result, text_images_tmp, output_svs_path,
-                                          create_new_svs_file)[filename]
+        redact_phi_in_svs(fully_qualified_filename, result, output_svs_path, create_new_svs_file)
     finally:
         result.unpersist()
 
     tiles = {
         "tiles": count_tiles(fully_qualified_filename),
-        "tiles_with_text": count_tiles(fully_qualified_filename, text_boxes),
-        "tiles_redacted": count_tiles(fully_qualified_filename, boxes),
+        "tiles_with_text": tiles_with_text,
+        "tiles_redacted": tiles_redacted,
     }
     if create_new_svs_file:
         fully_qualified_filename = output_svs_path
