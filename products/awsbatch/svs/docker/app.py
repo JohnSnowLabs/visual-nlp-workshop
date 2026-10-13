@@ -21,39 +21,6 @@ from pyspark.sql.functions import col
 from sparkocr.enums import *
 from sparkocr.transformers import *
 
-def show_boto3_credentials(mask=True):
-    session = boto3.Session()
-    creds = session.get_credentials()
-
-    if creds is None:
-        print("No credentials found by boto3.")
-        return
-
-    # Resolve to a frozen, concrete set of values (this also triggers
-    # refresh logic for role-assumed / instance-profile credentials).
-    frozen = creds.get_frozen_credentials()
-
-    def mask_value(v, keep=4):
-        if not v:
-            return v
-        return v if not mask else f"{v[:keep]}...{v[-keep:]} (len={len(v)})"
-
-    print("Access Key ID:     ", mask_value(frozen.access_key))
-    print("Secret Access Key: ", mask_value(frozen.secret_key))
-    print("Session Token:     ", mask_value(frozen.token) if frozen.token else None)
-    print("Credential method: ", creds.method)  # e.g. 'env', 'shared-credentials-file', 'iam-role', 'sts-assume-role'
-    print("Region:            ", session.region_name)
-
-    # Confirm identity + check expiry via STS (also validates the token works)
-    try:
-        sts = session.client("sts")
-        identity = sts.get_caller_identity()
-        print("Account:           ", identity["Account"])
-        print("ARN:               ", identity["Arn"])
-    except Exception as e:
-        print("get_caller_identity failed:", e)
-        
-
 def get_logger(logger_name):
     log_level = os.environ.get("LOG_LEVEL", "ERROR").upper()
     logger = logging.getLogger(logger_name)
@@ -467,9 +434,7 @@ def ensure_user():
 if __name__ == "__main__":
     output = get_config()
     ensure_user()
-    if is_s3(output):
-        show_boto3_credentials(mask=True)
-    else:
+    if not is_s3(output):
         os.makedirs(output, exist_ok=True)
     spark = start_spark()
     spark.sparkContext.setLogLevel("ERROR")
