@@ -74,6 +74,8 @@ docker push "${REPO_URI}:latest"
 ```
 
 For GPU, build with `--build-arg HARDWARE_TARGET=gpu` and deploy in step 3 with `-c hardware=gpu`.
+The job redacts only the PHI found by the de-identification pipeline (`DEID_MODE=pipeline`, the default).
+To redact all detected text instead, build with `--build-arg DEID_MODE=blanket`.
 
 ## 3. Bootstrap and deploy the CDK stack
 

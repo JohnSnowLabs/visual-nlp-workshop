@@ -8,8 +8,10 @@ ENV HARDWARE_TARGET=${HARDWARE_TARGET}
 ENV TF_CPP_MIN_LOG_LEVEL='3'
 ENV MODEL_TO_LOAD="image_deid_multi_model_context_line_pipeline_${HARDWARE_TARGET}"
 ENV CREATE_NEW_SVS_FILE="false"
-# blanket: redact all detected text; pipeline: only the PHI found by MODEL_TO_LOAD
-ENV DEID_MODE="pipeline"
+# pipeline or blanket: --build-arg DEID_MODE=blanket redacts all detected text instead of only the PHI
+# found by MODEL_TO_LOAD
+ARG DEID_MODE=pipeline
+ENV DEID_MODE=${DEID_MODE}
 # fewer glibc malloc arenas: keeps the JVM's native memory from growing across files
 ENV MALLOC_ARENA_MAX=2
 ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64/

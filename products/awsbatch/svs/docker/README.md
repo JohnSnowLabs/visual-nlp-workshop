@@ -10,8 +10,10 @@ docker build --secret id=license,src=spark_nlp_for_healthcare_spark_ocr_license.
 
 For GPU, add `--build-arg HARDWARE_TARGET=gpu`.
 
-`DEID_MODE=pipeline` (default) redacts only the PHI found by the de-identification pipeline;
-`DEID_MODE=blanket` redacts all detected text. Set it at run time with `-e DEID_MODE=blanket`.
+`DEID_MODE` selects what is redacted:
+- `pipeline` (default): only the PHI found by the de-identification pipeline.
+- `blanket`: all detected text. Build the image with `--build-arg DEID_MODE=blanket` (this is what
+  the AWS Batch job uses), or override it at run time with `-e DEID_MODE=blanket`.
 
 #### Run 
 `AWS_*` credentials are for boto3's own S3 access, and are optional if the
