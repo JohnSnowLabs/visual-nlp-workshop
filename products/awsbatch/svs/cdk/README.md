@@ -2,7 +2,7 @@
 
 S3 → EventBridge → Lambda → AWS Batch (EC2, `c7a.4xlarge`) → container (`../docker`).
 
-For GPU, deploy with `-c hardware=gpu` (EC2 `g4dn.2xlarge`).
+For GPU, deploy with `-c hardware=gpu`.
 
 Flow: files land under `s3://<bucket>/<folder>/`. Nothing happens until a
 `_READY` object is created under that same prefix. That triggers an
