@@ -73,6 +73,10 @@ docker tag deid-container:latest "${REPO_URI}:latest"
 docker push "${REPO_URI}:latest"
 ```
 
+For GPU, build with `--build-arg HARDWARE_TARGET=gpu` and deploy in step 3 with `-c hardware=gpu`.
+The job redacts only the PHI found by the de-identification pipeline (`DEID_MODE=pipeline`, the default).
+To redact all detected text instead, build with `--build-arg DEID_MODE=blanket`.
+
 ## 3. Bootstrap and deploy the CDK stack
 
 ```bash
@@ -117,8 +121,8 @@ you'll need `BucketName` and `JobQueueArn`.
 
 ```bash
 BUCKET=<BucketName from step 3 output>
-aws s3 cp file1.dcm s3://$BUCKET/testfolder/
-aws s3 cp file2.dcm s3://$BUCKET/testfolder/
+aws s3 cp file1.svs s3://$BUCKET/testfolder/
+aws s3 cp file2.svs s3://$BUCKET/testfolder/
 aws s3api put-object --bucket $BUCKET --key testfolder/_READY --body /dev/null   # triggers the job
 
 aws batch list-jobs --job-queue <JobQueueArn from step 3 output>
