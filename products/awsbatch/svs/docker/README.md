@@ -35,6 +35,7 @@ On-premise, mount the folder (e.g. a network drive) and pass local paths:
 docker run --rm -v /mnt/drive:/data deid-container --input /data/svs/ --output /data/svs_output/
 ```
 
+The input is read with its subfolders, and the output keeps them (`<input>/a/b/abc.svs` -> `<output>/a/b/abc.svs`).
 Several containers can run on the same folder, on one or more machines: each file is processed by only one of them. A file whose container stopped is taken by another one after `CLAIM_TIMEOUT_MINUTES` (default 30).
 Files that failed are retried when they are replaced, or with `--retry-failed`.
 If root can't write to the share (e.g. NFS with `root_squash`), add `--user <uid>:<gid>` of its owner.

@@ -9,8 +9,8 @@ Flow: files land under `s3://<bucket>/<folder>/`. Nothing happens until a
 EventBridge rule (S3 → EventBridge notifications, filtered on the `_READY`
 key suffix) which invokes a Lambda that splits the folder's files into manifests and
 submits an array job with `MANIFEST_S3_URI` and
-`OUTPUT_S3_URI=s3://<bucket>/<folder>_output/`. Each file gets a
-`_SUCCESS_<file>` or `_FAILURE_<file>` marker (with the error) in the output prefix.
+`OUTPUT_S3_URI=s3://<bucket>/<folder>_output/`. The output keeps the subfolders of the input, and each file gets a
+`_SUCCESS_<file>` or `_FAILURE_<file>` marker (with the error) next to it.
 
 ## Prerequisites
 

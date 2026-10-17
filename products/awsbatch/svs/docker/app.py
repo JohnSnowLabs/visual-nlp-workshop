@@ -156,21 +156,35 @@ def join(folder, name):
     return folder.rstrip("/") + "/" + name if is_s3(folder) else os.path.join(folder, name)
 
 
-def list_files(folder):
-    """(path, size) of every file in `folder`, skipping markers and other `_` files."""
+def list_files(folder, exclude=None):
+    """(path, size, relative path) of every file under `folder` and its subfolders, skipping markers
+    and other `_` files, and the folder `exclude` (the output, when it is inside the input)."""
     if is_s3(folder):
         bucket, prefix = parse_s3_uri(folder)
+        prefix = prefix.rstrip("/") + "/" if prefix else ""
+        skip = parse_s3_uri(exclude)[1].rstrip("/") + "/" if exclude and is_s3(exclude) else None
         paginator = s3_client().get_paginator("list_objects_v2")
         for page in paginator.paginate(Bucket=bucket, Prefix=prefix):
             for obj in page.get("Contents", []):
                 key = obj["Key"]
-                if not key.endswith("/") and not os.path.basename(key).startswith("_"):
-                    yield f"s3://{bucket}/{key}", obj["Size"]
+                if not key.endswith("/") and not os.path.basename(key).startswith("_") \
+                        and not (skip and key.startswith(skip)):
+                    yield f"s3://{bucket}/{key}", obj["Size"], key[len(prefix):]
         return
-    for name in sorted(os.listdir(folder)):
-        path = os.path.join(folder, name)
-        if os.path.isfile(path) and not name.startswith("_"):
-            yield path, os.path.getsize(path)
+    skip = os.path.realpath(exclude) if exclude else None
+    for root, dirs, names in os.walk(folder):
+        dirs[:] = sorted(d for d in dirs if not d.startswith("_")
+                         and os.path.realpath(os.path.join(root, d)) != skip)
+        for name in sorted(names):
+            path = os.path.join(root, name)
+            if not name.startswith("_") and not name.endswith(".part") and os.path.isfile(path):
+                yield path, os.path.getsize(path), os.path.relpath(path, folder).replace(os.sep, "/")
+
+
+def marker_name(rel, prefix):
+    """The marker of the file at `rel`, in the same subfolder: a/b/abc.svs -> a/b/_SUCCESS_abc.svs."""
+    folder, name = os.path.split(rel)
+    return f"{folder}/{prefix}{name}" if folder else f"{prefix}{name}"
 
 
 def download(path, local_path):
@@ -196,7 +210,7 @@ def write_marker(output, name, body=""):
         bucket, key = parse_s3_uri(path)
         s3_client().put_object(Bucket=bucket, Key=key, Body=body.encode("utf-8"))
     else:
-        os.makedirs(output, exist_ok=True)
+        os.makedirs(os.path.dirname(path), exist_ok=True)
         with open(path, "w") as f:
             f.write(body)
     logger.info("Wrote marker %s", path)
@@ -223,8 +237,8 @@ def remove_marker(output, name):
         os.remove(path)
 
 
-def write_failure_marker(output, error_message, filename=None):
-    write_marker(output, f"_FAILURE_{filename}" if filename else "_FAILURE", error_message)
+def write_failure_marker(output, error_message, rel=None):
+    write_marker(output, marker_name(rel, "_FAILURE_") if rel else "_FAILURE", error_message)
 
 
 METRICS = ["file_name", "file_size_bytes", "tiles", "tiles_with_text", "tiles_redacted",
@@ -248,9 +262,10 @@ def write_metrics(output, rows):
 CLAIM_TIMEOUT = float(os.environ.get("CLAIM_TIMEOUT_MINUTES", "30")) * 60
 
 
-def claim(output, filename):
-    """Claim `filename` for this task: mkdir is atomic, also on a network drive."""
-    path = join(output, f"_CLAIM_{filename}")
+def claim(output, rel):
+    """Claim the file at `rel` for this task: mkdir is atomic, also on a network drive."""
+    path = join(output, marker_name(rel, "_CLAIM_"))
+    os.makedirs(os.path.dirname(path), exist_ok=True)
     try:
         os.mkdir(path)
         return path
@@ -290,28 +305,31 @@ class Heartbeat:
         shutil.rmtree(self.path, ignore_errors=True)
 
 
-def input_files():
-    """Files to process: this job's manifest (MANIFEST_S3_URI, one per array child),
-    or the files under INPUT_URI, largest first."""
+def input_files(output=None):
+    """(path, relative path) of the files to process: this job's manifest (MANIFEST_S3_URI, one per
+    array child), or the files under INPUT_URI and its subfolders, largest first."""
     manifest_s3 = os.environ.get("MANIFEST_S3_URI")
     if manifest_s3:
         bucket, prefix = parse_s3_uri(manifest_s3)
         index = os.environ.get("AWS_BATCH_JOB_ARRAY_INDEX", "0")
         body = s3_client().get_object(Bucket=bucket, Key=os.path.join(prefix, f"{index}.json"))["Body"].read()
         manifest = json.loads(body)
-        return [f"s3://{manifest['bucket']}/{key}" for key in manifest["keys"]]
-    files = sorted(list_files(os.environ["INPUT_URI"]), key=lambda f: (-f[1], f[0]))
-    return [path for path, _ in files]
+        prefix = manifest.get("prefix", "")
+        return [(f"s3://{manifest['bucket']}/{key}", key[len(prefix):] if prefix else os.path.basename(key))
+                for key in manifest["keys"]]
+    files = sorted(list_files(os.environ["INPUT_URI"], exclude=output), key=lambda f: (-f[1], f[0]))
+    return [(path, rel) for path, _, rel in files]
 
 
 # ---- main ----
-def process_one(pipeline, path, output, tmp_input_folder, tmp_output_folder):
-    """De-identify one file into output, with its _SUCCESS_ or _FAILURE_ marker; returns its metrics."""
+def process_one(pipeline, path, rel, output, tmp_input_folder, tmp_output_folder):
+    """De-identify one file into output at the same relative path `rel` as in the input, with its
+    _SUCCESS_ or _FAILURE_ marker; returns its metrics."""
     filename = os.path.basename(path)
     per_file_folder = tempfile.mkdtemp(dir=tmp_input_folder, prefix='tmp_input')
     per_file_output = tempfile.mkdtemp(dir=tmp_output_folder, prefix='tmp_output')
     local_path = os.path.join(per_file_folder, filename)
-    row = {"file_name": filename, "status": "failed"}
+    row = {"file_name": rel, "status": "failed"}
     start = time.time()
 
     try:
@@ -322,20 +340,20 @@ def process_one(pipeline, path, output, tmp_input_folder, tmp_output_folder):
         logger.info("Processing %s...", filename)
         output_local, tiles = process_file(pipeline, per_file_folder, filename, per_file_output)
         row.update(tiles)
-        out_path = join(output, filename)
+        out_path = join(output, rel)
 
         logger.info("Uploading to %s...", out_path)
         upload(output_local, out_path)
-        write_marker(output, f"_SUCCESS_{filename}")
-        remove_marker(output, f"_FAILURE_{filename}")
+        write_marker(output, marker_name(rel, "_SUCCESS_"))
+        remove_marker(output, marker_name(rel, "_FAILURE_"))
         row["status"] = "success"
     except Exception:
         error_message = traceback.format_exc()
-        logger.error("Failed to process %s:\n%s", filename, error_message)
+        logger.error("Failed to process %s:\n%s", rel, error_message)
         try:
-            write_failure_marker(output, error_message, filename=filename)
+            write_failure_marker(output, error_message, rel=rel)
         except Exception:
-            logger.exception("Failed to write failure marker for %s", filename)
+            logger.exception("Failed to write failure marker for %s", rel)
     finally:
         # clean up this file only, keep parent dirs for the next one
         shutil.rmtree(per_file_output, ignore_errors=True)
@@ -343,13 +361,14 @@ def process_one(pipeline, path, output, tmp_input_folder, tmp_output_folder):
 
     row["processing_seconds"] = round(time.time() - start, 1)
     logger.info("Metrics %s: size=%s bytes, tiles=%s, tiles with text=%s, tiles redacted=%s, time=%ss, %s",
-                filename, row.get("file_size_bytes"), row.get("tiles"), row.get("tiles_with_text"),
+                rel, row.get("file_size_bytes"), row.get("tiles"), row.get("tiles_with_text"),
                 row.get("tiles_redacted"), row["processing_seconds"], row["status"])
     return row
 
 
 def process_files(files, output):
-    """De-identify `files` into output, skipping those with a _SUCCESS_ marker. With a local output
+    """De-identify `files` ((path, relative path) pairs) into output, keeping their subfolders, and
+    skipping those with a _SUCCESS_ marker. With a local output
     each file is claimed first, so any number of containers can run on the same folder; the folder is
     listed again until there is nothing left to claim. Returns the metrics of the files processed."""
     if not files:
@@ -364,32 +383,31 @@ def process_files(files, output):
     with tempfile.TemporaryDirectory() as tmp_input_folder, tempfile.TemporaryDirectory() as tmp_output_folder:
         while True:
             processed = 0
-            for path in files:
-                filename = os.path.basename(path)
-                if has_marker(output, f"_SUCCESS_{filename}"):
-                    logger.info("Skipping %s, already de-identified", filename)
+            for path, rel in files:
+                if has_marker(output, marker_name(rel, "_SUCCESS_")):
+                    logger.info("Skipping %s, already de-identified", rel)
                     continue
                 if not shared:
-                    metrics.append(process_one(pipeline, path, output, tmp_input_folder, tmp_output_folder))
+                    metrics.append(process_one(pipeline, path, rel, output, tmp_input_folder, tmp_output_folder))
                 else:
-                    if filename in tried:
+                    if rel in tried:
                         continue
                     # a failed file is retried only when it was replaced, or with --retry-failed
-                    failure = join(output, f"_FAILURE_{filename}")
+                    failure = join(output, marker_name(rel, "_FAILURE_"))
                     if os.path.exists(failure) and not retry_failed \
                             and (is_s3(path) or os.path.getmtime(path) <= os.path.getmtime(failure)):
-                        logger.info("Skipping %s, it failed before", filename)
+                        logger.info("Skipping %s, it failed before", rel)
                         continue
-                    claimed = claim(output, filename)
+                    claimed = claim(output, rel)
                     if not claimed:
-                        logger.info("Skipping %s, claimed by another task", filename)
+                        logger.info("Skipping %s, claimed by another task", rel)
                         continue
                     with Heartbeat(claimed):
                         # it may have been finished between the check and the claim
-                        if has_marker(output, f"_SUCCESS_{filename}"):
+                        if has_marker(output, marker_name(rel, "_SUCCESS_")):
                             continue
-                        tried.add(filename)
-                        metrics.append(process_one(pipeline, path, output, tmp_input_folder, tmp_output_folder))
+                        tried.add(rel)
+                        metrics.append(process_one(pipeline, path, rel, output, tmp_input_folder, tmp_output_folder))
                 processed += 1
                 try:
                     write_metrics(output, metrics)
@@ -397,7 +415,7 @@ def process_files(files, output):
                     logger.exception("Failed to write the metrics csv")
             if not shared or not processed:
                 break
-            files = input_files()
+            files = input_files(output)
 
     failed_files = [row["file_name"] for row in metrics if row["status"] != "success"]
     if failed_files:
@@ -448,7 +466,7 @@ if __name__ == "__main__":
     spark.sparkContext.setLogLevel("ERROR")
 
     try:
-        metrics = process_files(input_files(), output)
+        metrics = process_files(input_files(output), output)
     except Exception:
         error_message = traceback.format_exc()
         logger.error(error_message)
