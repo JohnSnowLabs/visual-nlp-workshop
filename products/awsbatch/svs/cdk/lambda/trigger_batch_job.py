@@ -62,12 +62,17 @@ def handler(event, context):
     output_prefix = f"{parent}/{folder_name}_output/" if parent else f"{folder_name}_output/"
 
     # files with a _SUCCESS_ marker in the output are skipped: writing _READY again
-    # processes only the ones that failed or never ran
-    done = {os.path.basename(obj["Key"])[len(SUCCESS_PREFIX):]
-            for obj in list_objects(bucket, output_prefix + SUCCESS_PREFIX)}
-    files = [(obj["Key"], obj["Size"]) for obj in list_objects(bucket, folder_prefix + "/")
+    # processes only the ones that failed or never ran. The output keeps the input's subfolders,
+    # and each marker is in the subfolder of its file: a/b/abc.svs -> a/b/_SUCCESS_abc.svs
+    done = set()
+    for obj in list_objects(bucket, output_prefix):
+        folder, _, name = obj["Key"][len(output_prefix):].rpartition("/")
+        if name.startswith(SUCCESS_PREFIX):
+            done.add(f"{folder}/{name[len(SUCCESS_PREFIX):]}" if folder else name[len(SUCCESS_PREFIX):])
+    input_prefix = folder_prefix + "/"
+    files = [(obj["Key"], obj["Size"]) for obj in list_objects(bucket, input_prefix)
              if not obj["Key"].endswith("/") and not os.path.basename(obj["Key"]).startswith("_")
-             and os.path.basename(obj["Key"]) not in done]
+             and obj["Key"][len(input_prefix):] not in done]
     if not files:
         logger.info("Nothing to process under s3://%s/%s/", bucket, folder_prefix)
         return {"status": "nothing to process", "bucket": bucket, "prefix": folder_prefix}
@@ -79,7 +84,7 @@ def handler(event, context):
     manifest_prefix = f"{output_prefix}{MANIFESTS}/{run}/"
     for i, shard in enumerate(shards):
         s3.put_object(Bucket=bucket, Key=f"{manifest_prefix}{i}.json",
-                      Body=json.dumps({"bucket": bucket, "keys": shard}).encode("utf-8"))
+                      Body=json.dumps({"bucket": bucket, "prefix": input_prefix, "keys": shard}).encode("utf-8"))
 
     job_name = re.sub(r"[^A-Za-z0-9_-]", "-", f"deid-{folder_name}")[:128]
     logger.info("Submitting %s: %d file(s) in %d job(s), manifests at s3://%s/%s",
