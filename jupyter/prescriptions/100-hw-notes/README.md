@@ -1,0 +1,10 @@
+Images taken from [100-handwritten-medical-records](https://huggingface.co/datasets/chaithanyakota/100-handwritten-medical-records).
+
+image_01.jpg
+CEPODEM XP 325MG TAB, DOLO TAB 650MG, MONTAIR FX TAB, BETADINE GARGLE
+image_02.jpg
+DEPURA, MONTEK 10MG TAB
+image_03.jpg
+PAN 40MG INJ, EMESET INJ, PAN DSR CAP, EMESET-MD TAB, ZITEN 20MG TAB, GLYCOMET GP2 TAB, COVERSYL 4MG TAB, ECOSPRIN-AV 75MG TAB, LONAZEP MD 0.5MG TAB, ATEN 50MG TAB
+image_04.jpg
+, PIRITON-CS SYR, AMBRODIL-S SYR, TOBA EYE-DPS
