@@ -96,10 +96,8 @@ def count_tiles(svs_path):
 
 
 def find_phi(pipeline, images_df):
-    """Run the de-identification pipeline on the images where its text detector, the first stage,
-    finds text: on an image with no text the OCR reads the whole image, and PHI found in what it
-    reads would black out the whole image. Returns the `path`, `text_regions` and `coordinates`
-    of every image."""
+    """Run the de-identification pipeline only on the images where its text detector, the first
+    stage, finds text. Returns the `path`, `text_regions` and `coordinates` of every image."""
     detector, rest = PipelineModel(stages=pipeline.stages[:1]), PipelineModel(stages=pipeline.stages[1:])
     detected = detector.transform(images_df).cache()
     try:
