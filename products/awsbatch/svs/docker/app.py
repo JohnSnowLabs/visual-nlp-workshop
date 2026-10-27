@@ -17,7 +17,7 @@ from urllib.parse import urlparse
 import tifffile
 from johnsnowlabs import nlp
 from pyspark.ml import PipelineModel
-from pyspark.sql.functions import col
+from pyspark.sql.functions import col, size
 from sparkocr.enums import *
 from sparkocr.transformers import *
 
@@ -95,6 +95,23 @@ def count_tiles(svs_path):
         return sum(-(-p.shape[1] // p.tilewidth) * -(-p.shape[0] // p.tilelength) for p in levels)
 
 
+def find_phi(pipeline, images_df):
+    """Run the de-identification pipeline on the images where its text detector, the first stage,
+    finds text: on an image with no text the OCR reads the whole image, and PHI found in what it
+    reads would black out the whole image. Returns the `path`, `text_regions` and `coordinates`
+    of every image."""
+    detector, rest = PipelineModel(stages=pipeline.stages[:1]), PipelineModel(stages=pipeline.stages[1:])
+    detected = detector.transform(images_df).cache()
+    try:
+        has_text = size(col("text_regions")) > 0
+        rows = rest.transform(detected.filter(has_text)).select("path", "text_regions", "coordinates").collect()
+        rows += [{"path": row["path"], "text_regions": [], "coordinates": []}
+                 for row in detected.filter(~has_text).select("path").collect()]
+    finally:
+        detected.unpersist()
+    return rows
+
+
 def process_file(pipeline, input_folder, filename, output_folder):
     """Run the de-id pipeline on the local file `filename` in input_folder and return the local
     path to its output file inside output_folder, and its tile counts."""
@@ -108,18 +125,20 @@ def process_file(pipeline, input_folder, filename, output_folder):
     images_tmp = tempfile.mkdtemp(dir=output_folder, prefix="images_")
     images = svs_to_images(fully_qualified_filename, images_tmp)
     to_image = BinaryToImage().setInputCol("content").setOutputCol("image_raw").setImageType(ImageType.TYPE_BYTE_GRAY)
-    result = pipeline.transform(to_image.transform(spark.read.format("binaryFile").load(images).repartition(4))).cache()
-    try:
+    images_df = to_image.transform(spark.read.format("binaryFile").load(images).repartition(4))
+    if DEID_MODE == "blanket":
+        result = pipeline.transform(images_df).select("path", "coordinates").collect()
+        text = result
+    else:
+        result = find_phi(pipeline, images_df)
         # all the text the pipeline found, for the counts: pipeline mode redacts only the PHI in it
-        text = result if DEID_MODE == "blanket" else result.select("path", col("text_regions").alias("coordinates"))
-        tiles_with_text = len(get_overlapping_tiles(fully_qualified_filename, text)[filename])
-        tiles_redacted = len(get_overlapping_tiles(fully_qualified_filename, result)[filename])
+        text = [{"path": row["path"], "coordinates": row["text_regions"]} for row in result]
+    tiles_with_text = len(get_overlapping_tiles(fully_qualified_filename, text)[filename])
+    tiles_redacted = len(get_overlapping_tiles(fully_qualified_filename, result)[filename])
 
-        create_new_svs_file = os.environ.get("CREATE_NEW_SVS_FILE", "false").lower() == "true"
-        output_svs_path = os.path.join(output_folder, filename) if create_new_svs_file else None
-        redact_phi_in_svs(fully_qualified_filename, result, output_svs_path, create_new_svs_file)
-    finally:
-        result.unpersist()
+    create_new_svs_file = os.environ.get("CREATE_NEW_SVS_FILE", "false").lower() == "true"
+    output_svs_path = os.path.join(output_folder, filename) if create_new_svs_file else None
+    redact_phi_in_svs(fully_qualified_filename, result, output_svs_path, create_new_svs_file)
 
     tiles = {
         "tiles": count_tiles(fully_qualified_filename),
