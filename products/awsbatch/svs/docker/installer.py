@@ -27,9 +27,10 @@ detector.save("/opt/ml/image_text_detector_mem_opt")
 # the de-identification pipeline is only needed for DEID_MODE=pipeline
 if model_ref:
 
-    from sparkocr.pretrained import PretrainedPipeline
+    import sparkocr.internal as ocr_internal
 
-    pipe = PretrainedPipeline(model_ref, "en", "clinical/ocr")
-    pipe.model.save("/opt/ml/model")
+    # only downloaded and unzipped: app.py loads it, loading it here needs a lot of memory
+    path = ocr_internal._DownloadPipelineWithoutLoading(model_ref, "en", "clinical/ocr").apply()
+    shutil.move(path[len("file:"):] if path.startswith("file:") else path, "/opt/ml/model")
 
 shutil.rmtree("/app/model_cache")
