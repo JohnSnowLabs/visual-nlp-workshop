@@ -144,10 +144,10 @@ which reads `SPARK_OCR_LICENSE` directly from the environment. `AWS_ACCESS_
 KEY_ID`/`AWS_SECRET_ACCESS_KEY` from the license file are only used at image
 build time by `docker/installer.py` (a Docker build secret) — not needed at
 runtime, so they're never passed to the container. `load_pipeline()` loads
-the pipeline baked into the image at build time by `installer.py`: the de-id
-pipeline (`/opt/ml/model`, `MODEL_TO_LOAD` in the `Dockerfile`) for
-`DEID_MODE=pipeline`, or the text detector (`/opt/ml/image_text_detector_mem_opt`)
-for `DEID_MODE=blanket`. `process_file()` runs it per file (header cleanup,
+the models baked into the image at build time by `installer.py`: the text detector
+(`/opt/ml/image_text_detector_mem_opt`) and, for `DEID_MODE=pipeline`, the de-id
+pipeline (`/opt/ml/model`, `MODEL_TO_LOAD` in the `Dockerfile`), run only on the
+images with text. `process_file()` runs it per file (header cleanup,
 images to look for PHI in, de-id, redaction on every level).
 Redaction modifies the SVS in place by default; deploy with `-c create_new_svs_file=true` to have
 it write a new de-identified `.svs` file instead (slower, but leaves the

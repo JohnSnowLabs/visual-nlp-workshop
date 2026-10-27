@@ -2,11 +2,11 @@ FROM ubuntu:22.04
 ENV PYSPARK_PYTHON=python3
 ENV PYSPARK_DRIVER_PYTHON=python3
 ENV DEBIAN_FRONTEND=noninteractive
-# cpu or gpu: --build-arg HARDWARE_TARGET=gpu installs the GPU jars and model
+# cpu or gpu: --build-arg HARDWARE_TARGET=gpu installs the GPU jars and runs the text detector on the GPU
 ARG HARDWARE_TARGET=cpu
 ENV HARDWARE_TARGET=${HARDWARE_TARGET}
 ENV TF_CPP_MIN_LOG_LEVEL='3'
-ENV MODEL_TO_LOAD="image_deid_multi_model_context_line_pipeline_${HARDWARE_TARGET}"
+ENV MODEL_TO_LOAD="image_deid_multi_model_context_line_pipeline"
 ENV CREATE_NEW_SVS_FILE="false"
 # pipeline or blanket: --build-arg DEID_MODE=blanket redacts all detected text instead of only the PHI
 # found by MODEL_TO_LOAD

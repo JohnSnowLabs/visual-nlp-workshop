@@ -62,27 +62,28 @@ spark = None
 
 def load_pipeline():
     """
-    Load the pipeline for DEID_MODE: the text detector alone for blanket, the de-identification pipeline for pipeline.
+    Load the text detector and, for DEID_MODE=pipeline, the de-identification pipeline that finds
+    the PHI in the text: blanket redacts all the text found, pipeline only the PHI.
     """
-    if DEID_MODE == "pipeline":
-        model_path = os.path.join(CACHE_PRETRAINED_PATH, "model")
-        if not os.path.isdir(model_path):
-            raise RuntimeError("DEID_MODE=pipeline needs the image built with MODEL_TO_LOAD set")
-        return PipelineModel.load(model_path)
-
     text_detector = ImageTextDetectorCraft().load(os.path.join(CACHE_PRETRAINED_PATH, "image_text_detector_mem_opt")) \
     .setInputCol("image_raw") \
-    .setOutputCol("coordinates") \
+    .setOutputCol("text_regions") \
     .setScoreThreshold(0.7) \
     .setLinkThreshold(0.5) \
-    .setWithRefiner(True) \
+    .setWithRefiner(False) \
     .setTextThreshold(0.4) \
     .setSizeThreshold(-1) \
     .setUseGPU(HARDWARE_TARGET == "gpu") \
     .setWidth(0) \
     .setHeight(0)
 
-    return PipelineModel(stages=[text_detector])
+    if DEID_MODE == "blanket":
+        return text_detector, None
+
+    model_path = os.path.join(CACHE_PRETRAINED_PATH, "model")
+    if not os.path.isdir(model_path):
+        raise RuntimeError("DEID_MODE=pipeline needs the image built with MODEL_TO_LOAD set")
+    return text_detector, PipelineModel.load(model_path)
 
 def count_tiles(svs_path):
     """Tiles of all pyramid levels."""
@@ -93,21 +94,6 @@ def count_tiles(svs_path):
         ratio = base.shape[1] / base.shape[0]
         levels = [p for p in tiled if abs(p.shape[1] / p.shape[0] - ratio) < 0.03 * ratio]
         return sum(-(-p.shape[1] // p.tilewidth) * -(-p.shape[0] // p.tilelength) for p in levels)
-
-
-def find_phi(pipeline, images_df):
-    """Run the de-identification pipeline only on the images where its text detector, the first
-    stage, finds text. Returns the `path`, `text_regions` and `coordinates` of every image."""
-    detector, rest = PipelineModel(stages=pipeline.stages[:1]), PipelineModel(stages=pipeline.stages[1:])
-    detected = detector.transform(images_df).cache()
-    try:
-        has_text = size(col("text_regions")) > 0
-        rows = rest.transform(detected.filter(has_text)).select("path", "text_regions", "coordinates").collect()
-        rows += [{"path": row["path"], "text_regions": [], "coordinates": []}
-                 for row in detected.filter(~has_text).select("path").collect()]
-    finally:
-        detected.unpersist()
-    return rows
 
 
 def process_file(pipeline, input_folder, filename, output_folder):
@@ -124,13 +110,18 @@ def process_file(pipeline, input_folder, filename, output_folder):
     images = svs_to_images(fully_qualified_filename, images_tmp)
     to_image = BinaryToImage().setInputCol("content").setOutputCol("image_raw").setImageType(ImageType.TYPE_BYTE_GRAY)
     images_df = to_image.transform(spark.read.format("binaryFile").load(images).repartition(4))
-    if DEID_MODE == "blanket":
-        result = pipeline.transform(images_df).select("path", "coordinates").collect()
-        text = result
-    else:
-        result = find_phi(pipeline, images_df)
-        # all the text the pipeline found, for the counts: pipeline mode redacts only the PHI in it
-        text = [{"path": row["path"], "coordinates": row["text_regions"]} for row in result]
+    text_detector, deid_pipeline = pipeline
+    text_df = text_detector.transform(images_df).cache()
+    try:
+        text = text_df.select("path", col("text_regions").alias("coordinates")).collect()
+        if deid_pipeline is None:
+            result = text
+        else:
+            # only the images with text go through the de-identification pipeline
+            phi = deid_pipeline.transform(text_df.filter(size(col("text_regions")) > 0))
+            result = text_df.select("path").join(phi.select("path", "coordinates"), "path", "left").collect()
+    finally:
+        text_df.unpersist()
     tiles_with_text = len(get_overlapping_tiles(fully_qualified_filename, text)[filename])
     tiles_redacted = len(get_overlapping_tiles(fully_qualified_filename, result)[filename])
 
