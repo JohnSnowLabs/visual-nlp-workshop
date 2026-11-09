@@ -37,6 +37,7 @@ DICOM skill that you can download, zip, and provide to Claude, Codex, or Gemini.
 | Use VLM OCR for DICOM text detection | [`SparkOcrDicomVLM.ipynb`](SparkOcrDicomVLM.ipynb) | Uses 1B VLM for OCR with coordinates, then supports blanket or PHI-only redaction. |
 | Run de-identification in streaming mode | [`SparkOcrDicomDeIdentificationV2Streaming.ipynb`](SparkOcrDicomDeIdentificationV2Streaming.ipynb) | Spark Structured Streaming example based on the V2 image/OCR pipeline. |
 | Try pretrained de-identification pipelines | [`SparkOcrDicomPretrainedPipelines.ipynb`](SparkOcrDicomPretrainedPipelines.ipynb) | Compares ready-made minimal, full anonymization, and pseudonymization DICOM pipelines. |
+| Skip the frames without text | [`SparkOcrDicomFlaggingPretrainedPipelines.ipynb`](SparkOcrDicomFlaggingPretrainedPipelines.ipynb) | Compares the Fast-only and the text flagging (Indra's Lite + Fast) pretrained pipelines, and when flagging pays off. |
 | Pipeline Builder Clinical NER Models | [`SparkOcrDicomPipelineBuilder.ipynb`](SparkOcrDicomPipelineBuilder.ipynb) | Latest notebook to help wrap dicom pipelines around state of the Healthcare clinical pretrained pipelines. |
 
 ## Tags & Strategy Files
