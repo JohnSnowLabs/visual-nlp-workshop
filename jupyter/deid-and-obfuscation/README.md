@@ -34,6 +34,7 @@ Choose a model based on your input type and available hardware using the [Model 
 
 | If you want to... | Start with | Why |
 |---|---|---|
+| Run Bulk De-Identification | [`SparkOCRBulkOperation.ipynb`](SparkOCRBulkOperation.ipynb) | Databricks notebook for bulk PDF/Image de-identification. |
 | De-identify PHI in scanned images and PDFs | [`DeIdentification.ipynb`](DeIdentification.ipynb) | Remove PHI by drawing a bounding box over detected PHI regions in scanned documents. |
 | Obfuscate PHI in scanned images and PDFs | [`Obfuscation.ipynb`](Obfuscation.ipynb) | Remove PHI by rendering obfuscated (synthetic) text in place of PHI in scanned documents. |
 | Build a custom deid/obfuscation pipeline using clinical NER | [`AnonymizationPipelineBuilder_Healthcare.ipynb`](AnonymizationPipelineBuilder_Healthcare.ipynb) | Wrap image/PDF stages around state-of-the-art clinical NER pretrained pipelines for quick iteration. |
